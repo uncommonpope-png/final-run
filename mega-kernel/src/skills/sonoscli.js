@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * SONOSCLI.JS — Manage Sonos speakers — play, pause, queue, groups, and volume via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.3, love: 0.4, tax: 0.3 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function sonoscli(brain, memory, input) {
-    const prompt = `You are a sonoscli specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage Sonos speakers — play, pause, queue, groups, and volume via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'sonoscli', input, result }).catch(() => {});
+async function skill_sonoscli(input) {
+    const missing = [];
+    const v_SONOS_DISCOVERY = vault.getKey('SONOS_DISCOVERY'); if (!v_SONOS_DISCOVERY) missing.push('SONOS_DISCOVERY');
+    if (missing.length > 0) {
+        return { skill: 'sonoscli', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'sonoscli', result };
+    const _SONOS_DISCOVERY = vault.getKey('SONOS_DISCOVERY');
+    return { skill: 'sonoscli', plt_affinity: PLT_AFFINITY, success: true, message: 'Sonos CLI skill ready — keys configured', keys_available: ['SONOS_DISCOVERY'], timestamp: Date.now() };
 }
 
-module.exports = { sonoscli, PLT_AFFINITY };
+module.exports = { skill_sonoscli, PLT_AFFINITY };

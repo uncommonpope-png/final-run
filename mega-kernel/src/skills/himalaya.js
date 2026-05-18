@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * HIMALAYA.JS — Manage email via Himalaya CLI — send, read, search, and organize messages via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.2, love: 0.7, tax: 0.1 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function himalaya(brain, memory, input) {
-    const prompt = `You are a himalaya specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage email via Himalaya CLI — send, read, search, and organize messages via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'himalaya', input, result }).catch(() => {});
+async function skill_himalaya(input) {
+    const missing = [];
+    const v_HIMALAYA_ACCOUNT = vault.getKey('HIMALAYA_ACCOUNT'); if (!v_HIMALAYA_ACCOUNT) missing.push('HIMALAYA_ACCOUNT');
+    if (missing.length > 0) {
+        return { skill: 'himalaya', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'himalaya', result };
+    const _HIMALAYA_ACCOUNT = vault.getKey('HIMALAYA_ACCOUNT');
+    return { skill: 'himalaya', plt_affinity: PLT_AFFINITY, success: true, message: 'Himalaya Email skill ready — keys configured', keys_available: ['HIMALAYA_ACCOUNT'], timestamp: Date.now() };
 }
 
-module.exports = { himalaya, PLT_AFFINITY };
+module.exports = { skill_himalaya, PLT_AFFINITY };

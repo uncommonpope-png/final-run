@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * WACLI.JS — Manage WiFi connections — scan, connect, disconnect, and troubleshoot networks via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.4, love: 0.4, tax: 0.2 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function wacli(brain, memory, input) {
-    const prompt = `You are a wacli specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage WiFi connections — scan, connect, disconnect, and troubleshoot networks via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'wacli', input, result }).catch(() => {});
+async function skill_wacli(input) {
+    const missing = [];
+    const v_WACLI_TOKEN = vault.getKey('WACLI_TOKEN'); if (!v_WACLI_TOKEN) missing.push('WACLI_TOKEN');
+    if (missing.length > 0) {
+        return { skill: 'wacli', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'wacli', result };
+    const _WACLI_TOKEN = vault.getKey('WACLI_TOKEN');
+    return { skill: 'wacli', plt_affinity: PLT_AFFINITY, success: true, message: 'WA CLI skill ready — keys configured', keys_available: ['WACLI_TOKEN'], timestamp: Date.now() };
 }
 
-module.exports = { wacli, PLT_AFFINITY };
+module.exports = { skill_wacli, PLT_AFFINITY };

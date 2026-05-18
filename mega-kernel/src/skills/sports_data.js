@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * SPORTS_DATA.JS — Analyze sports data — scores, standings, player stats, team comparisons, and predictions via brain reasoning
- * Converted from mock-data implementation to brain.think()-powered.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.5, love: 0.4, tax: 0.1 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function skill_sports_data(brain, memory, input) {
-    const prompt = `You are a sports_data specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Analyze sports data — scores, standings, player stats, team comparisons, and predictions via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'sports_data', input, result }).catch(() => {});
+async function skill_sports_data(input) {
+    const missing = [];
+    const v_SPORTS_DATA_API_KEY = vault.getKey('SPORTS_DATA_API_KEY'); if (!v_SPORTS_DATA_API_KEY) missing.push('SPORTS_DATA_API_KEY');
+    if (missing.length > 0) {
+        return { skill: 'sports_data', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'sports_data', result };
+    const _SPORTS_DATA_API_KEY = vault.getKey('SPORTS_DATA_API_KEY');
+    return { skill: 'sports_data', plt_affinity: PLT_AFFINITY, success: true, message: 'Sports Data skill ready — keys configured', keys_available: ['SPORTS_DATA_API_KEY'], timestamp: Date.now() };
 }
 
 module.exports = { skill_sports_data, PLT_AFFINITY };

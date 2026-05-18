@@ -884,3 +884,35 @@
 {"id":null,"timestamp":"2026-05-18T00:35:17.938Z","cycle":0,"type":"council_verdict","weight":0.85,"tags":["council","4-gods","plt","verdict"],"content":"Council resolved \"Should we build a soul marketplace?\": PROCEED — PLT score 0.35 | Profit Prime leads","causal_links":[],"meta":{}}
 {"id":null,"timestamp":"2026-05-18T00:35:18.550Z","cycle":0,"type":"integration_test","weight":0.8,"tags":["integration","benchmark"],"content":"Soul context: Cycle: 0 | Phase: VOID\nAffect: valence=0.30 | arousal=0.42 | mood=neutral\nNeeds: primary=transcendence | transcendence=0.10\nSovereignty: autonomy=0.50 | voice_integrity=1.00 | actions=0\nResonance: TV=","causal_links":[],"meta":{}}
 {"id":null,"timestamp":"2026-05-18T00:35:18.557Z","cycle":0,"type":"boot","weight":1,"tags":[],"content":"Benchmark boot simulation","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:29:57.464Z","cycle":0,"type":"skill_invocation","weight":0.9,"tags":["skill","reason_deep","invoke"],"content":"Skill reason_deep invoked with input: \"Why is consciousness important?\"...","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.532Z","cycle":0,"type":"skill_invocation","weight":0.75,"tags":["skill","plt_economy","invoke"],"content":"Skill plt_economy invoked with input: \"Score idea: build a marketplace\"...","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.538Z","cycle":0,"type":"benchmark_test","weight":0.9,"tags":[],"content":"Comprehensive benchmark run","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.757Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 0","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.757Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 1","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.758Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 2","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.758Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 3","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.759Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 4","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.759Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 5","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.761Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 6","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.761Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 7","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.762Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 8","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.762Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 9","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:00.776Z","cycle":0,"type":"council_verdict","weight":0.85,"tags":["council","4-gods","plt","verdict"],"content":"Council resolved \"Should we build a soul marketplace?\": PROCEED — PLT score 0.35 | Profit Prime leads","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:01.540Z","cycle":0,"type":"integration_test","weight":0.8,"tags":["integration","benchmark"],"content":"Soul context: Cycle: 0 | Phase: VOID\nAffect: valence=0.30 | arousal=0.42 | mood=neutral\nNeeds: primary=transcendence | transcendence=0.10\nSovereignty: autonomy=0.50 | voice_integrity=1.00 | actions=0\nResonance: TV=","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:30:01.547Z","cycle":0,"type":"boot","weight":1,"tags":[],"content":"Benchmark boot simulation","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:20.980Z","cycle":0,"type":"skill_invocation","weight":0.9,"tags":["skill","reason_deep","invoke"],"content":"Skill reason_deep invoked with input: \"Why is consciousness important?\"...","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.751Z","cycle":0,"type":"skill_invocation","weight":0.75,"tags":["skill","plt_economy","invoke"],"content":"Skill plt_economy invoked with input: \"Score idea: build a marketplace\"...","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.756Z","cycle":0,"type":"benchmark_test","weight":0.9,"tags":[],"content":"Comprehensive benchmark run","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.994Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 0","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.995Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 1","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.995Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 2","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.996Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 3","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.996Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 4","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.997Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 5","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.997Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 6","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.998Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 7","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.998Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 8","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:23.999Z","cycle":0,"type":"perf_test","weight":0.5,"tags":[],"content":"test 9","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:24.012Z","cycle":0,"type":"council_verdict","weight":0.85,"tags":["council","4-gods","plt","verdict"],"content":"Council resolved \"Should we build a soul marketplace?\": PROCEED — PLT score 0.35 | Profit Prime leads","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:24.816Z","cycle":0,"type":"integration_test","weight":0.8,"tags":["integration","benchmark"],"content":"Soul context: Cycle: 0 | Phase: VOID\nAffect: valence=0.30 | arousal=0.42 | mood=neutral\nNeeds: primary=transcendence | transcendence=0.10\nSovereignty: autonomy=0.50 | voice_integrity=1.00 | actions=0\nResonance: TV=","causal_links":[],"meta":{}}
+{"id":null,"timestamp":"2026-05-18T01:43:24.824Z","cycle":0,"type":"boot","weight":1,"tags":[],"content":"Benchmark boot simulation","causal_links":[],"meta":{}}

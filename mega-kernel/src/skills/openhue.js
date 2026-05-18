@@ -1,24 +1,19 @@
 'use strict';
 
-/**
- * OPENHUE.JS — Manage Philips Hue lights — scenes, schedules, groups, and home automation via brain reasoning
- * Converted from mock-data implementation to brain.think()-powered.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.3, love: 0.5, tax: 0.2 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function skill_openhue(brain, memory, input) {
-    const prompt = `You are a openhue specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage Philips Hue lights — scenes, schedules, groups, and home automation via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'openhue', input, result }).catch(() => {});
+async function skill_openhue(input) {
+    const missing = [];
+    const v_PHILIPS_HUE_IP = vault.getKey('PHILIPS_HUE_IP'); if (!v_PHILIPS_HUE_IP) missing.push('PHILIPS_HUE_IP');
+    const v_PHILIPS_HUE_USER = vault.getKey('PHILIPS_HUE_USER'); if (!v_PHILIPS_HUE_USER) missing.push('PHILIPS_HUE_USER');
+    if (missing.length > 0) {
+        return { skill: 'openhue', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'openhue', result };
+    const _PHILIPS_HUE_IP = vault.getKey('PHILIPS_HUE_IP');
+    const _PHILIPS_HUE_USER = vault.getKey('PHILIPS_HUE_USER');
+    return { skill: 'openhue', plt_affinity: PLT_AFFINITY, success: true, message: 'Philips Hue skill ready — keys configured', keys_available: ['PHILIPS_HUE_IP', 'PHILIPS_HUE_USER'], timestamp: Date.now() };
 }
 
 module.exports = { skill_openhue, PLT_AFFINITY };

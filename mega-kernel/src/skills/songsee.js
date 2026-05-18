@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * SONGSEE.JS — Analyze songs and music — structure, lyrics, production, and recommendations via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.3, love: 0.6, tax: 0.1 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function songsee(brain, memory, input) {
-    const prompt = `You are a songsee specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Analyze songs and music — structure, lyrics, production, and recommendations via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'songsee', input, result }).catch(() => {});
+async function skill_songsee(input) {
+    const missing = [];
+    const v_SONGSEE_KEY = vault.getKey('SONGSEE_KEY'); if (!v_SONGSEE_KEY) missing.push('SONGSEE_KEY');
+    if (missing.length > 0) {
+        return { skill: 'songsee', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'songsee', result };
+    const _SONGSEE_KEY = vault.getKey('SONGSEE_KEY');
+    return { skill: 'songsee', plt_affinity: PLT_AFFINITY, success: true, message: 'SongSee skill ready — keys configured', keys_available: ['SONGSEE_KEY'], timestamp: Date.now() };
 }
 
-module.exports = { songsee, PLT_AFFINITY };
+module.exports = { skill_songsee, PLT_AFFINITY };

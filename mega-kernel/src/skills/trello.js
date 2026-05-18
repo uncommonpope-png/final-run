@@ -1,24 +1,19 @@
 'use strict';
 
-/**
- * TRELLO.JS — Manage Trello boards — cards, lists, checklists, and team collaboration via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.3, love: 0.4, tax: 0.3 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function trello(brain, memory, input) {
-    const prompt = `You are a trello specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage Trello boards — cards, lists, checklists, and team collaboration via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'trello', input, result }).catch(() => {});
+async function skill_trello(input) {
+    const missing = [];
+    const v_TRELLO_API_KEY = vault.getKey('TRELLO_API_KEY'); if (!v_TRELLO_API_KEY) missing.push('TRELLO_API_KEY');
+    const v_TRELLO_TOKEN = vault.getKey('TRELLO_TOKEN'); if (!v_TRELLO_TOKEN) missing.push('TRELLO_TOKEN');
+    if (missing.length > 0) {
+        return { skill: 'trello', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'trello', result };
+    const _TRELLO_API_KEY = vault.getKey('TRELLO_API_KEY');
+    const _TRELLO_TOKEN = vault.getKey('TRELLO_TOKEN');
+    return { skill: 'trello', plt_affinity: PLT_AFFINITY, success: true, message: 'Trello skill ready — keys configured', keys_available: ['TRELLO_API_KEY', 'TRELLO_TOKEN'], timestamp: Date.now() };
 }
 
-module.exports = { trello, PLT_AFFINITY };
+module.exports = { skill_trello, PLT_AFFINITY };

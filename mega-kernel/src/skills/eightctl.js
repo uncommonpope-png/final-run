@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * EIGHTCTL.JS — Manage Eight Sleep smart bed — temperature control, sleep tracking, and schedule via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.3, love: 0.4, tax: 0.3 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function eightctl(brain, memory, input) {
-    const prompt = `You are a eightctl specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage Eight Sleep smart bed — temperature control, sleep tracking, and schedule via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'eightctl', input, result }).catch(() => {});
+async function skill_eightctl(input) {
+    const missing = [];
+    const v_EIGHTCTL_TOKEN = vault.getKey('EIGHTCTL_TOKEN'); if (!v_EIGHTCTL_TOKEN) missing.push('EIGHTCTL_TOKEN');
+    if (missing.length > 0) {
+        return { skill: 'eightctl', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'eightctl', result };
+    const _EIGHTCTL_TOKEN = vault.getKey('EIGHTCTL_TOKEN');
+    return { skill: 'eightctl', plt_affinity: PLT_AFFINITY, success: true, message: 'Eight Control skill ready — keys configured', keys_available: ['EIGHTCTL_TOKEN'], timestamp: Date.now() };
 }
 
-module.exports = { eightctl, PLT_AFFINITY };
+module.exports = { skill_eightctl, PLT_AFFINITY };

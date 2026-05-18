@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * GOPLACES.JS — Discover and review places — recommendations, directions, and local information via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
 const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function goplaces(brain, memory, input) {
-    const prompt = `You are a goplaces specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Discover and review places — recommendations, directions, and local information via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'goplaces', input, result }).catch(() => {});
+async function skill_goplaces(input) {
+    const missing = [];
+    const v_GOOGLE_API_KEY = vault.getKey('GOOGLE_API_KEY'); if (!v_GOOGLE_API_KEY) missing.push('GOOGLE_API_KEY');
+    if (missing.length > 0) {
+        return { skill: 'goplaces', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'goplaces', result };
+    const _GOOGLE_API_KEY = vault.getKey('GOOGLE_API_KEY');
+    return { skill: 'goplaces', plt_affinity: PLT_AFFINITY, success: true, message: 'Google Places skill ready — keys configured', keys_available: ['GOOGLE_API_KEY'], timestamp: Date.now() };
 }
 
-module.exports = { goplaces, PLT_AFFINITY };
+module.exports = { skill_goplaces, PLT_AFFINITY };

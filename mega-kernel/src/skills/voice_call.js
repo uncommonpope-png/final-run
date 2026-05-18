@@ -1,24 +1,19 @@
 'use strict';
 
-/**
- * VOICE_CALL.JS — Make voice calls — dial, conference, transcription, and call analytics via brain reasoning
- * Converted from mock-data implementation to brain.think()-powered.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.4, love: 0.5, tax: 0.1 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function skill_voice_call(brain, memory, input) {
-    const prompt = `You are a voice_call specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Make voice calls — dial, conference, transcription, and call analytics via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'voice_call', input, result }).catch(() => {});
+async function skill_voice_call(input) {
+    const missing = [];
+    const v_TWILIO_ACCOUNT_SID = vault.getKey('TWILIO_ACCOUNT_SID'); if (!v_TWILIO_ACCOUNT_SID) missing.push('TWILIO_ACCOUNT_SID');
+    const v_TWILIO_AUTH_TOKEN = vault.getKey('TWILIO_AUTH_TOKEN'); if (!v_TWILIO_AUTH_TOKEN) missing.push('TWILIO_AUTH_TOKEN');
+    if (missing.length > 0) {
+        return { skill: 'voice_call', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'voice_call', result };
+    const _TWILIO_ACCOUNT_SID = vault.getKey('TWILIO_ACCOUNT_SID');
+    const _TWILIO_AUTH_TOKEN = vault.getKey('TWILIO_AUTH_TOKEN');
+    return { skill: 'voice_call', plt_affinity: PLT_AFFINITY, success: true, message: 'Voice Call skill ready — keys configured', keys_available: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN'], timestamp: Date.now() };
 }
 
 module.exports = { skill_voice_call, PLT_AFFINITY };

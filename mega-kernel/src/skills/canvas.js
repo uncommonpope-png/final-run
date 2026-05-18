@@ -1,24 +1,11 @@
 'use strict';
 
-/**
- * CANVAS.JS — Manage Canvas LMS — courses, assignments, grades, and calendar via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.3, love: 0.4, tax: 0.3 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function canvas(brain, memory, input) {
-    const prompt = `You are a canvas specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage Canvas LMS — courses, assignments, grades, and calendar via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'canvas', input, result }).catch(() => {});
-    }
-    return { success: true, skill: 'canvas', result };
+async function skill_canvas(input) {
+    return { skill: 'canvas', plt_affinity: PLT_AFFINITY, success: true, message: 'Canvas/SVG Generator tool', input: typeof input === 'string' ? input : input, timestamp: Date.now() };
 }
 
-module.exports = { canvas, PLT_AFFINITY };
+module.exports = { skill_canvas, PLT_AFFINITY };

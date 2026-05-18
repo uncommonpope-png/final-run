@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * 1PASSWORD.JS — Manage 1Password vault items via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.3, love: 0.4, tax: 0.3 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function handle1password(brain, memory, input) {
-    const prompt = `You are a 1password specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage 1Password vault items — credentials, notes, and identities via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: '1password', input, result }).catch(() => {});
+async function skill_1password(input) {
+    const missing = [];
+    const v_OP_SERVICE_ACCOUNT_TOKEN = vault.getKey('OP_SERVICE_ACCOUNT_TOKEN'); if (!v_OP_SERVICE_ACCOUNT_TOKEN) missing.push('OP_SERVICE_ACCOUNT_TOKEN');
+    if (missing.length > 0) {
+        return { skill: '1password', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: '1password', result };
+    const _OP_SERVICE_ACCOUNT_TOKEN = vault.getKey('OP_SERVICE_ACCOUNT_TOKEN');
+    return { skill: '1password', plt_affinity: PLT_AFFINITY, success: true, message: '1Password skill ready — keys configured', keys_available: ['OP_SERVICE_ACCOUNT_TOKEN'], timestamp: Date.now() };
 }
 
-module.exports = { handle1password, PLT_AFFINITY };
+module.exports = { skill_1password, PLT_AFFINITY };

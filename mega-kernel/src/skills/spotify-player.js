@@ -1,24 +1,19 @@
 'use strict';
 
-/**
- * SPOTIFY-PLAYER.JS — Manage Spotify playback — playlists, search, queue, and recommendations via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.3, love: 0.4, tax: 0.3 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function spotify_player(brain, memory, input) {
-    const prompt = `You are a spotify-player specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage Spotify playback — playlists, search, queue, and recommendations via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'spotify-player', input, result }).catch(() => {});
+async function skill_spotify_player(input) {
+    const missing = [];
+    const v_SPOTIFY_CLIENT_ID = vault.getKey('SPOTIFY_CLIENT_ID'); if (!v_SPOTIFY_CLIENT_ID) missing.push('SPOTIFY_CLIENT_ID');
+    const v_SPOTIFY_CLIENT_SECRET = vault.getKey('SPOTIFY_CLIENT_SECRET'); if (!v_SPOTIFY_CLIENT_SECRET) missing.push('SPOTIFY_CLIENT_SECRET');
+    if (missing.length > 0) {
+        return { skill: 'spotify-player', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'spotify-player', result };
+    const _SPOTIFY_CLIENT_ID = vault.getKey('SPOTIFY_CLIENT_ID');
+    const _SPOTIFY_CLIENT_SECRET = vault.getKey('SPOTIFY_CLIENT_SECRET');
+    return { skill: 'spotify-player', plt_affinity: PLT_AFFINITY, success: true, message: 'Spotify Player skill ready — keys configured', keys_available: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'], timestamp: Date.now() };
 }
 
-module.exports = { spotify_player, PLT_AFFINITY };
+module.exports = { skill_spotify_player, PLT_AFFINITY };

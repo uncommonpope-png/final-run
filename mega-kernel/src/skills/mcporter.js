@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * MCPORTER.JS — Port Minecraft worlds and servers — migration, backup, and synchronization via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.3, love: 0.4, tax: 0.3 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function mcporter(brain, memory, input) {
-    const prompt = `You are a mcporter specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Port Minecraft worlds and servers — migration, backup, and synchronization via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'mcporter', input, result }).catch(() => {});
+async function skill_mcporter(input) {
+    const missing = [];
+    const v_MCPORTER_TOKEN = vault.getKey('MCPORTER_TOKEN'); if (!v_MCPORTER_TOKEN) missing.push('MCPORTER_TOKEN');
+    if (missing.length > 0) {
+        return { skill: 'mcporter', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'mcporter', result };
+    const _MCPORTER_TOKEN = vault.getKey('MCPORTER_TOKEN');
+    return { skill: 'mcporter', plt_affinity: PLT_AFFINITY, success: true, message: 'MCPorter skill ready — keys configured', keys_available: ['MCPORTER_TOKEN'], timestamp: Date.now() };
 }
 
-module.exports = { mcporter, PLT_AFFINITY };
+module.exports = { skill_mcporter, PLT_AFFINITY };

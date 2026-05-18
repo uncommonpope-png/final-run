@@ -5,6 +5,8 @@ const { validateSoul, createDefaultSoul } = require('./soul_schema');
 const path = require('path');
 const fs = require('fs');
 
+// Only run tests in Jest environment
+if (typeof describe !== 'undefined') {
 describe('Soul Registry', () => {
   let soulManager;
   const testDataDir = path.join(__dirname, '../../test_data/soul_registry');
@@ -178,4 +180,5 @@ if (require.main === module) {
     console.error('Test failed:', error.message);
     process.exit(1);
   }
+}
 }

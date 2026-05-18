@@ -198,5 +198,55 @@
     "name": "Soul",
     "birthTime": 1779064505104,
     "personalityType": "CREATOR"
+  },
+  "soul_testsoul_1779067787240_717vnrlci": {
+    "name": "TestSoul",
+    "birthTime": 1779067787240,
+    "personalityType": "EXPLORER"
+  },
+  "soul_traitsoul_1779067787243_hhrzuv6a0": {
+    "name": "TraitSoul",
+    "birthTime": 1779067787243,
+    "personalityType": "EXPLORER"
+  },
+  "soul_soul_1779067787245_gpuhzeilm": {
+    "name": "Soul",
+    "birthTime": 1779067787245,
+    "personalityType": "CHALLENGER"
+  },
+  "soul_soul_1779067787249_40ay87h2z": {
+    "name": "Soul",
+    "birthTime": 1779067787249,
+    "personalityType": "CREATOR"
+  },
+  "soul_soul_1779067787251_7bqofuk03": {
+    "name": "Soul",
+    "birthTime": 1779067787251,
+    "personalityType": "EXPLORER"
+  },
+  "soul_testsoul_1779068613082_ojqvk0cl9": {
+    "name": "TestSoul",
+    "birthTime": 1779068613082,
+    "personalityType": "EXPLORER"
+  },
+  "soul_traitsoul_1779068613090_6kedbojm4": {
+    "name": "TraitSoul",
+    "birthTime": 1779068613090,
+    "personalityType": "PERFORMER"
+  },
+  "soul_soul_1779068613092_7qxw4r6lt": {
+    "name": "Soul",
+    "birthTime": 1779068613092,
+    "personalityType": "CHALLENGER"
+  },
+  "soul_soul_1779068613095_2bt25lv9e": {
+    "name": "Soul",
+    "birthTime": 1779068613095,
+    "personalityType": "GUARDIAN"
+  },
+  "soul_soul_1779068613097_2m3shv4gl": {
+    "name": "Soul",
+    "birthTime": 1779068613097,
+    "personalityType": "PEACEMAKER"
   }
 }

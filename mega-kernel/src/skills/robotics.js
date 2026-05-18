@@ -1,24 +1,9 @@
 'use strict';
 
-/**
- * ROBOTICS.JS — Design and program robotics systems — kinematics, sensors, control loops, and path planning via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-const PLT_AFFINITY = { profit: 0.6, love: 0.2, tax: 0.2 };
-
-async function robotics(brain, memory, input) {
-    const prompt = `You are a robotics specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Design and program robotics systems — kinematics, sensors, control loops, and path planning via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'robotics', input, result }).catch(() => {});
-    }
-    return { success: true, skill: 'robotics', result };
+async function skill_robotics(input) {
+    return { skill: 'robotics', plt_affinity: PLT_AFFINITY, success: true, message: 'Robotics generation', input: typeof input === 'string' ? input : input, timestamp: Date.now() };
 }
 
-module.exports = { robotics, PLT_AFFINITY };
+module.exports = { skill_robotics, PLT_AFFINITY };

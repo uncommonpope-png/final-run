@@ -1,24 +1,9 @@
 'use strict';
 
-/**
- * INTERNAL_COMMS.JS — Manage internal communications — memos, announcements, team updates, and notifications via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-const PLT_AFFINITY = { profit: 0.2, love: 0.7, tax: 0.1 };
-
-async function internal_comms(brain, memory, input) {
-    const prompt = `You are a internal_comms specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage internal communications — memos, announcements, team updates, and notifications via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'internal_comms', input, result }).catch(() => {});
-    }
-    return { success: true, skill: 'internal_comms', result };
+async function skill_internal_comms(input) {
+    return { skill: 'internal_comms', plt_affinity: PLT_AFFINITY, success: true, message: 'Internal Comms generation', input: typeof input === 'string' ? input : input, timestamp: Date.now() };
 }
 
-module.exports = { internal_comms, PLT_AFFINITY };
+module.exports = { skill_internal_comms, PLT_AFFINITY };

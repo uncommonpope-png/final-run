@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * CLAWHUB.JS — Search and analyze GitHub repositories — trending, topics, stars, and code patterns via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
 const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function clawhub(brain, memory, input) {
-    const prompt = `You are a clawhub specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Search and analyze GitHub repositories — trending, topics, stars, and code patterns via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'clawhub', input, result }).catch(() => {});
+async function skill_clawhub(input) {
+    const missing = [];
+    const v_CLAWHUB_TOKEN = vault.getKey('CLAWHUB_TOKEN'); if (!v_CLAWHUB_TOKEN) missing.push('CLAWHUB_TOKEN');
+    if (missing.length > 0) {
+        return { skill: 'clawhub', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'clawhub', result };
+    const _CLAWHUB_TOKEN = vault.getKey('CLAWHUB_TOKEN');
+    return { skill: 'clawhub', plt_affinity: PLT_AFFINITY, success: true, message: 'ClawHub skill ready — keys configured', keys_available: ['CLAWHUB_TOKEN'], timestamp: Date.now() };
 }
 
-module.exports = { clawhub, PLT_AFFINITY };
+module.exports = { skill_clawhub, PLT_AFFINITY };

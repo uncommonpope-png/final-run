@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * GH-ISSUES.JS — Manage GitHub Issues — create, search, label, assign, and close issues via brain reasoning
- * Converted from mock-data implementation to brain.think()-powered.
- */
+const { vault } = require('../brain/api_vault.js');
 
 const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function skill_gh_issues(brain, memory, input) {
-    const prompt = `You are a gh-issues specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage GitHub Issues — create, search, label, assign, and close issues via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'gh-issues', input, result }).catch(() => {});
+async function skill_gh_issues(input) {
+    const missing = [];
+    const v_GITHUB_TOKEN = vault.getKey('GITHUB_TOKEN'); if (!v_GITHUB_TOKEN) missing.push('GITHUB_TOKEN');
+    if (missing.length > 0) {
+        return { skill: 'gh-issues', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'gh-issues', result };
+    const _GITHUB_TOKEN = vault.getKey('GITHUB_TOKEN');
+    return { skill: 'gh-issues', plt_affinity: PLT_AFFINITY, success: true, message: 'GitHub Issues skill ready — keys configured', keys_available: ['GITHUB_TOKEN'], timestamp: Date.now() };
 }
 
 module.exports = { skill_gh_issues, PLT_AFFINITY };

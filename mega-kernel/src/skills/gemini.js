@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * GEMINI.JS — Interact with Google Gemini API — generate text, analyze content, and process multimodal inputs via brain reasoning
- * Converted from mock-data implementation to brain.think()-powered.
- */
+const { vault } = require('../brain/api_vault.js');
 
 const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function skill_gemini(brain, memory, input) {
-    const prompt = `You are a gemini specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Interact with Google Gemini API — generate text, analyze content, and process multimodal inputs via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'gemini', input, result }).catch(() => {});
+async function skill_gemini(input) {
+    const missing = [];
+    const v_GEMINI_API_KEY = vault.getKey('GEMINI_API_KEY'); if (!v_GEMINI_API_KEY) missing.push('GEMINI_API_KEY');
+    if (missing.length > 0) {
+        return { skill: 'gemini', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'gemini', result };
+    const _GEMINI_API_KEY = vault.getKey('GEMINI_API_KEY');
+    return { skill: 'gemini', plt_affinity: PLT_AFFINITY, success: true, message: 'Google Gemini skill ready — keys configured', keys_available: ['GEMINI_API_KEY'], timestamp: Date.now() };
 }
 
 module.exports = { skill_gemini, PLT_AFFINITY };

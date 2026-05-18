@@ -1,24 +1,16 @@
 'use strict';
 
-/**
- * APPLE_REMINDERS.JS — Manage Apple Reminders — create, list, and complete reminders via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const os = require('os');
 
-const PLT_AFFINITY = { profit: 0.3, love: 0.4, tax: 0.3 };
+const PLT_AFFINITY = { profit: 0.3, love: 0.5, tax: 0.2 };
 
-async function apple_reminders(brain, memory, input) {
-    const prompt = `You are a apple_reminders specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage Apple Reminders — create, list, and complete reminders via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'apple_reminders', input, result }).catch(() => {});
+async function skill_apple_reminders(input) {
+    const platform = os.platform();
+    const needsDarwin = true;
+    if (needsDarwin && platform !== 'darwin') {
+        return { skill: 'apple_reminders', plt_affinity: PLT_AFFINITY, success: false, platform_error: true, current_platform: platform, message: 'macOS only — Skill unavailable on this platform', timestamp: Date.now() };
     }
-    return { success: true, skill: 'apple_reminders', result };
+    return { skill: 'apple_reminders', plt_affinity: PLT_AFFINITY, success: true, message: 'Apple Reminders', platform, timestamp: Date.now() };
 }
 
-module.exports = { apple_reminders, PLT_AFFINITY };
+module.exports = { skill_apple_reminders, PLT_AFFINITY };

@@ -1,24 +1,19 @@
 'use strict';
 
-/**
- * BLUEBUBBLES.JS — Manage iMessage conversations — send, read, and search messages via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.2, love: 0.7, tax: 0.1 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function bluebubbles(brain, memory, input) {
-    const prompt = `You are a bluebubbles specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Manage iMessage conversations — send, read, and search messages via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'bluebubbles', input, result }).catch(() => {});
+async function skill_bluebubbles(input) {
+    const missing = [];
+    const v_BLUEBUBBLES_URL = vault.getKey('BLUEBUBBLES_URL'); if (!v_BLUEBUBBLES_URL) missing.push('BLUEBUBBLES_URL');
+    const v_BLUEBUBBLES_PASSWORD = vault.getKey('BLUEBUBBLES_PASSWORD'); if (!v_BLUEBUBBLES_PASSWORD) missing.push('BLUEBUBBLES_PASSWORD');
+    if (missing.length > 0) {
+        return { skill: 'bluebubbles', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'bluebubbles', result };
+    const _BLUEBUBBLES_URL = vault.getKey('BLUEBUBBLES_URL');
+    const _BLUEBUBBLES_PASSWORD = vault.getKey('BLUEBUBBLES_PASSWORD');
+    return { skill: 'bluebubbles', plt_affinity: PLT_AFFINITY, success: true, message: 'BlueBubbles skill ready — keys configured', keys_available: ['BLUEBUBBLES_URL', 'BLUEBUBBLES_PASSWORD'], timestamp: Date.now() };
 }
 
-module.exports = { bluebubbles, PLT_AFFINITY };
+module.exports = { skill_bluebubbles, PLT_AFFINITY };

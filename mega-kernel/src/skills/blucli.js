@@ -1,24 +1,17 @@
 'use strict';
 
-/**
- * BLUCLI.JS — Interact with Bluetooth devices — scan, pair, and send data via brain reasoning
- * Auto-converted from stub/fake to brain.think()-powered implementation.
- */
+const { vault } = require('../brain/api_vault.js');
 
-const PLT_AFFINITY = { profit: 0.3, love: 0.4, tax: 0.3 };
+const PLT_AFFINITY = { profit: 0.5, love: 0.3, tax: 0.2 };
 
-async function blucli(brain, memory, input) {
-    const prompt = `You are a blucli specialist. Your task: ${typeof input === 'string' ? input : JSON.stringify(input) || 'process this request'}.
-
-Interact with Bluetooth devices — scan, pair, and send data via brain reasoning.
-
-Provide a detailed, actionable response in natural language. Include specific recommendations, steps, or analysis based on best practices.`;
-
-    const result = await brain.think(prompt);
-    if (memory && typeof memory.witness === 'function') {
-        await memory.witness({ type: 'skill_execution', skill: 'blucli', input, result }).catch(() => {});
+async function skill_blucli(input) {
+    const missing = [];
+    const v_BLUCLI_TOKEN = vault.getKey('BLUCLI_TOKEN'); if (!v_BLUCLI_TOKEN) missing.push('BLUCLI_TOKEN');
+    if (missing.length > 0) {
+        return { skill: 'blucli', plt_affinity: PLT_AFFINITY, success: false, needs_key: true, missing_keys: missing, message: `Missing API keys: ${missing.join(', ')} — add to API Vault (src/data/api_vault.json) or set env vars`, timestamp: Date.now() };
     }
-    return { success: true, skill: 'blucli', result };
+    const _BLUCLI_TOKEN = vault.getKey('BLUCLI_TOKEN');
+    return { skill: 'blucli', plt_affinity: PLT_AFFINITY, success: true, message: 'Blu CLI skill ready — keys configured', keys_available: ['BLUCLI_TOKEN'], timestamp: Date.now() };
 }
 
-module.exports = { blucli, PLT_AFFINITY };
+module.exports = { skill_blucli, PLT_AFFINITY };
