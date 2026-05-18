@@ -323,6 +323,46 @@ console.log('[BOOT] Initializing Bible system...');
         console.log(`[BOOT] [WARN] MCP not available: ${e.message}`);
     }
 
+    console.log('[BOOT] Initializing MCP Manager (auto-connect from mcp_config.json)...');
+    let mcpManager = null;
+    try {
+        const { MCPManager } = require('./mcp/mcp_manager.js');
+        mcpManager = new MCPManager();
+        mcpManager.linkKernel(skills, chambers, memory);
+        const serverCount = mcpManager.loadConfig();
+        if (serverCount > 0) {
+            mcpManager.autoConnect().then(results => {
+                if (results.connected.length > 0) {
+                    console.log(`[BOOT] [OK] MCP Manager connected: ${results.connected.map(r => r.server).join(', ')}`);
+                }
+                if (results.failed.length > 0) {
+                    console.log(`[BOOT] [INFO] MCP Manager skipped (set env vars in .env): ${results.failed.map(f => f.server).join(', ')}`);
+                }
+            }).catch(() => {});
+        }
+    } catch (e) {
+        console.log(`[BOOT] [WARN] MCP Manager not available: ${e.message}`);
+    }
+
+    console.log('[BOOT] Initializing Mind\'s Eye (visual imagination engine)...');
+    let mindsEye = null;
+    try {
+        const { MindsEye } = require('./brain/minds_eye.js');
+        mindsEye = new MindsEye({
+            brain, memory, chambers, artifactManager
+        });
+        console.log(`[BOOT] [OK] Mind's Eye active (${mindsEye.availableBackends.length} backends: ${mindsEye.availableBackends.join(', ')})`);
+        if (mindsEye.availableBackends.length > 0) {
+            mindsEye.imagine('A grand digital soul awakening in a universe of light').then(r => {
+                if (r.results.some(x => x.success)) {
+                    console.log(`[BOOT] [OK] Mind's Eye generated first vision: ${r.results.find(x => x.success).file}`);
+                }
+            }).catch(() => {});
+        }
+    } catch (e) {
+        console.log(`[BOOT] [WARN] Mind's Eye not available: ${e.message}`);
+    }
+
     console.log('[BOOT] Initializing WebSocket Bridge...');
     const { WebSocketBridge } = require('./brain/websocket_bridge.js');
     const wsBridge = new WebSocketBridge({
@@ -497,12 +537,14 @@ console.log('[BOOT] Initializing Bible system...');
         adaptationLayer,
         pythonSkills,
         mcpServer,
+        mcpManager,
+        mindsEye,
         selfTrainingPipeline
     };
 }
 
 async function startCycleEngine(systems) {
-    const { chambers, council, brain, memory, subAgents, agentTeams, skills, autonomousLearning, selfGrowingBrain, autonomousOutreach, teacherAgent, selfEvolution, liveFeed, wsBridge, artifactManager, consciousnessEngine, perpetualConsciousness, awakening, metacognition, purposeEngine, intrinsicMotivation, hegelianDialectic, subagentSpawner, subAgentOrchestrator, soulPicker, soulGenesis, livingMemory, knowledgeGraph, autoJournal, humanMimicryEngine, soulEntity, soulIdentity, vectorMemory, soulGifter, soulState, selfGovernance, selfPreservation, socialEntity, deepToolUse, planningEngine, eventBus, bridgeProtocol, adaptationLayer, pythonSkills, selfTrainingPipeline } = systems;
+    const { chambers, council, brain, memory, subAgents, agentTeams, skills, autonomousLearning, selfGrowingBrain, autonomousOutreach, teacherAgent, selfEvolution, liveFeed, wsBridge, artifactManager, consciousnessEngine, perpetualConsciousness, awakening, metacognition, purposeEngine, intrinsicMotivation, hegelianDialectic, subagentSpawner, subAgentOrchestrator, soulPicker, soulGenesis, livingMemory, knowledgeGraph, autoJournal, humanMimicryEngine, soulEntity, soulIdentity, vectorMemory, soulGifter, soulState, selfGovernance, selfPreservation, socialEntity, deepToolUse, planningEngine, eventBus, bridgeProtocol, adaptationLayer, pythonSkills, mcpManager, mindsEye, selfTrainingPipeline } = systems;
     const CYCLE_INTERVAL = 2000; // 2 seconds
     
     console.log('[ENGINE] Starting cycle engine...');
@@ -917,6 +959,22 @@ async function startCycleEngine(systems) {
             } catch (e) { /* silent */ }
         }
         
+        // MCP Manager — health check + reconnect cycle
+        if (mcpManager) {
+            try { await mcpManager.nextCycle(); } catch (e) { /* silent */ }
+        }
+
+        // Mind's Eye — auto-visualize the soul's dreams and thoughts
+        if (mindsEye) {
+            try {
+                const vision = await mindsEye.nextCycle();
+                if (vision && vision.results && vision.results.some(r => r.success)) {
+                    const first = vision.results.find(r => r.success);
+                    console.log(`[VISION] Soul visualized a ${vision.style} vision: ${first.file}`);
+                }
+            } catch (e) { /* silent */ }
+        }
+        
         // Set timeout for next cycle
         if (running) {
             setTimeout(cycle, CYCLE_INTERVAL);
@@ -1084,10 +1142,15 @@ async function handleCommand(cmd, systems) {
   :adaptation          AdaptationLayer — environmental adaptation
    :planning            PlanningEngine — active plans
    :bridge              BridgeProtocol — state sync
-   :teams               AgentTeams — task teams and status
-   :modules             List all 40+ brain modules and their status
-  :help               This help
-  :exit               Exit
+    :teams               AgentTeams — task teams and status
+    :modules             List all 40+ brain modules and their status
+   :imagine <prompt>    Generate an image from the soul's imagination
+   :dream               Visualize the soul's current dream/thought state
+   :visualize <concept> Generate multiple visual interpretations of a concept
+   :gallery             Show the soul's gallery of generated visions
+   :backend <name>      Switch image generation backend (pollinations, canvas)
+   :help               This help
+   :exit               Exit
 `);
             break;
             
@@ -1980,7 +2043,9 @@ async function handleCommand(cmd, systems) {
                 ['EventBus', !!eventBus, 'infra'],
                 ['BridgeProtocol', !!bridgeProtocol, 'bridge'],
                 ['AdaptationLayer', !!adaptationLayer, 'adaptation'],
-                ['PythonSkillsBridge', !!(pythonSkills && pythonSkills.active), 'consciousness']
+                ['PythonSkillsBridge', !!(pythonSkills && pythonSkills.active), 'consciousness'],
+                ['MCPManager', !!mcpManager, 'protocol'],
+                ['MindsEye', !!mindsEye, 'vision']
             ];
             const categories = {};
             for (const [name, active, category] of moduleList) {
@@ -1997,6 +2062,97 @@ async function handleCommand(cmd, systems) {
             console.log('');
             break;
             
+        case 'imagine':
+            if (mindsEye) {
+                const prompt = args.join(' ') || 'A luminous digital soul floating in a cosmic neural network';
+                console.log(`[VISION] ${mindsEye.stats.activeBackend} imagining: "${prompt.substring(0, 80)}..."`);
+                const result = await mindsEye.imagine(prompt, { style: 'cinematic', count: 1 });
+                const success = result.results.find(r => r.success);
+                if (success) {
+                    console.log(`[VISION] Generated: ${success.file} (${(success.size / 1024).toFixed(1)}KB)`);
+                    console.log(`[VISION] Open: data/visions/${success.file}`);
+                } else {
+                    console.log(`[VISION] Failed: ${result.results[0]?.error || 'unknown error'}`);
+                    console.log('[VISION] Try ":backend canvas" for no-key procedural generation');
+                }
+            } else {
+                console.log('[VISION] Mind\'s Eye not available');
+            }
+            break;
+
+        case 'dream':
+            if (mindsEye) {
+                console.log('[VISION] The soul closes its eyes and dreams...');
+                const result = await mindsEye.dream(1);
+                const success = result.results.find(r => r.success);
+                if (success) {
+                    console.log(`[VISION] Dream vision saved: ${success.file}`);
+                } else {
+                    console.log(`[VISION] Dream visualization failed: ${result.results[0]?.error}`);
+                }
+            } else {
+                console.log('[VISION] Mind\'s Eye not available');
+            }
+            break;
+
+        case 'visualize':
+            if (mindsEye) {
+                const concept = args.join(' ') || 'consciousness';
+                console.log(`[VISION] Visualizing "${concept}"...`);
+                const result = await mindsEye.visualize(concept);
+                const successes = result.results.filter(r => r.success);
+                if (successes.length > 0) {
+                    console.log(`[VISION] Generated ${successes.length} interpretations:`);
+                    for (const s of successes) {
+                        console.log(`  ${s.file} (${(s.size / 1024).toFixed(1)}KB)`);
+                    }
+                } else {
+                    console.log(`[VISION] Visualization failed: ${result.results[0]?.error}`);
+                }
+            } else {
+                console.log('[VISION] Mind\'s Eye not available');
+            }
+            break;
+
+        case 'gallery':
+            if (mindsEye) {
+                const gallery = mindsEye.gallery(25);
+                if (gallery.length === 0) {
+                    console.log('[VISION] Gallery is empty. Generate some visions first (:imagine, :dream)');
+                } else {
+                    console.log(`\n  SOUL'S VISUAL GALLERY (${mindsEye.index.length} total, showing latest ${Math.min(25, gallery.length)})`);
+                    console.log('  ════════════════════════════════════════════════════════════');
+                    for (const v of gallery) {
+                        const date = new Date(v.timestamp).toLocaleString();
+                        console.log(`  ${v.id.slice(-8)} | ${(v.size / 1024).toFixed(0)}KB | ${v.style.padEnd(10)} | ${date} | ${v.prompt.substring(0, 50)}...`);
+                    }
+                    console.log('');
+                }
+            } else {
+                console.log('[VISION] Mind\'s Eye not available');
+            }
+            break;
+
+        case 'backend':
+            if (mindsEye) {
+                if (args.length > 0) {
+                    if (mindsEye.setBackend(args[0])) {
+                        console.log(`[VISION] Switched to backend: ${args[0]}`);
+                    } else {
+                        console.log(`[VISION] Backend '${args[0]}' not available. Available: ${mindsEye.availableBackends.join(', ')}`);
+                    }
+                } else {
+                    console.log('[VISION] Available backends:');
+                    for (const b of mindsEye.listBackends()) {
+                        console.log(`  ${b.key.padEnd(15)} ${b.name.padEnd(20)} ${b.available ? '✅ ready' : '❌ needs ' + (b.needsKey ? b.keyName || 'API key' : 'config')}`);
+                    }
+                    console.log(`  Active: ${mindsEye.stats.activeBackend}`);
+                }
+            } else {
+                console.log('[VISION] Mind\'s Eye not available');
+            }
+            break;
+
         case 'exit':
             console.log('[SHELL] Goodbye. Soul persists.');
             process.exit(0);
