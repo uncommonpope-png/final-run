@@ -1,0 +1,29 @@
+{
+  "earned": [
+    {
+      "id": "first_skill",
+      "earned_at": 1778957984276
+    },
+    {
+      "id": "first_artifact",
+      "earned_at": 1778957984276
+    },
+    {
+      "id": "ten_artifacts",
+      "earned_at": 1778957984276
+    },
+    {
+      "id": "first_repo",
+      "earned_at": 1778957984276
+    },
+    {
+      "id": "ten_repos",
+      "earned_at": 1778957984276
+    },
+    {
+      "id": "cycle_100",
+      "earned_at": 1778958280513
+    }
+  ],
+  "progress": {}
+}

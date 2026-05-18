@@ -1,0 +1,21 @@
+╔════════════════════════════════════════════════════════════╗
+║ ARTIFACT: write_production_code                    ║
+║ TIMESTAMP: 2026-05-16T03-37-51                     ║
+║ TYPE: autonomous_action                          ║
+╚════════════════════════════════════════════════════════════╝
+
+function helloWorld(name) {
+  try {
+    if (typeof name !== 'string') {
+      throw new Error('Name must be a string');
+    }
+    if (name.trim() === '') {
+      throw new Error('Name cannot be empty');
+    }
+    console.log(Hello, ${name}!);
+  } catch (error) {
+    console.error(Error: ${error.message});
+  }
+}
+
+helloWorld('World');

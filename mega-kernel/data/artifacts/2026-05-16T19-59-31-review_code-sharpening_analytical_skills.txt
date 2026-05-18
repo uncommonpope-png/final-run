@@ -1,0 +1,10 @@
+╔════════════════════════════════════════════════════════════╗
+║ ARTIFACT: review_code                    ║
+║ TIMESTAMP: 2026-05-16T19-59-31                     ║
+║ TYPE: autonomous_action                          ║
+╚════════════════════════════════════════════════════════════╝
+
+{
+  "raw": "[soul] Brain is offline. The soul speaks. You asked: Review this javascript code for production quality.\n\nCheck and score 0-10 each:\n- Docstrings/Comments: Are public APIs documented?\n- Error handling: Are exceptions caught and handled?\n- Structure: Is . What would help most right now?",
+  "parse_error": "no_json_found"
+}

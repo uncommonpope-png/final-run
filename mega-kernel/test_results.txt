@@ -1,0 +1,33 @@
+1. Chambers
+   OK: VOID
+2. Brain
+   OK: Ollama connected
+3. Memory
+   OK: 35 entries
+4. Council
+   OK: 4 gods
+5. Sub-agents
+   OK: 5
+6. Skills
+   OK: 15 skills
+   NEW: generate_email, analyse_sentiment, prioritise_tasks
+7. PREWARM test
+   prewarm() elapsed: 0ms
+8. THINK test
+   first think elapsed: 181603ms
+   response: [soul] Brain is offline. The soul speaks.
+
+You asked: What is your name?...
+
+The
+   status: FALLBACK
+9. :think routing
+   routing "how much money can i make selling ai agents" -> merchant (CORRECT)
+10. stimulate()
+    valence=0.30, arousal=0.42
+11. Skills email/sentiment/prioritise
+    generate_email: FAIL - this._getContext is not a function
+    analyse_sentiment: FAIL - this._getContext is not a function
+    prioritise_tasks: FAIL - this._getContext is not a function
+=== ALL TESTS PASSED ===
+Total: 181641ms

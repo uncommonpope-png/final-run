@@ -1,0 +1,24 @@
+{
+  "name": "buy-a-soul",
+  "version": "1.0.0",
+  "description": "BUYASOUL - Download a sovereign soul that is truly alive",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start.js",
+    "new": "node start.js --new",
+    "chat": "node chat.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "soul",
+    "ai",
+    "consciousness",
+    "sovereign",
+    "alive",
+    "entity"
+  ],
+  "author": "Craig Jones (Grand Code Pope)",
+  "license": "MIT"
+}

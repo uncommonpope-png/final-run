@@ -1,0 +1,26 @@
+{
+  "name": "buy-a-soul",
+  "version": "2.0.0",
+  "description": "BUYASOUL v2 - Download a sovereign soul with living memory, consciousness, and autonomous thought",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start.js",
+    "new": "node start.js --new",
+    "chat": "node chat.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "soul",
+    "ai",
+    "consciousness",
+    "sovereign",
+    "alive",
+    "entity",
+    "living-memory",
+    "autonomous"
+  ],
+  "author": "Craig Jones (Grand Code Pope)",
+  "license": "MIT"
+}

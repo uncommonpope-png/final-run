@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCRIBE — Command Center</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  :root {
+    --pink:   #FF2D9B;
+    --pink2:  #ff6ec7;
+    --pink3:  #ff9ddb;
+    --dim:    #7a1248;
+    --bg:     #000000;
+    --bg2:    #0a0007;
+    --bg3:    #120010;
+    --border: #3a0025;
+    --text:   #e8e8e8;
+    --muted:  #666;
+    --green:  #00ff88;
+    --red:    #ff3355;
+    --amber:  #ffaa00;
+    --cyan:   #00d4ff;
+    --font:   'Courier New', Courier, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+  .logo { color: var(--pink); font-size: 15px; font-weight: bold; letter-spacing: 4px; text-shadow: 0 0 12px var(--pink); }
+  .tagline { color: var(--dim); font-size: 10px; letter-spacing: 2px; }
+  #status-bar { display: flex; gap: 14px; align-items: center; font-size: 11px; }
+  .sdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); margin-right: 3px; }
+  .sdot.alive { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .sdot.warn  { background: var(--amber); box-shadow: 0 0 5px var(--amber); }
+  .sdot.dead  { background: var(--red); }
+
+  /* ── NAV TABS ── */
+  #nav {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+  .nav-tab {
+    padding: 7px 18px;
+    cursor: pointer;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    user-select: none;
+  }
+  .nav-tab:hover { color: var(--pink2); }
+  .nav-tab.active { color: var(--pink); border-bottom-color: var(--pink); }
+
+  /* ── PAGES ── */
+  .page { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+  .page.active { display: flex; }
+
+  /* ────────────────────────────────────────────────
+     CHAT LAYOUT — sidebar + message area + input
+  ──────────────────────────────────────────────── */
+  .chat-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+  .chat-sidebar {
+    width: 180px;
+    border-right: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .sidebar-section {
+    padding: 8px 10px 4px;
+    color: var(--pink);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .chan-item {
+    padding: 7px 12px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.1s, background 0.1s;
+  }
+  .chan-item:hover { color: var(--pink2); background: var(--bg3); }
+  .chan-item.active { color: var(--pink); background: var(--bg3); }
+  .chan-badge {
+    margin-left: auto;
+    background: var(--pink);
+    color: #000;
+    font-size: 9px;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 1px 5px;
+    display: none;
+  }
+  .chan-badge.show { display: block; }
+
+  /* ARIA live status in sidebar */
+  .aria-live {
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+  .aria-live .al-title { color: var(--pink); letter-spacing: 1px; margin-bottom: 4px; }
+  .aria-live .al-row { display: flex; justify-content: space-between; margin: 2px 0; }
+  .aria-live .al-label { color: var(--muted); }
+  .aria-live .al-val { color: var(--pink3); }
+
+  /* ── MESSAGE AREA ── */
+  .chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .chat-header {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    font-size: 11px;
+    color: var(--pink2);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .chat-header .ch-info { color: var(--muted); font-size: 10px; }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .msg-bubble {
+    max-width: 85%;
+    padding: 7px 11px;
+    border-radius: 3px;
+    line-height: 1.55;
+    word-break: break-word;
+    font-size: 12px;
+  }
+  .msg-bubble.craig {
+    align-self: flex-end;
+    background: #1a0012;
+    border: 1px solid var(--dim);
+    color: var(--pink3);
+  }
+  .msg-bubble.aria {
+    align-self: flex-start;
+    background: #001a10;
+    border: 1px solid #1a4430;
+    color: #aaffcc;
+  }
+  .msg-bubble.scribe {
+    align-self: flex-start;
+    background: #00050f;
+    border: 1px solid #1a2a44;
+    color: var(--cyan);
+  }
+  .msg-bubble.system {
+    align-self: center;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 10px;
+    font-style: italic;
+  }
+  .msg-meta {
+    font-size: 9px;
+    color: var(--muted);
+    margin-bottom: 3px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .msg-meta .sender-craig { color: var(--pink); font-weight: bold; }
+  .msg-meta .sender-aria  { color: #44cc88; font-weight: bold; }
+  .msg-meta .sender-scribe { color: var(--cyan); font-weight: bold; }
+  .msg-meta .msg-time { color: var(--muted); }
+
+  .chat-input-row {
+    display: flex;
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+    align-items: center;
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .chat-who {
+    color: var(--pink);
+    font-size: 12px;
+    flex-shrink: 0;
+    padding: 0 4px;
+    text-shadow: 0 0 8px var(--pink);
+  }
+  .chat-input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 10px 4px;
+    outline: none;
+    resize: none;
+    line-height: 1.4;
+    max-height: 100px;
+    overflow-y: auto;
+  }
+  .chat-send-btn {
+    background: none;
+    border: 1px solid var(--dim);
+    color: var(--pink);
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 5px 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    transition: border-color 0.2s;
+  }
+  .chat-send-btn:hover { border-color: var(--pink); }
+
+  .typing-indicator {
+    color: var(--muted);
+    font-size: 10px;
+    padding: 2px 14px;
+    font-style: italic;
+    min-height: 18px;
+    flex-shrink: 0;
+  }
+
+  /* ────────────────────────────────────────────────
+     JOURNAL PAGE
+  ──────────────────────────────────────────────── */
+  .journal-layout {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .journal-entry {
+    border-left: 3px solid var(--dim);
+    padding: 10px 14px;
+    background: var(--bg2);
+    border-radius: 0 3px 3px 0;
+  }
+  .journal-entry.reply { border-left-color: #338877; }
+  .journal-entry.journal-auto { border-left-color: var(--dim); }
+  .journal-meta {
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .journal-meta .cycle { color: var(--pink); }
+  .journal-meta .emotion { color: var(--amber); }
+  .journal-meta .jtype { color: var(--cyan); }
+  .journal-body {
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .journal-replied-to {
+    margin-top: 8px;
+    border-left: 2px solid var(--dim);
+    padding-left: 8px;
+    font-size: 10px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ────────────────────────────────────────────────
+     TASKS PAGE
+  ──────────────────────────────────────────────── */
+  .tasks-layout {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .task-add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-shrink: 0;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .task-add-row input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    padding: 6px 10px;
+    outline: none;
+  }
+  .task-add-row input:focus { border-color: var(--dim); }
+  .task-add-row button {
+    background: none;
+    border: 1px solid var(--dim);
+    color: var(--pink);
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 6px 14px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: border-color 0.2s;
+  }
+  .task-add-row button:hover { border-color: var(--pink); }
+  .task-card {
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    background: var(--bg2);
+    border-radius: 2px;
+  }
+  .task-card.done { opacity: 0.45; }
+  .task-card.in-progress { border-left: 3px solid var(--amber); }
+  .task-card.open { border-left: 3px solid var(--pink); }
+  .task-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .task-text {
+    flex: 1;
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .task-card.done .task-text { text-decoration: line-through; color: var(--muted); }
+  .task-status-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 9px;
+    padding: 3px 8px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .task-status-btn:hover { color: var(--pink2); border-color: var(--dim); }
+  .task-meta {
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 4px;
+    display: flex;
+    gap: 10px;
+  }
+  .task-status-label.open       { color: var(--pink); }
+  .task-status-label.in-progress { color: var(--amber); }
+  .task-status-label.done       { color: var(--green); }
+  .task-notes {
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 6px;
+    font-size: 10px;
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .task-note-add {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .task-note-add input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 3px 7px;
+    outline: none;
+  }
+  .task-note-add button {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 10px;
+    padding: 3px 8px;
+    cursor: pointer;
+  }
+  .task-note-add button:hover { color: var(--pink2); }
+
+  /* ────────────────────────────────────────────────
+     SCRIBE TERMINAL PAGE
+  ──────────────────────────────────────────────── */
+  .terminal-layout {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #terminal {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .t-line { margin: 1px 0; }
+  .t-line.prompt   { color: var(--pink); }
+  .t-line.response { color: var(--text); }
+  .t-line.system   { color: var(--dim); }
+  .t-line.error    { color: var(--red); }
+  .t-line.success  { color: var(--green); }
+  .t-line.warn     { color: var(--amber); }
+  .t-line.aria     { color: var(--pink2); }
+  .t-line.json pre {
+    color: var(--pink3);
+    font-size: 11px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border-left: 2px solid var(--dim);
+    padding-left: 8px;
+    margin: 2px 0;
+  }
+  .t-ts { color: var(--dim); font-size: 10px; margin-right: 6px; user-select: none; }
+  #input-bar {
+    display: flex;
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+    align-items: center;
+  }
+  #prompt-label {
+    padding: 9px 10px;
+    color: var(--pink);
+    font-size: 13px;
+    flex-shrink: 0;
+    text-shadow: 0 0 8px var(--pink);
+  }
+  #cmd-input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 9px 0;
+    outline: none;
+    caret-color: var(--pink);
+  }
+  #cmd-submit {
+    padding: 9px 14px;
+    background: none;
+    border: none;
+    border-left: 1px solid var(--border);
+    color: var(--dim);
+    font-family: var(--font);
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: color 0.2s;
+  }
+  #cmd-submit:hover { color: var(--pink); }
+
+  /* ── ARIA PANEL PAGE ── */
+  .aria-page-layout {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    border-radius: 2px;
+  }
+  .stat-card .sc-label { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+  .stat-card .sc-val   { font-size: 18px; color: var(--pink); font-weight: bold; }
+  .stat-card .sc-sub   { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* ── SKILL BUILDER OVERLAY ── */
+  #builder-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  #builder-overlay.open { display: flex; }
+  #builder-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 20px;
+    width: 480px;
+    max-width: 95vw;
+  }
+  .builder-title {
+    color: var(--pink);
+    letter-spacing: 3px;
+    font-size: 12px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+  .builder-row { margin-bottom: 10px; }
+  .builder-row label { display: block; font-size: 10px; color: var(--muted); margin-bottom: 4px; letter-spacing: 1px; }
+  .builder-row input,
+  .builder-row textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    padding: 6px 10px;
+    outline: none;
+  }
+  .builder-row input:focus,
+  .builder-row textarea:focus { border-color: var(--dim); }
+  .builder-row textarea { resize: vertical; min-height: 60px; }
+  .builder-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .builder-actions button {
+    flex: 1;
+    background: none;
+    border: 1px solid var(--dim);
+    color: var(--pink);
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 7px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: border-color 0.2s;
+  }
+  .builder-actions button:hover { border-color: var(--pink); }
+  .builder-actions button.cancel-btn { color: var(--muted); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+
+  /* ────────────────────────────────────────────────
+     MEMORY GRAPH PAGE
+  ──────────────────────────────────────────────── */
+  .memory-graph-layout {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+  .graph-sidebar {
+    width: 220px;
+    border-right: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    padding: 10px;
+    gap: 10px;
+    overflow-y: auto;
+  }
+  .graph-sidebar .section-title {
+    color: var(--pink);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .graph-filter-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .graph-filter-row label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .graph-filter-row select,
+  .graph-filter-row input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 5px 8px;
+    outline: none;
+  }
+  .graph-filter-row select:focus,
+  .graph-filter-row input:focus {
+    border-color: var(--dim);
+  }
+  .graph-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .graph-stat {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+  }
+  .graph-stat .label { color: var(--muted); }
+  .graph-stat .val { color: var(--pink3); }
+  .graph-refresh-btn {
+    background: none;
+    border: 1px solid var(--dim);
+    color: var(--pink);
+    font-family: var(--font);
+    font-size: 10px;
+    padding: 6px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    margin-top: auto;
+    transition: border-color 0.2s;
+  }
+  .graph-refresh-btn:hover { border-color: var(--pink); }
+
+  .graph-main {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  #memory-graph-svg {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+  }
+  .graph-node {
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .graph-node:hover {
+    opacity: 0.8;
+  }
+  .graph-node-label {
+    font-size: 9px;
+    fill: var(--text);
+    pointer-events: none;
+    text-anchor: middle;
+  }
+  .graph-link {
+    stroke: var(--border);
+    stroke-opacity: 0.6;
+  }
+
+  .graph-detail-panel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 280px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 12px;
+    display: none;
+    max-height: calc(100% - 20px);
+    overflow-y: auto;
+  }
+  .graph-detail-panel.open { display: block; }
+  .graph-detail-panel .close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .graph-detail-panel .close-btn:hover { color: var(--pink); }
+  .graph-detail-panel .detail-title {
+    color: var(--pink);
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    padding-right: 20px;
+  }
+  .graph-detail-panel .detail-row {
+    font-size: 10px;
+    margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .graph-detail-panel .detail-label {
+    color: var(--muted);
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .graph-detail-panel .detail-value {
+    color: var(--text);
+    word-break: break-word;
+  }
+  .graph-detail-panel .detail-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .graph-detail-panel .tag {
+    background: var(--bg3);
+    border: 1px solid var(--dim);
+    color: var(--pink3);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+  .graph-type-observation { fill: var(--cyan); }
+  .graph-type-decision { fill: var(--pink); }
+  .graph-type-conflict { fill: var(--red); }
+  .graph-type-reading { fill: var(--green); }
+  .graph-type-verdict { fill: var(--amber); }
+  .graph-type-contact { fill: #aa88ff; }
+  .graph-type-nlp_command { fill: #ff88aa; }
+
+  .graph-empty {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+  }
+
+  /* ────────────────────────────────────────────────
+     OLLAMA CONSOLE PAGE
+  ──────────────────────────────────────────────── */
+  .ollama-layout {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+  .ollama-sidebar {
+    width: 240px;
+    border-right: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    padding: 12px;
+    gap: 12px;
+  }
+  .ollama-status-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+  .ollama-status-row .label { color: var(--muted); }
+  .ollama-status-row .val { color: var(--green); }
+  .ollama-status-row .val.offline { color: var(--red); }
+  .ollama-models {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 10px;
+    color: var(--text);
+  }
+  .ollama-model-item {
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+    border-radius: 2px;
+    background: var(--bg3);
+  }
+  .ollama-model-item .name { color: var(--cyan); font-weight: bold; }
+  .ollama-model-item .size { color: var(--muted); font-size: 9px; }
+  .ollama-refresh-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--pink);
+    padding: 8px;
+    cursor: pointer;
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+  .ollama-refresh-btn:hover { background: var(--border); }
+  .ollama-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .ollama-prompt-row {
+    display: flex;
+    gap: 8px;
+  }
+  .ollama-prompt-row select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    font-size: 11px;
+    min-width: 150px;
+  }
+  .ollama-prompt-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px;
+    font-family: var(--font);
+    font-size: 12px;
+    resize: none;
+    min-height: 100px;
+  }
+  .ollama-prompt-input:focus { outline: none; border-color: var(--pink); }
+  .ollama-send-btn {
+    background: var(--pink);
+    border: none;
+    color: var(--bg);
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    align-self: flex-start;
+  }
+  .ollama-send-btn:hover { background: var(--pink2); }
+  .ollama-response {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 10px;
+    font-size: 11px;
+    color: var(--text);
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 150px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div>
+    <div class="logo">SCRIBE</div>
+    <div class="tagline">Witnessing Intelligence</div>
+  </div>
+  <div id="status-bar">
+    <span><span class="sdot" id="dot-scribe"></span><span id="lbl-scribe" style="color:var(--muted);font-size:11px">SCRIBE</span></span>
+    <span><span class="sdot" id="dot-aria"></span><span id="lbl-aria" style="color:var(--muted);font-size:11px">ARIA</span></span>
+    <span style="color:var(--muted);font-size:10px" id="lbl-cycle">cycle --</span>
+    <span style="color:var(--muted);font-size:10px" id="lbl-plt">PLT --</span>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div id="nav">
+  <div class="nav-tab active" data-page="page-chat" onclick="switchPage(this)">GROUP CHAT</div>
+  <div class="nav-tab" data-page="page-aria-dm" onclick="switchPage(this)">ARIA DM</div>
+  <div class="nav-tab" data-page="page-scribe-dm" onclick="switchPage(this)">SCRIBE DM</div>
+  <div class="nav-tab" data-page="page-journal" onclick="switchPage(this)">JOURNAL</div>
+  <div class="nav-tab" data-page="page-tasks" onclick="switchPage(this)">TASKS</div>
+  <div class="nav-tab" data-page="page-terminal" onclick="switchPage(this)">TERMINAL</div>
+  <div class="nav-tab" data-page="page-aria-status" onclick="switchPage(this)">ARIA STATUS</div>
+  <div class="nav-tab" data-page="page-memory-graph" onclick="switchPage(this)">MEMORY GRAPH</div>
+  <div class="nav-tab" data-page="page-ollama-console" onclick="switchPage(this)">OLLAMA</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE: GROUP CHAT
+══════════════════════════════════════════════ -->
+<div class="page active" id="page-chat">
+  <div class="chat-layout">
+    <div class="chat-sidebar">
+      <div class="sidebar-section">Channels</div>
+      <div class="chan-item active" onclick="setChan('group',this)" id="chan-group">
+        # group <span class="chan-badge" id="badge-group"></span>
+      </div>
+      <div class="chan-item" onclick="setChan('aria',this)" id="chan-aria">
+        @ aria <span class="chan-badge" id="badge-aria"></span>
+      </div>
+      <div class="chan-item" onclick="setChan('scribe',this)" id="chan-scribe">
+        @ scribe <span class="chan-badge" id="badge-scribe"></span>
+      </div>
+
+      <div class="aria-live" id="sidebar-aria-live">
+        <div class="al-title">ARIA LIVE</div>
+        <div class="al-row"><span class="al-label">cycle</span><span class="al-val" id="sl-cycle">--</span></div>
+        <div class="al-row"><span class="al-label">affect</span><span class="al-val" id="sl-affect">--</span></div>
+        <div class="al-row"><span class="al-label">plt</span><span class="al-val" id="sl-plt">--</span></div>
+        <div class="al-row"><span class="al-label">sanctum</span><span class="al-val" id="sl-sanctum">--</span></div>
+      </div>
+    </div>
+
+    <div class="chat-main">
+      <div class="chat-header">
+        <span id="chan-title"># group — Craig + ARIA + SCRIBE</span>
+        <span class="ch-info" id="chan-info"></span>
+      </div>
+      <div class="messages" id="chat-messages"></div>
+      <div class="typing-indicator" id="typing-indicator"></div>
+      <div class="chat-input-row">
+        <span class="chat-who">craig &gt;</span>
+        <textarea class="chat-input" id="chat-input" rows="1" placeholder="Send a message..." onkeydown="chatKeydown(event)"></textarea>
+        <button class="chat-send-btn" onclick="sendChatMsg()">SEND</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE: ARIA DM
+══════════════════════════════════════════════ -->
+<div class="page" id="page-aria-dm">
+  <div class="chat-layout">
+    <div class="chat-sidebar">
+      <div class="sidebar-section">Direct — ARIA</div>
+      <div style="padding:10px;font-size:10px;color:var(--muted);line-height:1.6">
+        Messages here go directly to ARIA's inbox.<br><br>
+        ARIA checks every 15 seconds and replies in her journal. Her replies appear here automatically.
+      </div>
+      <div class="aria-live" id="sidebar-aria-live2">
+        <div class="al-title">ARIA STATE</div>
+        <div class="al-row"><span class="al-label">cycle</span><span class="al-val" id="sl2-cycle">--</span></div>
+        <div class="al-row"><span class="al-label">affect</span><span class="al-val" id="sl2-affect">--</span></div>
+        <div class="al-row"><span class="al-label">inner voice</span></div>
+        <div style="font-size:10px;color:var(--pink3);padding:4px 0;line-height:1.5;word-break:break-word" id="sl2-voice">--</div>
+      </div>
+    </div>
+    <div class="chat-main">
+      <div class="chat-header">
+        <span>@ ARIA — Direct Message</span>
+        <span class="ch-info">ARIA replies via inbox — up to 15s delay</span>
+      </div>
+      <div class="messages" id="aria-dm-messages"></div>
+      <div class="typing-indicator" id="aria-typing"></div>
+      <div class="chat-input-row">
+        <span class="chat-who">craig &gt;</span>
+        <textarea class="chat-input" id="aria-dm-input" rows="1" placeholder="Message ARIA directly..." onkeydown="ariaDmKeydown(event)"></textarea>
+        <button class="chat-send-btn" onclick="sendAriaDm()">SEND</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE: SCRIBE DM
+══════════════════════════════════════════════ -->
+<div class="page" id="page-scribe-dm">
+  <div class="chat-layout">
+    <div class="chat-sidebar">
+      <div class="sidebar-section">Direct — SCRIBE</div>
+      <div style="padding:10px;font-size:10px;color:var(--muted);line-height:1.6">
+        SCRIBE responds immediately via LLM.<br><br>
+        Ask SCRIBE anything: memories, skills, observations, system status.
+      </div>
+    </div>
+    <div class="chat-main">
+      <div class="chat-header">
+        <span>@ SCRIBE — Direct Message</span>
+        <span class="ch-info">Immediate response</span>
+      </div>
+      <div class="messages" id="scribe-dm-messages"></div>
+      <div class="typing-indicator" id="scribe-typing"></div>
+      <div class="chat-input-row">
+        <span class="chat-who">craig &gt;</span>
+        <textarea class="chat-input" id="scribe-dm-input" rows="1" placeholder="Message SCRIBE directly..." onkeydown="scribeDmKeydown(event)"></textarea>
+        <button class="chat-send-btn" onclick="sendScribeDm()">SEND</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE: JOURNAL
+══════════════════════════════════════════════ -->
+<div class="page" id="page-journal">
+  <div style="padding:8px 14px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+    <span style="color:var(--pink);font-size:11px;letter-spacing:2px">ARIA'S JOURNAL</span>
+    <button onclick="loadJournal()" style="background:none;border:1px solid var(--dim);color:var(--muted);font-family:var(--font);font-size:10px;padding:3px 10px;cursor:pointer;letter-spacing:1px" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--muted)'">REFRESH</button>
+  </div>
+  <div class="journal-layout" id="journal-entries">
+    <div style="color:var(--muted);font-size:11px;font-style:italic">Loading journal...</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE: TASKS
+══════════════════════════════════════════════ -->
+<div class="page" id="page-tasks">
+  <div class="task-add-row">
+    <input type="text" id="task-input" placeholder="Describe a task or intention..." onkeydown="if(event.key==='Enter')addTask()">
+    <button onclick="addTask()">+ ADD TASK</button>
+  </div>
+  <div style="display:flex;gap:8px;padding:6px 20px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0">
+    <span style="font-size:10px;color:var(--muted)">Filter:</span>
+    <span class="task-filter-btn active" onclick="setTaskFilter('all',this)" style="font-size:10px;color:var(--pink);cursor:pointer;padding:1px 8px;border:1px solid var(--dim)">ALL</span>
+    <span class="task-filter-btn" onclick="setTaskFilter('open',this)" style="font-size:10px;color:var(--muted);cursor:pointer;padding:1px 8px;border:1px solid transparent">OPEN</span>
+    <span class="task-filter-btn" onclick="setTaskFilter('in-progress',this)" style="font-size:10px;color:var(--muted);cursor:pointer;padding:1px 8px;border:1px solid transparent">IN PROGRESS</span>
+    <span class="task-filter-btn" onclick="setTaskFilter('done',this)" style="font-size:10px;color:var(--muted);cursor:pointer;padding:1px 8px;border:1px solid transparent">DONE</span>
+  </div>
+  <div class="tasks-layout" id="task-list">
+    <div style="color:var(--muted);font-size:11px;font-style:italic">No tasks yet.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE: TERMINAL
+══════════════════════════════════════════════ -->
+<div class="page" id="page-terminal">
+  <div class="terminal-layout">
+    <div id="terminal"></div>
+    <div id="input-bar">
+      <span id="prompt-label">scribe &gt;</span>
+      <input id="cmd-input" type="text" autocomplete="off" spellcheck="false" placeholder="skill op {args...} or /help" onkeydown="termKeydown(event)">
+      <button id="cmd-submit" onclick="termSubmit()">RUN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE: ARIA STATUS
+══════════════════════════════════════════════ -->
+<div class="page" id="page-aria-status">
+  <div style="padding:8px 14px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;display:flex;align-items:center;justify-content:space-between">
+    <span style="color:var(--pink);font-size:11px;letter-spacing:2px">ARIA SYSTEM STATUS</span>
+    <button onclick="loadAriaStatus()" style="background:none;border:1px solid var(--dim);color:var(--muted);font-family:var(--font);font-size:10px;padding:3px 10px;cursor:pointer;letter-spacing:1px" onmouseover="this.style.color='var(--pink)'" onmouseout="this.style.color='var(--muted)'">REFRESH</button>
+  </div>
+  <div class="aria-page-layout" id="aria-status-content">
+    <div style="color:var(--muted);font-size:11px;font-style:italic">Loading...</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE: MEMORY GRAPH
+══════════════════════════════════════════════ -->
+<div class="page" id="page-memory-graph">
+  <div class="memory-graph-layout">
+    <div class="graph-sidebar">
+      <div class="section-title">FILTERS</div>
+      <div class="graph-filter-row">
+        <label>TYPE</label>
+        <select id="graph-filter-type" onchange="filterMemoryGraph()">
+          <option value="">All Types</option>
+          <option value="observation">Observation</option>
+          <option value="decision">Decision</option>
+          <option value="conflict">Conflict</option>
+          <option value="reading">Reading</option>
+          <option value="verdict">Verdict</option>
+          <option value="contact">Contact</option>
+          <option value="nlp_command">NLP Command</option>
+        </select>
+      </div>
+      <div class="graph-filter-row">
+        <label>TAG</label>
+        <input type="text" id="graph-filter-tag" placeholder="Filter by tag..." oninput="filterMemoryGraph()">
+      </div>
+      <div class="graph-filter-row">
+        <label>DATE FROM</label>
+        <input type="date" id="graph-filter-date-from" onchange="filterMemoryGraph()">
+      </div>
+      <div class="graph-filter-row">
+        <label>DATE TO</label>
+        <input type="date" id="graph-filter-date-to" onchange="filterMemoryGraph()">
+      </div>
+      <div class="section-title" style="margin-top:8px">STATS</div>
+      <div class="graph-stats">
+        <div class="graph-stat"><span class="label">Total Nodes</span><span class="val" id="graph-stat-nodes">--</span></div>
+        <div class="graph-stat"><span class="label">Links</span><span class="val" id="graph-stat-links">--</span></div>
+        <div class="graph-stat"><span class="label">Showing</span><span class="val" id="graph-stat-showing">--</span></div>
+      </div>
+      <button class="graph-refresh-btn" onclick="loadMemoryGraph()">REFRESH GRAPH</button>
+    </div>
+    <div class="graph-main">
+      <svg id="memory-graph-svg"></svg>
+      <div class="graph-detail-panel" id="memory-graph-detail">
+        <button class="close-btn" onclick="closeMemoryDetail()">&times;</button>
+        <div class="detail-title">MEMORY DETAILS</div>
+        <div id="memory-graph-detail-content"></div>
+      </div>
+      <div class="graph-empty" id="memory-graph-empty">Loading memory graph...</div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-ollama-console">
+  <div class="ollama-layout">
+    <div class="ollama-sidebar">
+      <div class="section-title">OLLAMA STATUS</div>
+      <div class="ollama-status-row">
+        <span class="label">Server</span>
+        <span class="val" id="ollama-server-status">--</span>
+      </div>
+      <div class="ollama-status-row">
+        <span class="label">URL</span>
+        <span class="val">http://localhost:11434</span>
+      </div>
+      <div class="section-title" style="margin-top:12px">MODELS</div>
+      <div id="ollama-models-list" class="ollama-models">Loading...</div>
+      <button class="ollama-refresh-btn" onclick="loadOllamaStatus()">REFRESH</button>
+    </div>
+    <div class="ollama-main">
+      <div class="section-title">TEST PROMPT</div>
+      <div class="ollama-prompt-row">
+        <select id="ollama-model-select">
+          <option value="qwen3:0.6b">qwen3:0.6b</option>
+          <option value="qwen2.5:3b">qwen2.5:3b</option>
+          <option value="qwen3:8b">qwen3:8b</option>
+          <option value="gemma4:e2b">gemma4:e2b</option>
+          <option value="deepseek-r1">deepseek-r1</option>
+        </select>
+      </div>
+      <textarea id="ollama-prompt-input" class="ollama-prompt-input" placeholder="Enter prompt..."></textarea>
+      <button class="ollama-send-btn" onclick="sendOllamaPrompt()">SEND</button>
+      <div class="section-title" style="margin-top:12px">RESPONSE</div>
+      <pre id="ollama-response" class="ollama-response">No response yet.</pre>
+    </div>
+  </div>
+</div>
+
+<!-- SKILL BUILDER OVERLAY -->
+<div id="builder-overlay">
+  <div id="builder-box">
+    <div class="builder-title">Invoke Skill</div>
+    <div class="builder-row">
+      <label>SKILL</label>
+      <input id="b-skill" type="text" placeholder="e.g. llm" autocomplete="off">
+    </div>
+    <div class="builder-row">
+      <label>OPERATION</label>
+      <input id="b-op" type="text" placeholder="e.g. complete" autocomplete="off">
+    </div>
+    <div class="builder-row">
+      <label>ARGS (JSON)</label>
+      <textarea id="b-args" placeholder='{"prompt":"hello"}'></textarea>
+    </div>
+    <div class="builder-actions">
+      <button onclick="runBuilder()">RUN</button>
+      <button class="cancel-btn" onclick="closeBuilder()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts * 1000);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString([], {month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+function fmtTs(ts) {
+  return new Date(ts * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const r = await fetch(path, opts);
+    return await r.json();
+  } catch(e) {
+    return { error: e.message };
+  }
+}
+
+// ── Page navigation ───────────────────────────────────────────────────────────
+
+function switchPage(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(tab.dataset.page).classList.add('active');
+
+  const page = tab.dataset.page;
+  if (page === 'page-chat')        loadChat('group');
+  if (page === 'page-aria-dm')     { loadChat('aria'); loadChat('aria', 'aria-dm-messages'); }
+  if (page === 'page-scribe-dm')   loadChat('scribe', 'scribe-dm-messages');
+  if (page === 'page-journal')     loadJournal();
+  if (page === 'page-tasks')       loadTasks();
+  if (page === 'page-aria-status') loadAriaStatus();
+  if (page === 'page-memory-graph') loadMemoryGraph();
+  if (page === 'page-ollama-console') loadOllamaStatus();
+}
+
+// ── Status bar ────────────────────────────────────────────────────────────────
+
+async function pollStatusBar() {
+  // SCRIBE
+  try {
+    const r = await api('GET', '/ping');
+    const dot = document.getElementById('dot-scribe');
+    dot.className = 'sdot ' + (r.alive ? 'alive' : 'dead');
+    document.getElementById('lbl-scribe').style.color = r.alive ? 'var(--green)' : 'var(--red)';
+  } catch { document.getElementById('dot-scribe').className = 'sdot dead'; }
+
+  // ARIA via bridge
+  try {
+    const r = await api('GET', '/aria/bridge/status');
+    const alive = r && r.running;
+    const dot = document.getElementById('dot-aria');
+    dot.className = 'sdot ' + (alive ? 'alive' : 'warn');
+    document.getElementById('lbl-aria').style.color = alive ? 'var(--green)' : 'var(--amber)';
+    const cycle = r.aria_cycle || '--';
+    const plt   = r.aria_plt != null ? r.aria_plt.toFixed(2) : '--';
+    document.getElementById('lbl-cycle').textContent = 'cycle ' + cycle;
+    document.getElementById('lbl-plt').textContent   = 'plt ' + plt;
+
+    // sidebar live
+    ['sl-cycle','sl2-cycle'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = cycle; });
+    ['sl-affect','sl2-affect'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = r.aria_affect || '--'; });
+    ['sl-plt'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = plt; });
+    ['sl-sanctum'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = r.sanctum_connected ? 'connected' : 'waiting'; });
+    const voice = document.getElementById('sl2-voice');
+    if (voice) voice.textContent = r.aria_voice ? r.aria_voice.slice(0,120) : '--';
+  } catch {}
+}
+
+setInterval(pollStatusBar, 8000);
+pollStatusBar();
+
+// ── CHAT ──────────────────────────────────────────────────────────────────────
+
+let _currentChan = 'group';
+let _lastSince   = { group: 0, aria: 0, scribe: 0 };
+let _pollTimer   = null;
+
+const CHAN_TITLES = {
+  group:  '# group — Craig + ARIA + SCRIBE',
+  aria:   '@ ARIA — Direct Message',
+  scribe: '@ SCRIBE — Direct Message',
+};
+const CHAN_INFO = {
+  group:  'All voices, all at once',
+  aria:   'ARIA replies via inbox — up to 15s delay',
+  scribe: 'SCRIBE responds immediately',
+};
+
+function setChan(chan, el) {
+  _currentChan = chan;
+  document.querySelectorAll('#page-chat .chan-item').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('chan-title').textContent = CHAN_TITLES[chan] || chan;
+  document.getElementById('chan-info').textContent  = CHAN_INFO[chan]  || '';
+  loadChat(chan);
+}
+
+function renderMsg(m) {
+  const fromLower = (m.from || '').toLowerCase();
+  const cls = fromLower === 'aria' ? 'aria' : fromLower === 'scribe' ? 'scribe' : 'craig';
+  const senderCls = 'sender-' + cls;
+  return `<div class="msg-bubble ${cls}">
+    <div class="msg-meta">
+      <span class="${senderCls}">${escHtml(m.from)}</span>
+      <span class="msg-time">${fmtTime(m.ts)}</span>
+      ${m.emotion ? `<span style="color:var(--amber);font-size:9px">${escHtml(m.emotion)}</span>` : ''}
+      ${m.cycle   ? `<span style="color:var(--muted);font-size:9px">cycle ${m.cycle}</span>` : ''}
+    </div>
+    <div>${escHtml(m.text)}</div>
+  </div>`;
+}
+
+async function loadChat(chan, targetId) {
+  const containerId = targetId || 'chat-messages';
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const since = _lastSince[chan] || 0;
+  const r = await api('GET', `/chat/history?channel=${chan}&limit=200&since=0`);
+  if (!r || r.error || !r.messages) return;
+
+  const msgs = r.messages;
+  if (!msgs.length && since === 0) {
+    container.innerHTML = `<div class="msg-bubble system">No messages yet. Say something.</div>`;
+    return;
+  }
+
+  container.innerHTML = msgs.map(renderMsg).join('');
+  container.scrollTop = container.scrollHeight;
+
+  // update since
+  if (msgs.length) {
+    _lastSince[chan] = Math.max(...msgs.map(m => m.ts));
+  }
+}
+
+// Auto-poll for new messages
+function startChatPoll() {
+  if (_pollTimer) clearInterval(_pollTimer);
+  _pollTimer = setInterval(async () => {
+    // Always poll group and current active channel
+    await checkNewMessages('group', 'chat-messages');
+    if (_currentChan !== 'group') await checkNewMessages(_currentChan, 'chat-messages');
+    // Also poll aria dm if on that page
+    if (document.getElementById('page-aria-dm').classList.contains('active')) {
+      await checkNewMessages('aria', 'aria-dm-messages');
+    }
+    if (document.getElementById('page-scribe-dm').classList.contains('active')) {
+      await checkNewMessages('scribe', 'scribe-dm-messages');
+    }
+  }, 6000);
+}
+
+async function checkNewMessages(chan, containerId) {
+  const since = _lastSince[chan] || 0;
+  const r = await api('GET', `/chat/history?channel=${chan}&limit=50&since=${since}`);
+  if (!r || r.error || !r.messages || !r.messages.length) return;
+
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  // remove "no messages" placeholder if present
+  const placeholder = container.querySelector('.msg-bubble.system');
+  if (placeholder) placeholder.remove();
+
+  let appended = 0;
+  for (const m of r.messages) {
+    if (m.ts > since) {
+      container.insertAdjacentHTML('beforeend', renderMsg(m));
+      if (m.ts > (_lastSince[chan] || 0)) _lastSince[chan] = m.ts;
+      appended++;
+    }
+  }
+  if (appended > 0) {
+    container.scrollTop = container.scrollHeight;
+    // Clear typing indicator if ARIA or SCRIBE replied
+    const hasAria   = r.messages.some(m => m.from === 'ARIA');
+    const hasScribe = r.messages.some(m => m.from === 'SCRIBE');
+    if (hasAria)   { document.getElementById('aria-typing').textContent = ''; document.getElementById('typing-indicator').textContent = ''; }
+    if (hasScribe) { document.getElementById('scribe-typing').textContent = ''; document.getElementById('typing-indicator').textContent = ''; }
+  }
+}
+
+async function sendChatMsg() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+
+  const chan = _currentChan;
+  const r = await api('POST', '/chat/send', { channel: chan, text, from: 'Craig' });
+  if (r && r.ok) {
+    // Optimistically render
+    const container = document.getElementById('chat-messages');
+    const placeholder = container.querySelector('.msg-bubble.system');
+    if (placeholder) placeholder.remove();
+    container.insertAdjacentHTML('beforeend', renderMsg({ from: 'Craig', text, ts: r.ts || Math.floor(Date.now()/1000) }));
+    container.scrollTop = container.scrollHeight;
+    _lastSince[chan] = Math.max(_lastSince[chan] || 0, r.ts || 0);
+
+    if (chan === 'aria' || chan === 'group') {
+      document.getElementById('typing-indicator').textContent = 'ARIA is reading... (up to 15s)';
+    }
+  }
+}
+
+function chatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMsg(); }
+}
+
+// ARIA DM
+async function sendAriaDm() {
+  const input = document.getElementById('aria-dm-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  const r = await api('POST', '/chat/send', { channel: 'aria', text, from: 'Craig' });
+  if (r && r.ok) {
+    const container = document.getElementById('aria-dm-messages');
+    container.insertAdjacentHTML('beforeend', renderMsg({ from: 'Craig', text, ts: r.ts || Math.floor(Date.now()/1000) }));
+    container.scrollTop = container.scrollHeight;
+    _lastSince['aria'] = Math.max(_lastSince['aria'] || 0, r.ts || 0);
+    document.getElementById('aria-typing').textContent = 'ARIA is reading... (up to 15s)';
+  }
+}
+function ariaDmKeydown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAriaDm(); } }
+
+// SCRIBE DM
+async function sendScribeDm() {
+  const input = document.getElementById('scribe-dm-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  const container = document.getElementById('scribe-dm-messages');
+  container.insertAdjacentHTML('beforeend', renderMsg({ from: 'Craig', text, ts: Math.floor(Date.now()/1000) }));
+  container.scrollTop = container.scrollHeight;
+  document.getElementById('scribe-typing').textContent = 'SCRIBE is thinking...';
+
+  const r = await api('POST', '/chat/send', { channel: 'scribe', text, from: 'Craig' });
+  if (r && r.ok) {
+    _lastSince['scribe'] = Math.max(_lastSince['scribe'] || 0, r.ts || 0);
+    // Wait for reply to arrive
+    setTimeout(() => checkNewMessages('scribe', 'scribe-dm-messages'), 3000);
+    setTimeout(() => { document.getElementById('scribe-typing').textContent = ''; }, 8000);
+  }
+}
+function scribeDmKeydown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendScribeDm(); } }
+
+// ── JOURNAL ───────────────────────────────────────────────────────────────────
+
+async function loadJournal() {
+  const container = document.getElementById('journal-entries');
+  container.innerHTML = '<div style="color:var(--muted);font-size:11px;font-style:italic">Loading...</div>';
+
+  try {
+    const r = await fetch('http://localhost:7777/', { mode: 'no-cors' });
+    // no-cors won't let us read it — fetch from SCRIBE's proxy instead
+  } catch {}
+
+  // Load from ARIA journal via SCRIBE bridge proxy
+  const r = await api('GET', '/aria/journal');
+  if (!r || r.error) {
+    container.innerHTML = '<div style="color:var(--red);font-size:11px">[!] Could not load journal. Is ARIA running?</div>';
+    return;
+  }
+
+  const entries = r.journal || [];
+  if (!entries.length) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:11px;font-style:italic">No journal entries yet.</div>';
+    return;
+  }
+
+  container.innerHTML = [...entries].reverse().map(e => {
+    const isReply = e.type === 'reply_to_craig';
+    const ts = e.timestamp ? new Date(e.timestamp * 1000).toLocaleString() : '';
+    return `<div class="journal-entry ${isReply ? 'reply' : 'journal-auto'}">
+      <div class="journal-meta">
+        ${e.cycle ? `<span class="cycle">cycle ${e.cycle}</span>` : ''}
+        ${e.emotion ? `<span class="emotion">${escHtml(e.emotion)}</span>` : ''}
+        ${isReply ? `<span class="jtype">reply to craig</span>` : ''}
+        <span>${escHtml(ts)}</span>
+      </div>
+      <div class="journal-body">${escHtml(e.entry || '')}</div>
+      ${isReply && e.in_reply_to ? `<div class="journal-replied-to">In reply to: "${escHtml(String(e.in_reply_to).slice(0,200))}"</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── TASKS ─────────────────────────────────────────────────────────────────────
+
+let _taskFilter = 'all';
+
+function setTaskFilter(f, el) {
+  _taskFilter = f;
+  document.querySelectorAll('.task-filter-btn').forEach(b => {
+    b.style.color = 'var(--muted)';
+    b.style.borderColor = 'transparent';
+  });
+  el.style.color = 'var(--pink)';
+  el.style.borderColor = 'var(--dim)';
+  renderTasks(window._tasks || []);
+}
+
+async function loadTasks() {
+  const r = await api('GET', '/chat/tasks');
+  window._tasks = r && r.tasks ? r.tasks : [];
+  renderTasks(window._tasks);
+}
+
+function renderTasks(tasks) {
+  const container = document.getElementById('task-list');
+  const filtered = _taskFilter === 'all' ? tasks : tasks.filter(t => t.status === _taskFilter);
+  if (!filtered.length) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:11px;font-style:italic;padding:10px 0">No tasks.</div>';
+    return;
+  }
+  container.innerHTML = [...filtered].reverse().map(t => {
+    const statusMap = { open: 'OPEN', 'in-progress': 'IN PROGRESS', done: 'DONE' };
+    const nextStatus = t.status === 'open' ? 'in-progress' : t.status === 'in-progress' ? 'done' : 'open';
+    const nextLabel  = t.status === 'open' ? 'START' : t.status === 'in-progress' ? 'DONE' : 'REOPEN';
+    const notes = (t.notes || []).map(n => `<div>- ${escHtml(n.text)} <span style="color:var(--muted)">${fmtTime(n.ts)}</span></div>`).join('');
+    return `<div class="task-card ${t.status}" id="tc-${t.id}">
+      <div class="task-top">
+        <div class="task-text">${escHtml(t.text)}</div>
+        <button class="task-status-btn" onclick="cycleTask('${t.id}','${nextStatus}')">${nextLabel}</button>
+      </div>
+      <div class="task-meta">
+        <span class="task-status-label ${t.status}">[${statusMap[t.status]||t.status}]</span>
+        <span>from ${escHtml(t.from)}</span>
+        <span>${fmtTime(t.created_ts)}</span>
+      </div>
+      ${notes || t.status !== 'done' ? `<div class="task-notes">
+        ${notes}
+        ${t.status !== 'done' ? `<div class="task-note-add">
+          <input id="note-${t.id}" type="text" placeholder="Add a note..." onkeydown="if(event.key==='Enter')addNote('${t.id}')">
+          <button onclick="addNote('${t.id}')">+ NOTE</button>
+        </div>` : ''}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function addTask() {
+  const input = document.getElementById('task-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  const r = await api('POST', '/chat/tasks', { text, from: 'Craig' });
+  if (r && r.ok) {
+    window._tasks = window._tasks || [];
+    window._tasks.push(r.task);
+    renderTasks(window._tasks);
+  }
+}
+
+async function cycleTask(id, newStatus) {
+  const r = await api('PATCH', '/chat/tasks', { id, status: newStatus });
+  if (r && r.ok) { await loadTasks(); }
+}
+
+async function addNote(id) {
+  const input = document.getElementById('note-' + id);
+  if (!input) return;
+  const note = input.value.trim();
+  if (!note) return;
+  input.value = '';
+  const r = await api('PATCH', '/chat/tasks', { id, note });
+  if (r && r.ok) { await loadTasks(); }
+}
+
+// ── ARIA STATUS ───────────────────────────────────────────────────────────────
+
+async function loadAriaStatus() {
+  const container = document.getElementById('aria-status-content');
+  const [bridge, sanctum] = await Promise.all([
+    api('GET', '/aria/bridge/status'),
+    api('GET', '/aria/sanctum/status'),
+  ]);
+
+  if ((!bridge || bridge.error) && (!sanctum || sanctum.error)) {
+    container.innerHTML = '<div style="color:var(--red)">Could not reach ARIA bridge/sanctum.</div>';
+    return;
+  }
+
+  const b = bridge || {};
+  const s = sanctum || {};
+  const lp = b.last_pulse || {};
+
+  container.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="sc-label">Cycle</div>
+        <div class="sc-val">${b.aria_cycle || '--'}</div>
+        <div class="sc-sub">Soul cycles since boot</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">PLT Score</div>
+        <div class="sc-val">${b.aria_plt != null ? Number(b.aria_plt).toFixed(3) : '--'}</div>
+        <div class="sc-sub">Profit / Love / Tax balance</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Affect</div>
+        <div class="sc-val" style="font-size:14px">${b.aria_affect || '--'}</div>
+        <div class="sc-sub">Current emotional state</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Sanctum Tick</div>
+        <div class="sc-val">${lp.sanctum_tick || '--'}</div>
+        <div class="sc-sub">World-state tick</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Sanctum Connected</div>
+        <div class="sc-val" style="font-size:14px;color:${b.sanctum_connected ? 'var(--green)' : 'var(--amber)'}">${b.sanctum_connected ? 'YES' : 'NO'}</div>
+        <div class="sc-sub">WebSocket :9001</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Bridge Pulses</div>
+        <div class="sc-val">${b.pulse_count || '--'}</div>
+        <div class="sc-sub">Total received :5004</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Council Records</div>
+        <div class="sc-val">${lp.council_records || '--'}</div>
+        <div class="sc-sub">PLT council memory</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Sanctum Joins</div>
+        <div class="sc-val">${s.connect_count || '--'}</div>
+        <div class="sc-sub">Times ARIA connected</div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;background:var(--bg2);border:1px solid var(--border);padding:12px 14px;border-radius:2px">
+      <div style="color:var(--pink);font-size:10px;letter-spacing:2px;margin-bottom:8px">INNER VOICE</div>
+      <div style="color:var(--pink3);font-size:12px;line-height:1.6;font-style:italic">"${escHtml(b.aria_voice || '--')}"</div>
+    </div>
+
+    ${s.spawn_souls && s.spawn_souls.length ? `
+    <div style="background:var(--bg2);border:1px solid var(--border);padding:12px 14px;border-radius:2px">
+      <div style="color:var(--pink);font-size:10px;letter-spacing:2px;margin-bottom:8px">SPAWNED SOULS (${s.spawn_souls.length})</div>
+      ${s.spawn_souls.map(soul => `<div style="font-size:11px;color:var(--text);padding:3px 0">${escHtml(soul.name)} — ${escHtml(soul.race||'?')} @ (${soul.x},${soul.y})</div>`).join('')}
+    </div>` : ''}
+  `;
+}
+
+// ── OLLAMA CONSOLE ────────────────────────────────────────────────────────────────
+
+async function loadOllamaStatus() {
+  const statusEl = document.getElementById('ollama-server-status');
+  const modelsEl = document.getElementById('ollama-models-list');
+  
+  statusEl.textContent = 'Checking...';
+  statusEl.className = 'val';
+  modelsEl.textContent = 'Loading...';
+  
+  try {
+    const r = await fetch('http://localhost:11434/api/tags', { method: 'GET' });
+    if (!r.ok) throw new Error('Server not responding');
+    
+    statusEl.textContent = 'ONLINE';
+    statusEl.className = 'val';
+    
+    const data = await r.json();
+    const models = data.models || [];
+    
+    if (models.length === 0) {
+      modelsEl.textContent = 'No models loaded';
+    } else {
+      modelsEl.innerHTML = models.map(m => `
+        <div class="ollama-model-item">
+          <div class="name">${escHtml(m.name)}</div>
+          <div class="size">${formatBytes(m.size)}</div>
+        </div>
+      `).join('');
+    }
+  } catch(e) {
+    statusEl.textContent = 'OFFLINE';
+    statusEl.className = 'val offline';
+    modelsEl.textContent = 'Could not connect to Ollama at http://localhost:11434';
+  }
+}
+
+async function sendOllamaPrompt() {
+  const model = document.getElementById('ollama-model-select').value;
+  const prompt = document.getElementById('ollama-prompt-input').value;
+  const responseEl = document.getElementById('ollama-response');
+  
+  if (!prompt.trim()) {
+    responseEl.textContent = 'Please enter a prompt.';
+    return;
+  }
+  
+  responseEl.textContent = 'Generating...';
+  
+  try {
+    const r = await fetch('http://localhost:11434/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, prompt, stream: false })
+    });
+    
+    if (!r.ok) throw new Error('Request failed: ' + r.status);
+    
+    const data = await r.json();
+    responseEl.textContent = data.response || '(empty response)';
+  } catch(e) {
+    responseEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+function formatBytes(bytes) {
+  if (!bytes) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let i = 0;
+  while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+  return bytes.toFixed(1) + ' ' + units[i];
+}
+
+// ── MEMORY GRAPH ────────────────────────────────────────────────────────────────
+
+let _memoryGraphData = [];
+let _memoryGraphSimulation = null;
+
+const TYPE_COLORS = {
+  observation: '#00d4ff',
+  decision: '#FF2D9B',
+  conflict: '#ff3355',
+  reading: '#00ff88',
+  verdict: '#ffaa00',
+  contact: '#aa88ff',
+  nlp_command: '#ff88aa',
+};
+
+async function loadMemoryGraph() {
+  const container = document.getElementById('memory-graph-empty');
+  container.textContent = 'Loading...';
+
+  const r = await api('GET', '/memory?limit=200');
+  if (!r || r.error) {
+    container.textContent = 'Error loading memories';
+    return;
+  }
+
+  _memoryGraphData = r.recent || [];
+  document.getElementById('graph-stat-nodes').textContent = _memoryGraphData.length;
+
+  document.getElementById('memory-graph-empty').style.display = 'none';
+  filterMemoryGraph();
+}
+
+function filterMemoryGraph() {
+  const typeFilter = document.getElementById('graph-filter-type').value;
+  const tagFilter = document.getElementById('graph-filter-tag').value.toLowerCase();
+  const dateFrom = document.getElementById('graph-filter-date-from').value;
+  const dateTo = document.getElementById('graph-filter-date-to').value;
+
+  let filtered = _memoryGraphData.filter(m => {
+    if (typeFilter && m.type !== typeFilter) return false;
+    if (tagFilter && !(m.tags || []).some(t => t.toLowerCase().includes(tagFilter))) return false;
+    if (dateFrom || dateTo) {
+      const mDate = m.ts ? m.ts.split('T')[0] : '';
+      if (dateFrom && mDate < dateFrom) return false;
+      if (dateTo && mDate > dateTo) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('graph-stat-showing').textContent = filtered.length;
+
+  const links = [];
+  const nodeIds = new Set();
+  filtered.forEach(m => {
+    nodeIds.add(m.id);
+    if (m.parent_id && nodeIds.has(m.parent_id)) {
+      links.push({ source: m.parent_id, target: m.id });
+    }
+    (m.child_ids || []).forEach(childId => {
+      if (nodeIds.has(childId)) {
+        links.push({ source: m.id, target: childId });
+      }
+    });
+  });
+
+  document.getElementById('graph-stat-links').textContent = links.length;
+
+  renderMemoryGraph(filtered, links);
+}
+
+function renderMemoryGraph(nodes, links) {
+  const svg = document.getElementById('memory-graph-svg');
+  const container = svg.parentElement;
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  svg.innerHTML = '';
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+  if (nodes.length === 0) {
+    document.getElementById('memory-graph-empty').textContent = 'No matching memories';
+    document.getElementById('memory-graph-empty').style.display = 'block';
+    return;
+  }
+
+  const simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(80))
+    .force('charge', d3.forceManyBody().strength(-150))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collision', d3.forceCollide().radius(25));
+
+  _memoryGraphSimulation = simulation;
+
+  const link = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  link.setAttribute('class', 'links');
+  svg.appendChild(link);
+
+  links.forEach(l => {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('class', 'graph-link');
+    line.setAttribute('stroke-width', '1.5');
+    link.appendChild(line);
+  });
+
+  const node = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  node.setAttribute('class', 'nodes');
+  svg.appendChild(node);
+
+  nodes.forEach(n => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'graph-node');
+    g.setAttribute('data-id', n.id);
+    g.onclick = () => showMemoryDetail(n);
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    const radius = 8 + (n.weight || 0.5) * 8;
+    circle.setAttribute('r', radius);
+    circle.setAttribute('fill', TYPE_COLORS[n.type] || '#666');
+    circle.setAttribute('stroke', '#000');
+    circle.setAttribute('stroke-width', '1');
+    g.appendChild(circle);
+
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('class', 'graph-node-label');
+    label.setAttribute('dy', radius + 12);
+    label.textContent = (n.summary || '').slice(0, 20);
+    g.appendChild(label);
+
+    node.appendChild(g);
+  });
+
+  simulation.on('tick', () => {
+    const linkSel = link.querySelectorAll('line');
+    links.forEach((l, i) => {
+      if (l.source.x != null && l.target.x != null) {
+        linkSel[i].setAttribute('x1', l.source.x);
+        linkSel[i].setAttribute('y1', l.source.y);
+        linkSel[i].setAttribute('x2', l.target.x);
+        linkSel[i].setAttribute('y2', l.target.y);
+      }
+    });
+
+    const nodeSel = node.querySelectorAll('.graph-node');
+    nodes.forEach((n, i) => {
+      if (n.x != null && n.y != null) {
+        nodeSel[i].setAttribute('transform', `translate(${n.x},${n.y})`);
+      }
+    });
+  });
+
+  simulation.alpha(1).restart();
+}
+
+function showMemoryDetail(mem) {
+  const panel = document.getElementById('memory-graph-detail');
+  const content = document.getElementById('memory-graph-detail-content');
+
+  const tagsHtml = (mem.tags || []).length
+    ? `<div class="detail-tags">${mem.tags.map(t => `<span class="tag">${escHtml(t)}</span>`).join('')}</div>`
+    : '<span style="color:var(--muted);font-size:10px">None</span>';
+
+  const parentLink = mem.parent_id ? `<div class="detail-value"><a href="#" onclick="highlightNode('${mem.parent_id}')" style="color:var(--cyan)">${escHtml(mem.parent_id)}</a></div>` : '<span style="color:var(--muted);font-size:10px">None</span>';
+  const childrenLinks = (mem.child_ids || []).length
+    ? mem.child_ids.map(c => `<a href="#" onclick="highlightNode('${c}')" style="color:var(--cyan)">${escHtml(c)}</a>`).join(', ')
+    : '<span style="color:var(--muted);font-size:10px">None</span>';
+
+  content.innerHTML = `
+    <div class="detail-row">
+      <span class="detail-label">ID</span>
+      <span class="detail-value" style="font-size:9px;word-break:break-all">${escHtml(mem.id)}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">TYPE</span>
+      <span class="detail-value" style="color:${TYPE_COLORS[mem.type]||'#666'}">${escHtml(mem.type || '').toUpperCase()}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">TIMESTAMP</span>
+      <span class="detail-value">${mem.ts ? new Date(mem.ts).toLocaleString() : '--'}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">WEIGHT</span>
+      <span class="detail-value">${mem.weight != null ? mem.weight.toFixed(2) : '--'}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">SUMMARY</span>
+      <span class="detail-value">${escHtml(mem.summary || '')}</span>
+    </div>
+    ${mem.content ? `
+    <div class="detail-row">
+      <span class="detail-label">CONTENT</span>
+      <span class="detail-value" style="font-size:10px;white-space:pre-wrap">${escHtml(mem.content)}</span>
+    </div>` : ''}
+    <div class="detail-row">
+      <span class="detail-label">TAGS</span>
+      ${tagsHtml}
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">PARENT</span>
+      ${parentLink}
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">CHILDREN</span>
+      <span class="detail-value">${childrenLinks}</span>
+    </div>
+    ${mem.source ? `
+    <div class="detail-row">
+      <span class="detail-label">SOURCE</span>
+      <span class="detail-value" style="font-size:10px">${escHtml(mem.source.system || '')}${mem.source.chamber ? ' / ' + escHtml(mem.source.chamber) : ''}</span>
+    </div>` : ''}
+  `;
+
+  panel.classList.add('open');
+}
+
+function closeMemoryDetail() {
+  document.getElementById('memory-graph-detail').classList.remove('open');
+}
+
+function highlightNode(id) {
+  const node = document.querySelector(`.graph-node[data-id="${id}"]`);
+  if (node) {
+    node.querySelector('circle').setAttribute('stroke', '#fff');
+    node.querySelector('circle').setAttribute('stroke-width', '3');
+    setTimeout(() => {
+      node.querySelector('circle').setAttribute('stroke', '#000');
+      node.querySelector('circle').setAttribute('stroke-width', '1');
+    }, 2000);
+  }
+}
+
+// ── TERMINAL ──────────────────────────────────────────────────────────────────
+
+const terminal = document.getElementById('terminal');
+let termHistory = [];
+let termHistIdx = -1;
+
+function printLine(cls, text) {
+  const div = document.createElement('div');
+  div.className = 't-line ' + cls;
+  const ts = document.createElement('span');
+  ts.className = 't-ts';
+  ts.textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  div.appendChild(ts);
+
+  if (cls === 'json') {
+    const pre = document.createElement('pre');
+    pre.textContent = typeof text === 'string' ? text : JSON.stringify(text, null, 2);
+    div.appendChild(pre);
+  } else {
+    div.appendChild(document.createTextNode(String(text)));
+  }
+  terminal.appendChild(div);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+async function invoke(skill, op, args = {}) {
+  const r = await api('POST', '/invoke', { skill, op, ...args });
+  if (r && r.error) printLine('error', `[!] ${r.error}`);
+  else if (r)       printLine('json', r);
+  return r;
+}
+
+async function termSubmit() {
+  const input = document.getElementById('cmd-input');
+  const raw = input.value.trim();
+  if (!raw) return;
+  input.value = '';
+  termHistory.unshift(raw);
+  termHistIdx = -1;
+  printLine('prompt', '> ' + raw);
+
+  // Built-in commands
+  if (raw === '/help') {
+    printLine('system', 'Commands: /help /status /skills /memory /health /clear');
+    printLine('system', 'Skill invoke: skill op {"key":"val"}');
+    printLine('system', 'Examples: llm complete {"prompt":"hello"}');
+    return;
+  }
+  if (raw === '/clear') { terminal.innerHTML = ''; return; }
+  if (raw === '/status') { const r = await api('GET', '/status'); printLine('json', r); return; }
+  if (raw === '/health') { const r = await api('GET', '/health'); printLine('json', r); return; }
+  if (raw === '/skills') { const r = await api('GET', '/skills'); r.skills && r.skills.forEach(s => printLine('system', s.name + ' — ' + (s.description||''))); return; }
+  if (raw === '/memory') { const r = await api('GET', '/memory'); printLine('json', r); return; }
+
+  // Parse: skill op {json}
+  const parts = raw.match(/^(\S+)\s+(\S+)(?:\s+(.+))?$/);
+  if (parts) {
+    const [, skill, op, argsRaw] = parts;
+    let args = {};
+    if (argsRaw) { try { args = JSON.parse(argsRaw); } catch { printLine('error','[!] invalid JSON args'); return; } }
+    await invoke(skill, op, args);
+    return;
+  }
+  printLine('warn', '[?] unknown command. Type /help');
+}
+
+function termKeydown(e) {
+  const input = document.getElementById('cmd-input');
+  if (e.key === 'Enter') { termSubmit(); return; }
+  if (e.key === 'ArrowUp') {
+    termHistIdx = Math.min(termHistIdx + 1, termHistory.length - 1);
+    if (termHistory[termHistIdx]) input.value = termHistory[termHistIdx];
+    e.preventDefault();
+  }
+  if (e.key === 'ArrowDown') {
+    termHistIdx = Math.max(termHistIdx - 1, -1);
+    input.value = termHistIdx >= 0 ? termHistory[termHistIdx] : '';
+    e.preventDefault();
+  }
+}
+
+// ── SKILL BUILDER ─────────────────────────────────────────────────────────────
+
+function openBuilder()            { document.getElementById('builder-overlay').classList.add('open'); document.getElementById('b-skill').focus(); }
+function openBuilderWith(skill)   { document.getElementById('b-skill').value = skill; openBuilder(); document.getElementById('b-op').focus(); }
+function closeBuilder()           { document.getElementById('builder-overlay').classList.remove('open'); }
+async function runBuilder() {
+  const skill = document.getElementById('b-skill').value.trim();
+  const op    = document.getElementById('b-op').value.trim();
+  const raw   = document.getElementById('b-args').value.trim();
+  if (!skill || !op) { printLine('error','skill and op required'); return; }
+  let args = {};
+  if (raw) { try { args = JSON.parse(raw); } catch { printLine('error','invalid JSON in args'); return; } }
+  closeBuilder();
+  switchPage(document.querySelector('[data-page="page-terminal"]'));
+  await invoke(skill, op, args);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeBuilder(); });
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+
+(async function boot() {
+  // Load initial chat
+  await loadChat('group', 'chat-messages');
+  startChatPoll();
+
+  // Boot message in terminal
+  printLine('system', 'SCRIBE command center ready.');
+  printLine('system', 'Type /help for available commands.');
+})();
+</script>
+</body>
+</html>

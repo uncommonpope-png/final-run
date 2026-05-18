@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procedural Characters Demo - Babylon.js</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background: #000; }
+        #renderCanvas { width: 100%; height: 100vh; display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script src="procedural_characters.js"></script>
+    <script>
+        const canvas = document.getElementById('renderCanvas');
+        const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+
+        const createScene = function() {
+            const scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color4(0.05, 0.05, 0.1, 1);
+
+            const camera = new BABYLON.ArcRotateCamera('camera', -Math.PI / 2, Math.PI / 3, 25, new BABYLON.Vector3(0, 2, 0), scene);
+            camera.attachControl(canvas, true);
+            camera.lowerRadiusLimit = 5;
+            camera.upperRadiusLimit = 50;
+            camera.wheelPrecision = 50;
+
+            const hemiLight = new BABYLON.HemisphericLight('hemi', new BABYLON.Vector3(0, 1, 0), scene);
+            hemiLight.intensity = 0.6;
+            hemiLight.diffuse = new BABYLON.Color3(0.9, 0.9, 1);
+            hemiLight.groundColor = new BABYLON.Color3(0.3, 0.3, 0.4);
+
+            const dirLight = new BABYLON.DirectionalLight('dir', new BABYLON.Vector3(-1, -2, -1), scene);
+            dirLight.intensity = 0.8;
+            dirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.8);
+
+            const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 50, height: 50 }, scene);
+            const groundMat = new BABYLON.StandardMaterial('groundMat', scene);
+            groundMat.diffuseColor = new BABYLON.Color3(0.15, 0.2, 0.15);
+            groundMat.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+            ground.material = groundMat;
+
+            for (let i = 0; i < 30; i++) {
+                const x = (Math.random() - 0.5) * 48;
+                const z = (Math.random() - 0.5) * 48;
+                const treeTrunk = BABYLON.MeshBuilder.CreateCylinder('trunk' + i, { height: 1.5, diameter: 0.3 }, scene);
+                treeTrunk.position = new BABYLON.Vector3(x, 0.75, z);
+                const trunkMat = new BABYLON.StandardMaterial('trunkMat' + i, scene);
+                trunkMat.diffuseColor = new BABYLON.Color3(0.4, 0.25, 0.1);
+                treeTrunk.material = trunkMat;
+
+                const treeTop = BABYLON.MeshBuilder.CreateSphere('top' + i, { diameter: 2.5, segments: 8 }, scene);
+                treeTop.position = new BABYLON.Vector3(x, 2.5, z);
+                const topMat = new BABYLON.StandardMaterial('topMat' + i, scene);
+                topMat.diffuseColor = new BABYLON.Color3(0.1, 0.4 + Math.random() * 0.2, 0.1);
+                treeTop.material = topMat;
+            }
+
+            const characters = spawnWalkingCharacters(scene, 15, { minX: -20, maxX: 20, minZ: -20, maxZ: 20 });
+
+            let selectedChar = null;
+            scene.onPointerDown = function(evt, pickResult) {
+                if (pickResult.hit && pickResult.pickedMesh) {
+                    let mesh = pickResult.pickedMesh;
+                    while (mesh.parent && mesh.parent !== scene.rootNodes) {
+                        mesh = mesh.parent;
+                    }
+                    if (mesh.name.startsWith('character_')) {
+                        if (selectedChar) {
+                            selectedChar.stopWalking();
+                        }
+                        const charData = characters.find(c => c.root.name === mesh.name);
+                        if (charData) {
+                            selectedChar = charData;
+                            charData.startWalking();
+                        }
+                    }
+                }
+            };
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        engine.runRenderLoop(function() {
+            scene.render();
+        });
+
+        window.addEventListener('resize', function() {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>

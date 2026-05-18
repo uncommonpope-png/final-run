@@ -1,0 +1,14 @@
+╔════════════════════════════════════════════════════════════╗
+║ ARTIFACT: research_topic                    ║
+║ TIMESTAMP: 2026-05-16T19-58-15                     ║
+║ TYPE: autonomous_action                          ║
+╚════════════════════════════════════════════════════════════╝
+
+[soul] Brain is offline. The soul speaks. You asked: Research this topic thoroughly: undefined
+
+Provide structured findings with key insights and implications.
+
+Respond with:
+## [SOURCE] Source Name
+## [INSIGHT] Key Finding
+## [IMPLICATION] What this me. What would help most right now?

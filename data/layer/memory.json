@@ -1,0 +1,22 @@
+[
+  {
+    "id": "mem_1776644233_97c4",
+    "ts": 1776644233,
+    "type": "turn",
+    "from": "Craig",
+    "channel": "group",
+    "intent": "chat",
+    "text": "layer smoke test",
+    "summary": "Craig -> chat: layer smoke test"
+  },
+  {
+    "id": "mem_1778301499_lnjq",
+    "ts": 1778301499,
+    "type": "turn",
+    "from": "Craig",
+    "channel": "group",
+    "intent": "build",
+    "text": "hello iam grand code pope",
+    "summary": "Craig -> build: hello iam grand code pope"
+  }
+]

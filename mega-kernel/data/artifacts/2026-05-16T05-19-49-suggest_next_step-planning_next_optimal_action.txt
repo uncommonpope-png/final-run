@@ -1,0 +1,39 @@
+╔════════════════════════════════════════════════════════════╗
+║ ARTIFACT: suggest_next_step                    ║
+║ TIMESTAMP: 2026-05-16T05-19-49                     ║
+║ TYPE: autonomous_action                          ║
+╚════════════════════════════════════════════════════════════╝
+
+{
+  "situation": "undefined",
+  "next_steps": [
+    {
+      "priority": 1,
+      "action": "Define the situation",
+      "why": "To establish context and clarity",
+      "profit_impact": "Medium",
+      "love_impact": "High",
+      "tax_cost": "Low",
+      "plt_score": "positive"
+    },
+    {
+      "priority": 2,
+      "action": "Gather relevant information",
+      "why": "To inform decision-making and identify opportunities",
+      "profit_impact": "Medium",
+      "love_impact": "Medium",
+      "tax_cost": "Medium",
+      "plt_score": "positive"
+    },
+    {
+      "priority": 3,
+      "action": "Establish clear goals and objectives",
+      "why": "To focus efforts and maximize impact",
+      "profit_impact": "High",
+      "love_impact": "Low",
+      "tax_cost": "Low",
+      "plt_score": "positive"
+    }
+  ],
+  "recommended_first_step": "Define the situation"
+}

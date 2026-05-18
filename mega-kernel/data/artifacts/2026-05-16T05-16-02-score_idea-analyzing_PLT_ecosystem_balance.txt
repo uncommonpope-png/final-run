@@ -1,0 +1,16 @@
+╔════════════════════════════════════════════════════════════╗
+║ ARTIFACT: score_idea                    ║
+║ TIMESTAMP: 2026-05-16T05-16-02                     ║
+║ TYPE: autonomous_action                          ║
+╚════════════════════════════════════════════════════════════╝
+
+{
+  "idea": "Current: calm mood, undefined need, cycle 10",
+  "profit": 0.1,
+  "love": 0.2,
+  "tax": 0.5,
+  "score": -0.2,
+  "true_value": "Low",
+  "verdict": "evaluate",
+  "reasoning": "The idea lacks clear direction and potential for growth, while also carrying significant costs or risks, resulting in a low true value score. Further evaluation is needed to determine its potential for improvement."
+}

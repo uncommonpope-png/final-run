@@ -1,0 +1,30 @@
+{
+  "phase": "B",
+  "timestamp": 1778971889965,
+  "godMode": true,
+  "repos": [
+    "Significant-Gravitas/AutoGPT",
+    "microsoft/autogen",
+    "langchain-ai/langchain",
+    "joaomdmoura/crewAI",
+    "geekan/MetaGPT",
+    "n8n-io/n8n",
+    "langgenius/dify",
+    "run-llama/llama_index",
+    "huggingface/transformers",
+    "OpenBMB/AgentVerse",
+    "microsoft/TaskWeaver",
+    "plandex-ai/plandex",
+    "AIOS-Research/AIOS",
+    "awslabs/multi-agent-orchestrator",
+    "e2b-dev/e2b",
+    "mckaywrigley/chatbot-ui",
+    "google-research/google-research",
+    "chatchat-space/Langchain-Chatchat",
+    "microsoft/semantic-kernel",
+    "anthropics/anthropic-cookbook"
+  ],
+  "totalRepos": 20,
+  "totalStars": 847200,
+  "strategy": "God Mode: Study top agent frameworks to seed self-growing brain"
+}

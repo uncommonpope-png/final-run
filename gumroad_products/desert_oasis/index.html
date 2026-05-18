@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desert Oasis Kingdom — Soulverse Habitat</title>
+<meta name="description" content="Golden sands, warm terracotta buildings, palm oases, amber twilight">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#000;font-family:'Segoe UI',sans-serif}
+#renderCanvas{width:100vw;height:100vh;display:block}
+#loading{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.95);z-index:100;color:#fff;font-size:1.2em;transition:opacity .5s}
+#loading h1{margin-bottom:20px;font-size:2em;background:linear-gradient(90deg,rgb(229.5,178.5,76.5),rgb(204,153,102),rgb(255,204,51),rgb(178.5,153,76.5),rgb(255,178.5,38.25),rgb(229.5,204,102),rgb(216.75,127.5,51),rgb(153,127.5,178.5),rgb(178.5,153,89.25));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#progress{width:300px;height:4px;background:#222;border-radius:2px;overflow:hidden}
+#progress-bar{height:100%;width:0;background:linear-gradient(90deg,229.5,178.5,76.5,255,178.5,38.25);transition:width .3s}
+#loading-text{margin-top:10px;font-size:.9em;color:#888;min-height:1.2em}
+.hud{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:12px;font-family:monospace;pointer-events:none;z-index:10}
+.hud span{margin:0 10px}
+</style>
+</head>
+<body>
+<canvas id="renderCanvas"></canvas>
+<div id="loading">
+  <h1>Desert Oasis Kingdom</h1>
+  <div id="progress"><div id="progress-bar"></div></div>
+  <div id="loading-text">Entering the realm...</div>
+</div>
+<div class="hud">
+  <span>WASD + Mouse</span>
+  <span>|</span>
+  <span>Scroll to zoom</span>
+</div>
+
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script>
+// ==================== Desert Oasis Kingdom ====================
+const engine = new BABYLON.Engine(document.getElementById('renderCanvas'), true, { preserveDrawingBuffer: true, stencil: true });
+const scene = new BABYLON.Scene(engine);
+scene.clearColor = new BABYLON.Color4(0.06, 0.03, 0.01, 1);
+scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+scene.fogDensity = 0.003;
+scene.fogColor = new BABYLON.Color3(0.08, 0.05, 0.02);
+scene.ambientColor = new BABYLON.Color3(0.15, 0.1, 0.05);
+
+const canvas = document.getElementById('renderCanvas');
+const camera = new BABYLON.ArcRotateCamera('cam', -Math.PI/2, Math.PI/3, 60, BABYLON.Vector3.Zero(), scene);
+camera.attachControl(canvas, true);
+camera.lowerRadiusLimit = 15;
+camera.upperRadiusLimit = 120;
+camera.wheelPrecision = 50;
+
+// Lights
+const hemi = new BABYLON.HemisphericLight('hemi', new BABYLON.Vector3(0, 1, 0), scene);
+hemi.intensity = 0.7;
+hemi.diffuse = new BABYLON.Color3(0.6, 0.4, 0.2);
+hemi.groundColor = new BABYLON.Color3(0.15, 0.1, 0.05);
+
+const sun = new BABYLON.DirectionalLight('sun', new BABYLON.Vector3(-1, -2, -1), scene);
+sun.intensity = 1;
+sun.diffuse = new BABYLON.Color3(1, 0.8, 0.5);
+
+// Ground
+const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 200, height: 200 }, scene);
+const groundMat = new BABYLON.StandardMaterial('groundMat', scene);
+groundMat.diffuseColor = new BABYLON.Color3(0.08, 0.05, 0.02);
+groundMat.specularColor = new BABYLON.Color3(0.15, 0.1, 0.05);
+ground.material = groundMat;
+
+// Post-processing
+try {
+  const pipeline = new BABYLON.DefaultRenderingPipeline('pipe', true, scene, [camera]);
+  pipeline.bloomEnabled = true;
+  pipeline.bloomThreshold = 0.4;
+  pipeline.bloomWeight = 0.5;
+  pipeline.bloomKernel = 32;
+  pipeline.fxaaEnabled = true;
+  pipeline.imageProcessingEnabled = true;
+  pipeline.imageProcessing.contrast = 1.2;
+  pipeline.imageProcessing.exposure = 1.1;
+  
+  const glow = new BABYLON.GlowLayer('glow', scene);
+  glow.intensity = 0.4;
+} catch(e) {}
+
+// GRIDS
+const GRIDS = [{"id":0,"name":"Golden City","icon":"🏛️","color":[0.9,0.7,0.3],"x":0,"z":0,"type":"work"},{"id":1,"name":"Oasis Homes","icon":"🌴","color":[0.8,0.6,0.4],"x":45,"z":0,"type":"home"},{"id":2,"name":"Bazaar Square","icon":"🎪","color":[1,0.8,0.2],"x":90,"z":0,"type":"social"},{"id":3,"name":"Sand Library","icon":"📚","color":[0.7,0.6,0.3],"x":0,"z":45,"type":"learn"},{"id":4,"name":"Gold Market","icon":"💰","color":[1,0.7,0.15],"x":45,"z":45,"type":"market"},{"id":5,"name":"Sun Temple","icon":"☀️","color":[0.9,0.8,0.4],"x":90,"z":45,"type":"sacred"},{"id":6,"name":"Arena Sands","icon":"⚔️","color":[0.85,0.5,0.2],"x":0,"z":90,"type":"arena"},{"id":7,"name":"Alchemy Lab","icon":"⚗️","color":[0.6,0.5,0.7],"x":45,"z":90,"type":"lab"},{"id":8,"name":"Dune Wastes","icon":"🏜️","color":[0.7,0.6,0.35],"x":90,"z":90,"type":"wild"}];
+
+// ===== BUILDINGS =====
+const BUILDINGS_BY_TYPE = {"work":[{"name":"Golden Tower","h":28,"s":7,"c":[0.85,0.65,0.25],"style":"modern"},{"name":"Sandstone Hall","h":16,"s":10,"c":[0.75,0.55,0.2],"style":"brick"},{"name":"Merchant Office","h":12,"s":7,"c":[0.9,0.7,0.3],"style":"classic"},{"name":"Oasis Admin","h":10,"s":6,"c":[0.8,0.6,0.2],"style":"villa"},{"name":"Trade Hub","h":14,"s":8,"c":[0.95,0.75,0.35],"style":"pavilion"},{"name":"Desert HQ","h":8,"s":5,"c":[0.7,0.5,0.15],"style":"camp"}],"home":[{"name":"Terrace Homes","h":18,"s":8,"c":[0.75,0.55,0.35],"style":"brick"},{"name":"Palm Villa","h":10,"s":8,"c":[0.8,0.6,0.4],"style":"villa"},{"name":"Sandstone House","h":12,"s":7,"c":[0.7,0.5,0.3],"style":"cottage"},{"name":"Oasis Hut","h":6,"s":5,"c":[0.85,0.65,0.45],"style":"camp"},{"name":"Courtyard Home","h":8,"s":10,"c":[0.75,0.55,0.35],"style":"pavilion"},{"name":"Casa Blanca","h":10,"s":6,"c":[0.8,0.7,0.5],"style":"villa"}],"social":[{"name":"Grand Bazaar","h":10,"s":14,"c":[1,0.75,0.15],"style":"market"},{"name":"Cafe Oasis","h":6,"s":8,"c":[0.9,0.7,0.1],"style":"pavilion"},{"name":"Storyteller Hall","h":10,"s":10,"c":[1,0.8,0.2],"style":"theater"},{"name":"Music Square","h":8,"s":6,"c":[0.95,0.85,0.25],"style":"warm"},{"name":"Camel Tavern","h":8,"s":8,"c":[0.9,0.65,0.1],"style":"brick"},{"name":"Night Bazaar","h":6,"s":12,"c":[1,0.7,0.2],"style":"market"}],"learn":[{"name":"Desert Archive","h":20,"s":10,"c":[0.6,0.5,0.2],"style":"classic"},{"name":"Sand Academy","h":14,"s":8,"c":[0.55,0.45,0.25],"style":"brick"},{"name":"Star Observatory","h":16,"s":6,"c":[0.65,0.55,0.3],"style":"tower"},{"name":"Knowledge Hall","h":12,"s":10,"c":[0.7,0.6,0.35],"style":"pavilion"},{"name":"Study Lounge","h":8,"s":7,"c":[0.5,0.4,0.2],"style":"warm"},{"name":"Library Tower","h":18,"s":6,"c":[0.6,0.5,0.25],"style":"modern"}],"market":[{"name":"Gold Exchange","h":22,"s":8,"c":[1,0.65,0.1],"style":"classic"},{"name":"Silk Market","h":10,"s":12,"c":[1,0.7,0.15],"style":"market"},{"name":"Spice Vault","h":8,"s":5,"c":[1,0.8,0.25],"style":"secure"},{"name":"Jewel Bazaar","h":6,"s":10,"c":[0.95,0.6,0.1],"style":"market"},{"name":"Carpet House","h":12,"s":7,"c":[1,0.75,0.2],"style":"villa"},{"name":"Treasure Hall","h":10,"s":5,"c":[0.9,0.7,0.3],"style":"crystal"}],"sacred":[{"name":"Sun Temple","h":30,"s":12,"c":[0.85,0.75,0.35],"style":"pyramid"},{"name":"Moon Dome","h":14,"s":10,"c":[0.8,0.7,0.4],"style":"dome"},{"name":"Sacred Oasis","h":8,"s":8,"c":[0.9,0.8,0.45],"style":"garden"},{"name":"Star Altar","h":16,"s":6,"c":[0.85,0.85,0.5],"style":"crystal"},{"name":"Peace Courtyard","h":6,"s":10,"c":[0.8,0.75,0.4],"style":"pavilion"},{"name":"Sand Shrine","h":10,"s":5,"c":[0.9,0.8,0.35],"style":"shrine"}],"arena":[{"name":"Sun Arena","h":8,"s":22,"c":[0.8,0.4,0.15],"style":"arena"},{"name":"Training Grounds","h":12,"s":8,"c":[0.75,0.35,0.1],"style":"military"},{"name":"Warrior Hall","h":10,"s":5,"c":[0.85,0.45,0.2],"style":"brick"},{"name":"Dune Pit","h":5,"s":16,"c":[0.8,0.3,0.1],"style":"arena"},{"name":"Honor Monument","h":10,"s":3,"c":[0.9,0.5,0.25],"style":"monument"},{"name":"Desert Fort","h":14,"s":7,"c":[0.7,0.3,0.1],"style":"secure"}],"lab":[{"name":"Alchemy Tower","h":18,"s":8,"c":[0.5,0.4,0.65],"style":"tower"},{"name":"Potion Lab","h":10,"s":6,"c":[0.55,0.45,0.6],"style":"glass"},{"name":"Transmutation","h":14,"s":7,"c":[0.45,0.35,0.7],"style":"classic"},{"name":"Sand Research","h":12,"s":6,"c":[0.6,0.5,0.75],"style":"modern"},{"name":"Crystal Workshop","h":16,"s":8,"c":[0.5,0.45,0.8],"style":"crystal"},{"name":"Desert Lab","h":10,"s":5,"c":[0.55,0.4,0.65],"style":"brick"}],"wild":[{"name":"Mirage Tower","h":16,"s":6,"c":[0.6,0.5,0.25],"style":"organic"},{"name":"Dune Camp","h":4,"s":6,"c":[0.65,0.55,0.3],"style":"camp"},{"name":"Ruined City","h":8,"s":5,"c":[0.55,0.45,0.2],"style":"ancient"},{"name":"Cactus Field","h":2,"s":10,"c":[0.7,0.6,0.35],"style":"garden"},{"name":"Salt Flats","h":6,"s":4,"c":[0.75,0.65,0.4],"style":"crystal"},{"name":"Wind Stone","h":6,"s":3,"c":[0.5,0.4,0.15],"style":"monument"}]};
+
+function getBuildings(type) {
+  return BUILDINGS_BY_TYPE[type] || BUILDINGS_BY_TYPE.work;
+}
+
+function createGroundWithGrids(fogDensity) {
+  for (const grid of GRIDS) {
+    const zone = BABYLON.MeshBuilder.CreateDisc('zone_'+grid.id, { radius: 38 }, scene);
+    zone.position = new BABYLON.Vector3(grid.x, 0.05, grid.z);
+    zone.rotation.x = Math.PI/2;
+    const zMat = new BABYLON.StandardMaterial('zm_'+grid.id, scene);
+    zMat.diffuseColor = new BABYLON.Color3(...grid.color.map(c => c * 0.2));
+    zMat.alpha = 0.4;
+    zone.material = zMat;
+
+    const ring = BABYLON.MeshBuilder.CreateTorus('ring_'+grid.id, { diameter: 60, thickness: 1.5 }, scene);
+    ring.position = new BABYLON.Vector3(grid.x, 0.1, grid.z);
+    ring.rotation.x = Math.PI/2;
+    const rMat = new BABYLON.StandardMaterial('rm_'+grid.id, scene);
+    rMat.diffuseColor = new BABYLON.Color3(...grid.color);
+    rMat.emissiveColor = new BABYLON.Color3(grid.color[0]*0.3, grid.color[1]*0.3, grid.color[2]*0.3);
+    ring.material = rMat;
+
+    const configs = getBuildings(grid.type);
+    configs.forEach((cfg, i) => {
+      const angle = (i / configs.length) * Math.PI * 2;
+      const radius = 15 + (i % 3) * 8;
+      const x = grid.x + Math.cos(angle) * radius;
+      const z = grid.z + Math.sin(angle) * radius;
+      createBuilding(grid, cfg, x, z, i);
+    });
+
+    createMonument(grid);
+  }
+  
+  // Roads
+  for (const grid of GRIDS) {
+    const col = grid.id % 3, row = Math.floor(grid.id / 3);
+    if (col < 2) {
+      const r = BABYLON.MeshBuilder.CreateBox('rh_'+grid.id, { width: 15, height: 0.1, depth: 2 }, scene);
+      r.position = new BABYLON.Vector3(grid.x + 22.5, 0.05, grid.z);
+      const rm = new BABYLON.StandardMaterial('rhm_'+grid.id, scene);
+      rm.diffuseColor = new BABYLON.Color3(0.15, 0.1, 0.06);
+      r.material = rm;
+    }
+    if (row < 2) {
+      const r = BABYLON.MeshBuilder.CreateBox('rv_'+grid.id, { width: 2, height: 0.1, depth: 15 }, scene);
+      r.position = new BABYLON.Vector3(grid.x, 0.05, grid.z + 22.5);
+      const rm = new BABYLON.StandardMaterial('rvm_'+grid.id, scene);
+      rm.diffuseColor = new BABYLON.Color3(0.15, 0.1, 0.06);
+      r.material = rm;
+    }
+  }
+  
+  // Decorations
+  for (const grid of GRIDS) {
+    for (let i = 0; i < 6; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 28 + Math.random() * 8;
+      const x = grid.x + Math.cos(angle) * radius;
+      const z = grid.z + Math.sin(angle) * radius;
+      const type = Math.floor(Math.random() * 3);
+      if (type === 0) {
+        const b = BABYLON.MeshBuilder.CreateBox('bench_'+grid.id+'_'+i, { width: 2, height: 0.5, depth: 0.5 }, scene);
+        b.position = new BABYLON.Vector3(x, 0.25, z);
+      } else if (type === 1) {
+        const t = BABYLON.MeshBuilder.CreateCylinder('tree_'+grid.id+'_'+i, { height: 3, diameterTop: 0, diameterBottom: 1.5 }, scene);
+        t.position = new BABYLON.Vector3(x, 1.5, z);
+        const tm = new BABYLON.StandardMaterial('tm_'+grid.id+'_'+i, scene);
+        tm.diffuseColor = new BABYLON.Color3(0.2, 0.4, 0.2);
+        t.material = tm;
+      }
+    }
+  }
+  
+  // Particles
+  const ps = new BABYLON.ParticleSystem('ambient', 400, scene);
+  ps.particleTexture = new BABYLON.Texture('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAKdSURBVFiF7ZdNaxRBFIC/md29XNxEXFC8EhEvgheNvHrxJvRKvHrxpniRePEfwIvIi8SLF8WLRPwJvoqIRhQXvCIuu7uzu+WsMLt7u7d3L+4lxgczszvz3pvZmZ1VIgThXyL4b3L3Hwd+7u7eW/b8tP2d0e0B0N0ngPdmdjMzu5mZFU3gEHCqKWAyqpvZaDPxHPCymX8u+24P8LqZfQG+mtlhM6sA3zKz82b2oZl9N7PnZrbPzH4D9gEfzexzM/vczF6a2VEzex84Y2Y3mtlrM3thZp+a2evA0cD/Apwy4+0ws3fAJDP7ADwPvAfOm9m9wN0B9gInzexh4IuZPWpmLwPnmwI2gQfN7BUwMLPXzez5YPoR2GNm3wLnmwIC4KSZvQUmwPvAw6aAleB+M3sP3G8KCPyJ4wF+mdmrwPkI/gTcb2aPgfeBA2b2pJk9Dhw0s6fN7FXgkJl9BpwPfO4FdpnZp8D1wP8qsN/MHgfuNQUcAN4HzpjZ08AXM3tkZl+a2X0ze2xmh8zssZkdMrP7ZvbCzA6Z2VMze2xmj5rZ82Z2t5ndMLPHZvbUzJ6Y2eNm9tLMnjWzl2b2wsxemtlLM3thZq+a2Usze9XM3jSzt2b2rpndN7PXzez/Y++8g+Soy/j/e7qne3JaWUmIJJRRQIAJJmNsTDTR5TQ555xBEMlROeeco0gCBEhCEhIgcTTRJoTIOedgkuU4aXKO8/+h3u7Z3dmZnZ3ZnR3m+zzPPNPd1dX3Xr+qrq5CUuYI0hM8CdwGnAc0AWuB1cCFQBOwATgTeBk4FTgReAV4FfiwmX8xszfN7LH4LPCwmX+ys/eBbUBr4P4C3gR2B6aZ+Xdm/hF43My+NPPZZvYVcHfg/gK8Z+YPmdmvwNPAcTP/1cyHmvlXZv4ScH/g/gp8aOYPmtlPwKPA8Wb+0MynN/MpzfybwB3AY2Y+xcx/CHxu5t+b+Rdm/oWZT2vmU5v5l8AtwCNm/k1gspl/ZeYfmvmnZj7NzD8KXG3mn5r5R2b+sZl/YeYfmflHgbvN/GMz/zg438z/AJ4x84/MfIKZTzfzCWb+IXCTmX9o5h+a+Ydm/kHgDjP/yMwnmPlkM//YzD8K3G7mH5r5h2b+AfCumX9o5h8F7jTz6c18spl/FLjNzD8w8w/N/AMz/yBwu5l/aOYfBu4084/NfIKZTzHzKWb+IXC7mX9g5h8EbjfzyWb+kZl/aObTzPxjM/8gcIeZTzbzCWb+UeA2M3/fzD808w/N/EMz/yBwp5lPNvOPAnf8hwN3/9f+AP8D+AcU1hX7rAAAAABJRU5ErkJggg==', scene);
+  ps.emitter = new BABYLON.Vector3(0, 0.5, 0);
+  ps.minEmitBox = new BABYLON.Vector3(-80, 0, -80);
+  ps.maxEmitBox = new BABYLON.Vector3(80, 5, 80);
+  ps.color1 = new BABYLON.Color4(1, 0.7, 0.3, 0.2);
+  ps.color2 = new BABYLON.Color4(1, 0.9, 0.5, 0.2);
+  ps.colorDead = new BABYLON.Color4(0.1, 0.05, 0, 0);
+  ps.minSize = 0.05;
+  ps.maxSize = 0.15;
+  ps.minLifeTime = 3;
+  ps.maxLifeTime = 6;
+  ps.emitRate = 30;
+  ps.gravity = new BABYLON.Vector3(0, 0.02, 0);
+  ps.direction1 = new BABYLON.Vector3(-0.1, 0.05, -0.1);
+  ps.direction2 = new BABYLON.Vector3(0.1, 0.1, 0.1);
+  ps.minEmitPower = 0.05;
+  ps.maxEmitPower = 0.1;
+  ps.start();
+  
+  // Skybox
+  const sky = BABYLON.MeshBuilder.CreateBox('skybox', { size: 300 }, scene);
+  const skyMat = new BABYLON.StandardMaterial('skyboxMat', scene);
+  skyMat.backFaceCulling = false;
+  skyMat.diffuseColor = new BABYLON.Color3(0.08, 0.05, 0.02);
+  skyMat.specularColor = new BABYLON.Color3(0, 0, 0);
+  sky.material = skyMat;
+  
+  // Stars
+  const stars = new BABYLON.PointsCloudSystem('stars', 300, scene);
+  stars.addPoints(300, (p) => {
+    p.position = new BABYLON.Vector3(
+      (Math.random() - 0.5) * 400,
+      Math.random() * 100 + 50,
+      (Math.random() - 0.5) * 400
+    );
+    p.color = new BABYLON.Color4(1, 1, 1, 0.3 + Math.random() * 0.7);
+    p.size = 0.2 + Math.random() * 0.5;
+  });
+  stars.buildMeshAsync();
+}
+
+function createBuilding(grid, cfg, x, z, i) {
+  const b = BABYLON.MeshBuilder.CreateBox('bld_'+grid.id+'_'+i, { width: cfg.s, height: cfg.h, depth: cfg.s }, scene);
+  b.position = new BABYLON.Vector3(x, cfg.h/2, z);
+  const m = new BABYLON.StandardMaterial('bm_'+grid.id+'_'+i, scene);
+  m.diffuseColor = new BABYLON.Color3(...cfg.c);
+  m.specularColor = new BABYLON.Color3(0.3, 0.3, 0.4);
+  m.emissiveColor = new BABYLON.Color3(cfg.c[0]*0.2, cfg.c[1]*0.2, cfg.c[2]*0.2);
+  b.material = m;
+  
+  const roof = BABYLON.MeshBuilder.CreateCylinder('roof_'+grid.id+'_'+i, { 
+    diameterTop: 0, diameterBottom: cfg.s*0.8, height: cfg.h*0.25, tessellation: 4
+  }, scene);
+  roof.position = new BABYLON.Vector3(x, cfg.h + cfg.h*0.125, z);
+  roof.rotation.y = Math.PI/4;
+  const rm = new BABYLON.StandardMaterial('rm_'+grid.id+'_'+i, scene);
+  rm.diffuseColor = new BABYLON.Color3(...cfg.c.map(c=>c*0.5));
+  roof.material = rm;
+  
+  // Windows
+  for (let w = -1; w <= 1; w += 2) {
+    for (let f = 0; f < Math.floor(cfg.h/3); f++) {
+      const win = BABYLON.MeshBuilder.CreatePlane('win_'+grid.id+'_'+i+'_'+w+'_'+f, { width: 0.8, height: 1.2 }, scene);
+      win.position = new BABYLON.Vector3(x + w*(cfg.s/2-0.2), 2 + f*3, z + cfg.s/2 + 0.01);
+      win.rotation.y = Math.PI;
+      const wm = new BABYLON.StandardMaterial('wm_'+grid.id+'_'+i, scene);
+      wm.emissiveColor = new BABYLON.Color3(0.6, 0.8, 1);
+      wm.alpha = 0.7;
+      win.material = wm;
+    }
+  }
+}
+
+function createMonument(grid) {
+  const m = BABYLON.MeshBuilder.CreateCylinder('mon_'+grid.id, { height: 8, diameterTop: 0, diameterBottom: 4, tessellation: 8 }, scene);
+  m.position = new BABYLON.Vector3(grid.x, 4, grid.z);
+  const mm = new BABYLON.StandardMaterial('monm_'+grid.id, scene);
+  mm.diffuseColor = new BABYLON.Color3(...grid.color);
+  mm.emissiveColor = new BABYLON.Color3(grid.color[0]*0.5, grid.color[1]*0.5, grid.color[2]*0.5);
+  m.material = mm;
+  
+  const orb = BABYLON.MeshBuilder.CreateSphere('orb_'+grid.id, { diameter: 2 }, scene);
+  orb.position = new BABYLON.Vector3(grid.x, 10, grid.z);
+  const om = new BABYLON.StandardMaterial('orbm_'+grid.id, scene);
+  om.diffuseColor = new BABYLON.Color3(...grid.color);
+  om.emissiveColor = new BABYLON.Color3(...grid.color);
+  om.alpha = 0.8;
+  orb.material = om;
+  
+  scene.registerBeforeRender(() => {
+    m.rotation.y += 0.005;
+    orb.position.y = 10 + Math.sin(Date.now() * 0.002) * 0.5;
+  });
+}
+
+// ==================== INIT ====================
+let pct = 0;
+function setProgress(v, msg) {
+  pct = v;
+  document.getElementById('progress-bar').style.width = v+'%';
+  document.getElementById('loading-text').textContent = msg || 'Loading...';
+}
+
+async function init() {
+  setProgress(10, 'Creating world...');
+  await new Promise(r => setTimeout(r, 100));
+  
+  setProgress(30, 'Building cities...');
+  createGroundWithGrids();
+  await new Promise(r => setTimeout(r, 100));
+  
+  setProgress(60, 'Adding atmosphere...');
+  await new Promise(r => setTimeout(r, 100));
+  
+  setProgress(80, 'Finalizing...');
+  
+  engine.runRenderLoop(() => scene.render());
+  window.addEventListener('resize', () => engine.resize());
+  
+  setProgress(100, 'Desert Oasis Kingdom ready!');
+  await new Promise(r => setTimeout(r, 500));
+  document.getElementById('loading').style.opacity = '0';
+  setTimeout(() => document.getElementById('loading').style.display = 'none', 500);
+}
+
+init();
+</script>
+</body>
+</html>

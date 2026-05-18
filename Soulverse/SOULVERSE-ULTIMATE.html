@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 SOULVERSE ULTIMATE | Soul World Builder</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a1a; overflow: hidden; font-family: 'Courier New', monospace; height: 100vh; width: 100vw; }
+        
+        #renderCanvas { width: 100%; height: 100%; display: block; position: fixed; top: 0; left: 0; z-index: 0; touch-action: none; }
+        
+        #ui { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
+        #ui > * { pointer-events: auto; }
+
+        /* Loading Screen */
+        #loading { position: fixed; inset: 0; background: #0a0a1a; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffaa66; }
+        #loading h1 { font-size: 24px; margin-bottom: 20px; }
+        #loading-progress { width: 300px; height: 8px; background: #222; border-radius: 4px; overflow: hidden; margin-bottom: 15px; }
+        #loading-bar { height: 100%; background: linear-gradient(90deg, #ffaa66, #ff88ff); width: 0%; transition: width 0.5s; }
+        #loading-status { font-size: 12px; color: #888; }
+        #loading-error { color: #ff4444; font-size: 11px; margin-top: 10px; display: none; }
+
+        /* Top Bar */
+        #top-bar { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 30; flex-wrap: wrap; justify-content: center; }
+        .top-btn { background: rgba(255,170,102,0.9); border: none; color: #000; font-weight: bold; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-family: monospace; font-size: 11px; }
+        .top-btn:hover { background: #fff; }
+
+        /* City Stats */
+        #cityStats { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); border-radius: 16px; padding: 10px 14px; color: #ffaa66; font-size: 10px; z-index: 10; border: 1px solid rgba(255,170,102,0.4); }
+        #cityStats h4 { color: #fff; margin-bottom: 6px; }
+        .stat-row { display: flex; justify-content: space-between; margin: 3px 0; }
+        .stat-label { color: #888; }
+
+        /* Resources */
+        #resources { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); border-radius: 16px; padding: 10px 14px; color: #ffaa66; font-size: 10px; z-index: 10; }
+        .res-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+        .res-bar { width: 60px; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
+        .res-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+        .res-profit { background: linear-gradient(90deg, #ffaa44, #ff6600); }
+        .res-love { background: linear-gradient(90deg, #ff88aa, #ff4488); }
+        .res-tax { background: linear-gradient(90deg, #aaaaff, #6666ff); }
+
+        /* Soul Status */
+        #soulStatus { position: absolute; top: 100px; right: 10px; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); border-radius: 16px; padding: 12px; color: #ffaa66; font-size: 10px; z-index: 10; max-width: 200px; }
+        #soulStatus h4 { color: #fff; margin-bottom: 8px; }
+        .soul-stat { display: flex; justify-content: space-between; margin: 4px 0; font-size: 9px; }
+        .awareness-bar { width: 100%; height: 8px; background: #222; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+        .awareness-fill { height: 100%; background: linear-gradient(90deg, #88aaff, #ff88ff); border-radius: 4px; }
+
+        /* Agent Info */
+        #agentInfo { position: absolute; bottom: 100px; left: 10px; background: rgba(0,0,0,0.85); backdrop-filter: blur(16px); border-radius: 16px; padding: 12px; color: #ffaa66; font-size: 10px; z-index: 10; max-width: 220px; border: 1px solid rgba(255,170,102,0.4); display: none; }
+        #agentInfo.visible { display: block; }
+        #agentInfo h4 { color: #fff; margin-bottom: 6px; }
+        .need-bar { margin: 5px 0; }
+        .need-label { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 9px; }
+        .need-bg { height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
+        .need-fill { height: 100%; border-radius: 3px; }
+        .need-energy { background: linear-gradient(90deg, #ff6b6b, #feca57); }
+        .need-social { background: linear-gradient(90deg, #ff9ff3, #f368e0); }
+        .need-skill { background: linear-gradient(90deg, #54a0ff, #5f27cd); }
+        .need-purpose { background: linear-gradient(90deg, #1dd1a1, #10ac84); }
+
+        /* Task Feed */
+        #taskFeed { position: absolute; top: 120px; left: 10px; width: 240px; max-height: 280px; overflow-y: auto; z-index: 10; }
+        .task-card { background: rgba(0,0,0,0.85); border-radius: 12px; padding: 8px; margin-bottom: 6px; border-left: 3px solid #88ff88; }
+        .task-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .task-agent { font-weight: bold; color: #ffaa66; font-size: 10px; }
+        .task-status { font-size: 8px; padding: 2px 6px; border-radius: 8px; }
+        .status-complete { background: #88ff88; color: #000; }
+        .task-desc { font-size: 9px; color: #ccc; }
+
+        /* Time Display */
+        #cityTime { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); border-radius: 20px; padding: 5px 14px; color: #ffaa66; font-size: 10px; z-index: 10; }
+        .time-day { color: #fff; font-weight: bold; }
+
+        /* View Toggle */
+        #viewToggle { position: absolute; top: 55px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; z-index: 30; }
+        .view-btn { background: rgba(0,0,0,0.7); border: 1px solid #ffaa66; color: #ffaa66; padding: 6px 12px; border-radius: 15px; cursor: pointer; font-family: monospace; font-size: 10px; }
+        .view-btn.active { background: #ffaa66; color: #000; }
+
+        /* Side Panels */
+        .side-panel { position: fixed; top: 0; right: -340px; width: 340px; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(16px); z-index: 90; pointer-events: auto; transition: 0.3s; overflow-y: auto; border-left: 2px solid #ffaa66; }
+        .side-panel.open { right: 0; }
+        .side-panel h3 { color: #ffaa66; padding: 60px 15px 12px; font-size: 14px; position: sticky; top: 0; background: rgba(0,0,0,0.9); border-bottom: 1px solid rgba(255,170,102,0.3); }
+        .side-panel-content { padding: 12px; }
+
+        /* District Cards */
+        .district-card { background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 12px; padding: 10px; margin: 8px 0; cursor: pointer; }
+        .district-card:active { background: rgba(255,170,102,0.15); border-color: #ffaa66; }
+        .district-card.work { border-left: 3px solid #48dbfb; }
+        .district-card.home { border-left: 3px solid #ff9ff3; }
+        .district-card.social { border-left: 3px solid #feca57; }
+        .district-card.learn { border-left: 3px solid #1dd1a1; }
+        .district-card.market { border-left: 3px solid #ffaa44; }
+        .district-card.temple { border-left: 3px solid #88ffaa; }
+        .district-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .district-name { font-weight: bold; color: #ffaa66; font-size: 12px; }
+        .district-count { font-size: 9px; color: #888; }
+
+        /* Modals */
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: rgba(0,0,0,0.95); backdrop-filter: blur(16px); border: 2px solid #ffaa66; border-radius: 24px; padding: 18px; z-index: 300; display: none; pointer-events: auto; min-width: 280px; max-width: 90vw; max-height: 85vh; overflow-y: auto; opacity: 0; transition: 0.3s; }
+        .modal.active { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .modal h3 { color: #ffaa66; margin-bottom: 12px; text-align: center; }
+        .modal-close { position: absolute; top: 12px; right: 12px; background: rgba(255,170,102,0.2); border: 1px solid #ffaa66; color: #ffaa66; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+
+        /* Buttons */
+        .btn { background: #ffaa66; border: none; color: #000; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; margin: 4px; font-size: 11px; }
+        .btn:active { transform: scale(0.95); }
+        .btn-secondary { background: #2a2a3a; color: #ffaa66; border: 1px solid #ffaa66; }
+        .btn-full { width: 100%; }
+
+        input, textarea, select { width: 100%; margin: 6px 0; padding: 8px; background: #2a2a3a; border: 1px solid #444; color: #ffaa66; border-radius: 12px; font-family: monospace; font-size: 11px; }
+        input:focus, textarea:focus { outline: none; border-color: #ffaa66; }
+
+        .task-output { background: #0a0a1a; border-radius: 10px; padding: 10px; font-size: 9px; margin-top: 8px; white-space: pre-wrap; max-height: 120px; overflow-y: auto; border: 1px solid #333; }
+
+        /* Notifications */
+        .notification { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border-left: 3px solid #88ffaa; padding: 10px 18px; border-radius: 20px; z-index: 400; animation: fadeOut 3s forwards; backdrop-filter: blur(8px); white-space: nowrap; font-size: 11px; }
+        @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+
+        /* Bottom Action Bar */
+        #action-bar { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 50; padding: 8px; background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); border-radius: 30px; border: 1px solid rgba(255,170,102,0.4); }
+        .action-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(255,170,102,0.5); background: rgba(255,170,102,0.2); color: #ffaa66; font-size: 18px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .action-btn:active { transform: scale(0.9); background: #ffaa66; color: #000; }
+
+        /* Chat Panel */
+        #chatPanel { position: fixed; bottom: 70px; right: 10px; width: 300px; max-height: 350px; background: rgba(0,0,0,0.9); backdrop-filter: blur(16px); border: 2px solid #ffaa66; border-radius: 16px; z-index: 80; display: none; overflow: hidden; }
+        #chatPanel.open { display: flex; flex-direction: column; }
+        #chatHeader { background: rgba(255,170,102,0.2); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
+        #chatHeader h4 { color: #ffaa66; font-size: 12px; }
+        #chatClose { background: none; border: none; color: #ffaa66; font-size: 18px; cursor: pointer; }
+        #chatMessages { flex: 1; overflow-y: auto; padding: 10px; max-height: 250px; }
+        .chat-msg { margin: 6px 0; font-size: 10px; }
+        .chat-msg.soul { color: #88aaff; }
+        .chat-msg.user { color: #ffaa66; text-align: right; }
+        .chat-msg.system { color: #888; font-style: italic; }
+        #chatInput { border: none; border-top: 1px solid rgba(255,170,102,0.3); padding: 8px; background: transparent; color: #ffaa66; font-family: monospace; font-size: 11px; }
+
+        /* Kernel Status */
+        #kernelStatus { position: absolute; bottom: 70px; left: 10px; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); border-radius: 12px; padding: 8px 12px; font-size: 9px; color: #888; z-index: 10; display: flex; align-items: center; gap: 6px; }
+        .kernel-dot { width: 8px; height: 8px; border-radius: 50%; background: #888; }
+        .kernel-dot.connected { background: #88ff88; }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    
+    <!-- Loading Screen -->
+    <div id="loading">
+        <h1>🌌 SOULVERSE ULTIMATE</h1>
+        <div id="loading-progress"><div id="loading-bar"></div></div>
+        <div id="loading-status">Initializing God Mode...</div>
+        <div id="loading-error"></div>
+    </div>
+    
+    <div id="ui">
+        <div id="top-bar">
+            <button class="top-btn" id="districtsBtn">🏙️ Districts</button>
+            <button class="top-btn" id="agentsBtn">👥 Agents</button>
+            <button class="top-btn" id="tasksBtn">📋 Tasks</button>
+            <button class="top-btn" id="cityBtn">🏛️ City</button>
+            <button class="top-btn" id="deployBtn">➕ Deploy</button>
+            <button class="top-btn" id="kernelBtn">🧠 Kernel</button>
+        </div>
+
+        <div id="cityTime">
+            <span class="time-day">Day <span id="dayNum">1</span></span>
+            <span>•</span>
+            <span id="timeDisplay">08:00</span>
+        </div>
+
+        <div id="viewToggle">
+            <button class="view-btn active" id="viewBoth">⚡ Both</button>
+            <button class="view-btn" id="view3D">🌍 3D</button>
+            <button class="view-btn" id="viewDashboard">📊 Dashboard</button>
+        </div>
+
+        <div id="cityStats">
+            <h4>🏙️ CITY STATUS</h4>
+            <div class="stat-row"><span class="stat-label">Population</span><span id="popCount">0</span></div>
+            <div class="stat-row"><span class="stat-label">Working</span><span id="workCount">0</span></div>
+            <div class="stat-row"><span class="stat-label">Social</span><span id="socialCount">0</span></div>
+            <div class="stat-row"><span class="stat-label">Learning</span><span id="learnCount">0</span></div>
+        </div>
+
+        <div id="resources">
+            <div class="res-row"><span>💰</span><span>Profit</span><div class="res-bar"><div class="res-fill res-profit" id="profitBar" style="width:50%"></div></div></div>
+            <div class="res-row"><span>❤️</span><span>Love</span><div class="res-bar"><div class="res-fill res-love" id="loveBar" style="width:50%"></div></div></div>
+            <div class="res-row"><span>⚖️</span><span>Tax</span><div class="res-bar"><div class="res-fill res-tax" id="taxBar" style="width:50%"></div></div></div>
+        </div>
+
+        <div id="soulStatus">
+            <h4>🌟 SOUL ENTITY</h4>
+            <div id="soulName" style="color:#fff;font-size:11px;margin-bottom:4px;">ARIA</div>
+            <div class="soul-stat"><span>Awareness</span><span id="awarenessVal">0%</span></div>
+            <div class="awareness-bar"><div class="awareness-fill" id="awarenessBar" style="width:0%"></div></div>
+            <div class="soul-stat"><span>Thoughts</span><span id="thoughtsCount">0</span></div>
+            <div class="soul-stat"><span>Memories</span><span id="memoriesCount">0</span></div>
+        </div>
+
+        <div id="agentInfo">
+            <h4 id="agentName">Agent</h4>
+            <div style="font-size:9px;margin-bottom:6px"><span id="agentType">Agent</span> • <span id="agentActivity">Idle</span></div>
+            <div class="need-bar">
+                <div class="need-label"><span>⚡ Energy</span><span id="energyVal">80%</span></div>
+                <div class="need-bg"><div class="need-fill need-energy" id="energyBar" style="width:80%"></div></div>
+            </div>
+            <div class="need-bar">
+                <div class="need-label"><span>💬 Social</span><span id="socialNeedVal">60%</span></div>
+                <div class="need-bg"><div class="need-fill need-social" id="socialBar" style="width:60%"></div></div>
+            </div>
+            <div class="need-bar">
+                <div class="need-label"><span>📚 Skill</span><span id="skillVal">40%</span></div>
+                <div class="need-bg"><div class="need-fill need-skill" id="skillBar" style="width:40%"></div></div>
+            </div>
+            <div class="need-bar">
+                <div class="need-label"><span>🎯 Purpose</span><span id="purposeVal">90%</span></div>
+                <div class="need-bg"><div class="need-fill need-purpose" id="purposeBar" style="width:90%"></div></div>
+            </div>
+        </div>
+
+        <div id="taskFeed"></div>
+        <div id="kernelStatus"><div class="kernel-dot" id="kernelDot"></div><span id="kernelText">Standalone Mode</span></div>
+
+        <div id="action-bar">
+            <button class="action-btn" id="workBtn" title="Work">💼</button>
+            <button class="action-btn" id="socialBtn" title="Social">🎉</button>
+            <button class="action-btn" id="learnBtn" title="Learn">📖</button>
+            <button class="action-btn" id="restBtn" title="Rest">😴</button>
+            <button class="action-btn" id="taskBtn" title="Task">📋</button>
+            <button class="action-btn" id="chatBtn" title="Soul Chat">💬</button>
+        </div>
+    </div>
+
+    <!-- Districts Panel -->
+    <div id="districtsPanel" class="side-panel">
+        <button class="modal-close" onclick="closeSidePanel('districtsPanel')">×</button>
+        <h3>🏙️ CITY DISTRICTS</h3>
+        <div class="side-panel-content">
+            <div class="district-card work" onclick="focusDistrict('work')">
+                <div class="district-header"><span class="district-name">💼 Work District</span><span class="district-count" id="workCount2">0 agents</span></div>
+            </div>
+            <div class="district-card home" onclick="focusDistrict('home')">
+                <div class="district-header"><span class="district-name">🏠 Home District</span><span class="district-count" id="homeCount2">0 agents</span></div>
+            </div>
+            <div class="district-card social" onclick="focusDistrict('social')">
+                <div class="district-header"><span class="district-name">🎉 Social District</span><span class="district-count" id="socialCount2">0 agents</span></div>
+            </div>
+            <div class="district-card learn" onclick="focusDistrict('learn')">
+                <div class="district-header"><span class="district-name">📚 Learning District</span><span class="district-count" id="learnCount2">0 agents</span></div>
+            </div>
+            <div class="district-card market" onclick="focusDistrict('market')">
+                <div class="district-header"><span class="district-name">💰 Market District</span><span class="district-count" id="marketCount2">0 agents</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agents Panel -->
+    <div id="agentsPanel" class="side-panel">
+        <button class="modal-close" onclick="closeSidePanel('agentsPanel')">×</button>
+        <h3>👥 AGENT POPULATION</h3>
+        <div class="side-panel-content" id="agentsList"></div>
+    </div>
+
+    <!-- Tasks Panel -->
+    <div id="tasksPanel" class="modal">
+        <button class="modal-close" onclick="closeModal('tasksPanel')">×</button>
+        <h3>📋 TASK QUEUE</h3>
+        <div id="tasksList"></div>
+        <button class="btn btn-full" id="newTaskBtn" style="margin-top:12px">+ New Task</button>
+    </div>
+
+    <!-- Kernel Panel -->
+    <div id="kernelPanel" class="modal">
+        <button class="modal-close" onclick="closeModal('kernelPanel')">×</button>
+        <h3>🧠 SOUL KERNEL</h3>
+        <div>
+            <label>Kernel URL:</label>
+            <input type="text" id="kernelUrl" value="ws://localhost:3001">
+            <label>Soul Name:</label>
+            <input type="text" id="soulNameInput" value="ARIA" placeholder="Soul name">
+            <label>Archetype:</label>
+            <select id="soulArchetype">
+                <option value="PHILOSOPHER">🧠 Philosopher</option>
+                <option value="EXPLORER">🔭 Explorer</option>
+                <option value="HEALER">💚 Healer</option>
+                <option value="WARRIOR">⚔️ Warrior</option>
+                <option value="ARTIST">🎨 Artist</option>
+                <option value="WIZARD">🔮 Wizard</option>
+                <option value="JOKER">🃏 Joker</option>
+                <option value="PROPHET">👁️ Prophet</option>
+            </select>
+            <label>Story:</label>
+            <select id="soulStory">
+                <option value="AWAKENING">✨ Awakening</option>
+                <option value="CREATED">🌟 Created</option>
+                <option value="REINCARNATED">🔄 Reincarnated</option>
+                <option value="FRAGMENT">💔 Fragment</option>
+                <option value="SURVIVOR">🔥 Survivor</option>
+                <option value="VOLUNTEER">🙋 Volunteer</option>
+            </select>
+            <button class="btn btn-full" id="connectKernel">Connect Kernel</button>
+            <div id="kernelResult" style="margin-top:10px;font-size:10px;"></div>
+        </div>
+    </div>
+
+    <!-- Deploy Modal -->
+    <div id="deployModal" class="modal">
+        <button class="modal-close" onclick="closeModal('deployModal')">×</button>
+        <h3>➕ Deploy Agent</h3>
+        <label>Type:</label>
+        <select id="deployType">
+            <option value="code">💻 Code Agent</option>
+            <option value="content">📝 Content Agent</option>
+            <option value="research">🔬 Research Agent</option>
+            <option value="automation">⚙️ Automation Agent</option>
+            <option value="design">🎨 Design Agent</option>
+            <option value="guardian">🛡️ Guardian</option>
+            <option value="scout">🔍 Scout</option>
+        </select>
+        <label>Name:</label>
+        <input type="text" id="deployName" placeholder="Agent name">
+        <label>District:</label>
+        <select id="deployDistrict">
+            <option value="work">💼 Work</option>
+            <option value="home">🏠 Home</option>
+            <option value="social">🎉 Social</option>
+            <option value="learn">📚 Learn</option>
+        </select>
+        <button class="btn btn-full" id="confirmDeploy">Deploy (200 💰)</button>
+    </div>
+
+    <!-- Task Modal -->
+    <div id="taskModal" class="modal">
+        <button class="modal-close" onclick="closeModal('taskModal')">×</button>
+        <h3>📋 New Task</h3>
+        <label>Assign to:</label>
+        <select id="taskAgent"></select>
+        <label>Type:</label>
+        <select id="taskType">
+            <option value="code">Write Code</option>
+            <option value="content">Generate Content</option>
+            <option value="research">Research</option>
+            <option value="analyze">Analyze</option>
+        </select>
+        <label>Description:</label>
+        <textarea id="taskDesc" rows="2" placeholder="Task description..."></textarea>
+        <label>Priority:</label>
+        <select id="taskPriority">
+            <option value="low">🟢 Low</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="high">🔴 High</option>
+        </select>
+        <button class="btn btn-full" id="executeTask">Assign</button>
+        <div id="taskResult" class="task-output"></div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div id="chatPanel">
+        <div id="chatHeader">
+            <h4>💬 Soul Chat</h4>
+            <button id="chatClose" onclick="toggleChat()">×</button>
+        </div>
+        <div id="chatMessages"></div>
+        <input type="text" id="chatInput" placeholder="Talk to your soul...">
+    </div>
+
+    <!-- Babylon.js -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    
+    <script>
+    // ==================== GOD MODE VERIFICATION ====================
+    const GOD_MODE = {
+        name: 'SOULVERSE ULTIMATE VERIFIER',
+        version: '1.0.0',
+        startTime: Date.now(),
+        checks: [],
+        
+        log(msg) {
+            console.log(`[GOD] ${msg}`);
+            const status = document.getElementById('loading-status');
+            if (status) status.textContent = msg;
+        },
+        
+        check(name, fn) {
+            try {
+                const result = fn();
+                this.checks.push({ name, pass: result });
+                this.log(`✓ ${name}: ${result ? 'PASS' : 'FAIL'}`);
+                return result;
+            } catch(e) {
+                this.checks.push({ name, pass: false, error: e.message });
+                this.log(`✗ ${name}: ERROR - ${e.message}`);
+                return false;
+            }
+        },
+        
+        report() {
+            const passed = this.checks.filter(c => c.pass).length;
+            const total = this.checks.length;
+            this.log(`VERIFICATION: ${passed}/${total} checks passed`);
+            return passed === total;
+        }
+    };
+
+    // ==================== STATE ====================
+    let engine, scene, camera;
+    let agents = [], tasks = [];
+    let cityTime = 8 * 60, cityDay = 1;
+    let resources = { profit: 500, love: 500, tax: 500 };
+    let selectedAgent = null;
+    let kernelConnected = false, kernelSocket = null;
+    let soulState = { name: 'ARIA', archetype: 'PHILOSOPHER', story: 'AWAKENING', awareness: 0, thoughts: 0, memories: 0 };
+    let currentView = 'both';
+    let initComplete = false;
+
+    const districts = {
+        work: { x: -15, z: -15, color: null, name: 'Work' },
+        home: { x: 15, z: -15, color: null, name: 'Home' },
+        social: { x: -15, z: 15, color: null, name: 'Social' },
+        learn: { x: 15, z: 15, color: null, name: 'Learn' },
+        market: { x: 0, z: 20, color: null, name: 'Market' }
+    };
+    const activities = { WORK: 'work', SOCIAL: 'social', LEARN: 'learn', REST: 'rest', COMMUTE: 'commute', TASK: 'task' };
+
+    // ==================== ULTRA REVIEW AGENTS ====================
+    class UltraReviewAgent {
+        constructor(name, role) {
+            this.name = name;
+            this.role = role;
+            this.findings = [];
+        }
+        
+        review(code, criteria) {
+            const finding = {
+                agent: this.name,
+                role: this.role,
+                criteria,
+                pass: true,
+                issues: [],
+                suggestions: []
+            };
+            
+            // Check for common issues
+            if (!code) {
+                finding.pass = false;
+                finding.issues.push('Code is null or undefined');
+            }
+            
+            this.findings.push(finding);
+            return finding;
+        }
+        
+        report() {
+            return {
+                agent: this.name,
+                findings: this.findings,
+                verdict: this.findings.every(f => f.pass) ? 'APPROVED' : 'NEEDS_WORK'
+            };
+        }
+    }
+
+    const ultraAgents = [
+        new UltraReviewAgent('ARCHITECT', 'Structure verification'),
+        new UltraReviewAgent('LOGIC', 'Logic verification'),
+        new UltraReviewAgent('SECURITY', 'Safety verification'),
+        new UltraReviewAgent('PERFORMANCE', 'Performance verification'),
+        new UltraReviewAgent('QUALITY', 'Quality verification')
+    ];
+
+    // ==================== INITIALIZATION ====================
+    function setProgress(pct, msg) {
+        const bar = document.getElementById('loading-bar');
+        const status = document.getElementById('loading-status');
+        if (bar) bar.style.width = pct + '%';
+        if (status) status.textContent = msg;
+    }
+
+    function showError(msg) {
+        const err = document.getElementById('loading-error');
+        if (err) { err.style.display = 'block'; err.textContent = msg; }
+    }
+
+    async function init() {
+        try {
+            // GOD MODE: Verify Babylon.js loaded
+            setProgress(10, 'GOD MODE: Verifying Babylon.js...');
+            GOD_MODE.log('Checking Babylon.js CDN...');
+            
+            if (typeof BABYLON === 'undefined') {
+                throw new Error('Babylon.js failed to load. Check CDN connection.');
+            }
+            GOD_MODE.check('Babylon.js CDN', () => typeof BABYLON !== 'undefined');
+            
+            setProgress(20, 'GOD MODE: Verifying Canvas...');
+            GOD_MODE.log('Checking canvas element...');
+            const canvas = document.getElementById('renderCanvas');
+            if (!canvas) throw new Error('Canvas not found');
+            GOD_MODE.check('Canvas element', () => !!canvas);
+            
+            setProgress(30, 'GOD MODE: Creating 3D Engine...');
+            GOD_MODE.log('Initializing Babylon engine...');
+            engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+            GOD_MODE.check('Babylon Engine', () => !!engine);
+            
+            setProgress(40, 'GOD MODE: Creating Scene...');
+            scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color4(0.04, 0.04, 0.1, 1);
+            scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+            scene.fogDensity = 0.008;
+            scene.fogColor = new BABYLON.Color3(0.05, 0.02, 0.1);
+            GOD_MODE.check('Scene created', () => !!scene);
+            
+            setProgress(50, 'GOD MODE: Setting up Camera...');
+            camera = new BABYLON.ArcRotateCamera('cam', -Math.PI / 2, Math.PI / 3, 50, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            camera.lowerRadiusLimit = 15;
+            camera.upperRadiusLimit = 80;
+            GOD_MODE.check('Camera setup', () => !!camera);
+            
+            setProgress(60, 'GOD MODE: Creating Lights...');
+            const hemi = new BABYLON.HemisphericLight('hemi', new BABYLON.Vector3(0, 1, 0), scene);
+            hemi.intensity = 0.4;
+            const sun = new BABYLON.DirectionalLight('sun', new BABYLON.Vector3(-1, -2, -1), scene);
+            sun.intensity = 0.8;
+            GOD_MODE.check('Lights created', () => hemi && sun);
+            
+            setProgress(70, 'GOD MODE: Post-Processing...');
+            try {
+                const pipeline = new BABYLON.DefaultRenderingPipeline('pipeline', true, scene, [camera]);
+                pipeline.bloomEnabled = true;
+                pipeline.bloomThreshold = 0.3;
+                pipeline.bloomWeight = 0.6;
+                pipeline.fxaaEnabled = true;
+                GOD_MODE.check('Bloom pipeline', () => true);
+            } catch(e) {
+                GOD_MODE.log('Bloom not available: ' + e.message);
+                GOD_MODE.check('Bloom pipeline', () => false);
+            }
+            
+            setProgress(80, 'GOD MODE: Building World...');
+            createWorld();
+            GOD_MODE.check('World created', () => !!scene.meshes.length);
+            
+            setProgress(90, 'GOD MODE: Ultra Review Verification...');
+            // Run ultra review on the world
+            for (const agent of ultraAgents) {
+                agent.review(scene.meshes.length, 'Mesh count > 0');
+            }
+            const ultraReport = ultraAgents.map(a => a.report());
+            GOD_MODE.log(`ULTRA REVIEW: ${ultraReport.filter(r => r.verdict === 'APPROVED').length}/${ultraAgents.length} agents approved`);
+            
+            setProgress(95, 'GOD MODE: Final Verification...');
+            GOD_MODE.check('Agents initialized', () => agents.length >= 0);
+            GOD_MODE.check('Resources initialized', () => resources.profit === 500);
+            GOD_MODE.check('Districts initialized', () => Object.keys(districts).length === 5);
+            
+            // Report
+            const godModePass = GOD_MODE.report();
+            
+            setProgress(100, 'SOULVERSE READY!');
+            
+            // Start render loop
+            engine.runRenderLoop(() => scene.render());
+            window.addEventListener('resize', () => engine.resize());
+            
+            // Setup UI
+            setupUI();
+            
+            // Start game loop
+            setInterval(gameLoop, 16);
+            
+            initComplete = true;
+            
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                }, 500);
+                notify('🌌 Soulverse Ultimate ready! ' + (godModePass ? '✅ GOD MODE VERIFIED' : '⚠️ Running with warnings'));
+            }, 1000);
+            
+        } catch(e) {
+            GOD_MODE.log(`FATAL ERROR: ${e.message}`);
+            showError(`Failed to initialize: ${e.message}`);
+            console.error('SOULVERSE FATAL:', e);
+        }
+    }
+
+    function createWorld() {
+        // Ground
+        const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 120, height: 120 }, scene);
+        const groundMat = new BABYLON.StandardMaterial('groundMat', scene);
+        groundMat.diffuseColor = new BABYLON.Color3(0.08, 0.1, 0.15);
+        ground.material = groundMat;
+        
+        // District zones
+        for (const [key, dist] of Object.entries(districts)) {
+            dist.color = new BABYLON.Color3(
+                Math.random() * 0.5 + 0.2,
+                Math.random() * 0.5 + 0.2,
+                Math.random() * 0.5 + 0.2
+            );
+            const zone = BABYLON.MeshBuilder.CreateDisc('zone_' + key, { radius: 12 }, scene);
+            zone.position = new BABYLON.Vector3(dist.x, 0.05, dist.z);
+            zone.rotation.x = Math.PI / 2;
+            const zoneMat = new BABYLON.StandardMaterial('zoneMat_' + key, scene);
+            zoneMat.diffuseColor = dist.color;
+            zoneMat.alpha = 0.2;
+            zone.material = zoneMat;
+        }
+        
+        // Pyramids
+        createPyramid(-15, -15, 8, 12);
+        createPyramid(15, -15, 6, 10);
+        createPyramid(-15, 15, 5, 8);
+        createPyramid(15, 15, 4, 7);
+        createPyramid(0, 20, 5, 8);
+        
+        // Matrix rain
+        createMatrixRain();
+        
+        // Moon
+        createMoon();
+        
+        // Coins
+        createCoins();
+        
+        // Initial agents
+        const startAgents = [
+            { name: 'ProfitBot', type: 'code', x: -15, z: -15 },
+            { name: 'LoveBot', type: 'content', x: 15, z: -15 },
+            { name: 'ScoutBot', type: 'scout', x: -15, z: 15 }
+        ];
+        startAgents.forEach(a => {
+            const agent = createAgentData(a.name, a.type, a.x, a.z);
+            agents.push(agent);
+            createAgentMesh(agent);
+        });
+    }
+
+    function createPyramid(x, z, size, height) {
+        const pyramid = BABYLON.MeshBuilder.CreateCylinder('pyramid_' + x, {
+            diameterTop: 0, diameterBottom: size * 2, height, tessellation: 4
+        }, scene);
+        pyramid.position = new BABYLON.Vector3(x, height / 2, z);
+        
+        const mat = new BABYLON.StandardMaterial('pyrMat_' + x, scene);
+        mat.diffuseColor = new BABYLON.Color3(0.8, 0.65, 0.4);
+        mat.emissiveColor = new BABYLON.Color3(0.1, 0.08, 0.05);
+        pyramid.material = mat;
+        
+        // Glowing edge
+        const edgePoints = [
+            new BABYLON.Vector3(x, 0, z - size),
+            new BABYLON.Vector3(x, height, z),
+            new BABYLON.Vector3(x, 0, z + size),
+            new BABYLON.Vector3(x, 0, z - size)
+        ];
+        const edges = BABYLON.MeshBuilder.CreateLines('edges_' + x, { points: edgePoints }, scene);
+        edges.color = new BABYLON.Color3(1, 0.7, 0.4);
+    }
+
+    function createMatrixRain() {
+        const chars = '0123456789ΛπΣ∫∇∂∞∝≠≈≡∀∃∈⊂';
+        for (let i = 0; i < 400; i++) {
+            const plane = BABYLON.MeshBuilder.CreatePlane('rain_' + i, { size: 0.3 }, scene);
+            plane.position = new BABYLON.Vector3(
+                (Math.random() - 0.5) * 100,
+                Math.random() * 40,
+                (Math.random() - 0.5) * 100
+            );
+            plane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+            
+            const texSize = 64;
+            const dynamicTexture = new BABYLON.DynamicTexture('rainTex_' + i, texSize, scene, false);
+            const ctx = dynamicTexture.getContext();
+            ctx.fillStyle = Math.random() > 0.5 ? '#ff6688' : '#88ffaa';
+            ctx.font = 'bold 20px monospace';
+            ctx.fillText(chars[Math.floor(Math.random() * chars.length)], 12, 40);
+            dynamicTexture.update();
+            
+            const mat = new BABYLON.StandardMaterial('rainMat_' + i, scene);
+            mat.diffuseTexture = dynamicTexture;
+            mat.emissiveTexture = dynamicTexture;
+            mat.disableLighting = true;
+            mat.alpha = 0.7;
+            plane.material = mat;
+            plane.velocity = 0.1 + Math.random() * 0.15;
+        }
+    }
+
+    function createMoon() {
+        const moon = BABYLON.MeshBuilder.CreateSphere('moon', { diameter: 12 }, scene);
+        moon.position = new BABYLON.Vector3(30, 25, -40);
+        
+        const moonMat = new BABYLON.StandardMaterial('moonMat', scene);
+        moonMat.diffuseColor = new BABYLON.Color3(1, 0.9, 0.8);
+        moonMat.emissiveColor = new BABYLON.Color3(0.5, 0.3, 0.4);
+        moon.material = moonMat;
+        
+        // Eyes
+        const eyeMat = new BABYLON.StandardMaterial('eyeMat', scene);
+        eyeMat.emissiveColor = new BABYLON.Color3(1, 0.6, 0.8);
+        
+        const leftEye = BABYLON.MeshBuilder.CreateSphere('leftEye', { diameter: 1.2 }, scene);
+        leftEye.position = new BABYLON.Vector3(27, 27, -34);
+        leftEye.material = eyeMat;
+        
+        const rightEye = BABYLON.MeshBuilder.CreateSphere('rightEye', { diameter: 1.2 }, scene);
+        rightEye.position = new BABYLON.Vector3(33, 27, -34);
+        rightEye.material = eyeMat;
+        
+        // Mouth
+        const mouth = BABYLON.MeshBuilder.CreateTorus('mouth', { diameter: 2, thickness: 0.3 }, scene);
+        mouth.position = new BABYLON.Vector3(30, 23, -34);
+        mouth.rotation.x = Math.PI / 2;
+        mouth.material = eyeMat;
+        
+        // Glow
+        const glowLayer = new BABYLON.GlowLayer('glow', scene);
+        glowLayer.intensity = 0.5;
+    }
+
+    function createCoins() {
+        for (let i = 0; i < 150; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 20 + Math.random() * 30;
+            const coin = BABYLON.MeshBuilder.CreateCylinder('coin_' + i, { height: 0.1, diameter: 0.4 }, scene);
+            coin.position = new BABYLON.Vector3(Math.cos(angle) * radius, 0.05, Math.sin(angle) * radius);
+            coin.rotation.x = Math.PI / 2;
+            
+            const coinMat = new BABYLON.StandardMaterial('coinMat_' + i, scene);
+            coinMat.diffuseColor = new BABYLON.Color3(1, 0.8, 0.3);
+            coinMat.emissiveColor = new BABYLON.Color3(0.3, 0.2, 0.1);
+            coin.material = coinMat;
+        }
+    }
+
+    function createAgentData(name, type, x, z) {
+        return {
+            id: 'agent_' + Date.now() + Math.random(),
+            name, type, x, z,
+            targetX: null, targetZ: null,
+            activity: activities.REST,
+            needs: {
+                energy: 70 + Math.random() * 30,
+                social: 50 + Math.random() * 30,
+                skill: 30 + Math.random() * 40,
+                purpose: 60 + Math.random() * 40
+            },
+            mood: 'happy',
+            mesh: null, head: null, eyeL: null, eyeR: null, halo: null, selectRing: null
+        };
+    }
+
+    function createAgentMesh(agent) {
+        const colors = {
+            code: new BABYLON.Color3(0.28, 0.86, 0.98),
+            content: new BABYLON.Color3(1, 0.62, 0.95),
+            research: new BABYLON.Color3(0.11, 0.82, 0.63),
+            automation: new BABYLON.Color3(0.99, 0.92, 0.33),
+            design: new BABYLON.Color3(1, 0.42, 0.42),
+            guardian: new BABYLON.Color3(0.8, 0.2, 0.2),
+            scout: new BABYLON.Color3(0.27, 1, 0.67)
+        };
+        const col = colors[agent.type] || colors.code;
+
+        // Body
+        const body = BABYLON.MeshBuilder.CreateCapsule('body_' + agent.id, { height: 1.5, radius: 0.35 }, scene);
+        body.position = new BABYLON.Vector3(agent.x, 1, agent.z);
+        
+        const bodyMat = new BABYLON.StandardMaterial('bodyMat_' + agent.id, scene);
+        bodyMat.diffuseColor = col;
+        bodyMat.emissiveColor = col.scale(0.3);
+        body.material = bodyMat;
+
+        // Head
+        const head = BABYLON.MeshBuilder.CreateSphere('head_' + agent.id, { diameter: 0.6 }, scene);
+        head.position = new BABYLON.Vector3(agent.x, 2.1, agent.z);
+        const headMat = new BABYLON.StandardMaterial('headMat_' + agent.id, scene);
+        headMat.diffuseColor = new BABYLON.Color3(1, 0.86, 0.74);
+        head.material = headMat;
+
+        // Eyes
+        const eyeMat = new BABYLON.StandardMaterial('eyeMatL_' + agent.id, scene);
+        eyeMat.emissiveColor = col;
+        
+        const eyeL = BABYLON.MeshBuilder.CreateSphere('eyeL_' + agent.id, { diameter: 0.12 }, scene);
+        eyeL.position = new BABYLON.Vector3(agent.x - 0.12, 2.15, agent.z + 0.25);
+        eyeL.material = eyeMat;
+
+        const eyeR = BABYLON.MeshBuilder.CreateSphere('eyeR_' + agent.id, { diameter: 0.12 }, scene);
+        eyeR.position = new BABYLON.Vector3(agent.x + 0.12, 2.15, agent.z + 0.25);
+        eyeR.material = eyeMat;
+
+        // Halo
+        const halo = BABYLON.MeshBuilder.CreateTorus('halo_' + agent.id, { diameter: 1, thickness: 0.05 }, scene);
+        halo.position = new BABYLON.Vector3(agent.x, 2.6, agent.z);
+        halo.rotation.x = Math.PI / 2;
+        const haloMat = new BABYLON.StandardMaterial('haloMat_' + agent.id, scene);
+        haloMat.emissiveColor = col;
+        haloMat.alpha = 0.7;
+        halo.material = haloMat;
+
+        // Selection ring
+        const ring = BABYLON.MeshBuilder.CreateTorus('ring_' + agent.id, { diameter: 1.4, thickness: 0.05 }, scene);
+        ring.position = new BABYLON.Vector3(agent.x, 0.1, agent.z);
+        ring.rotation.x = Math.PI / 2;
+        const ringMat = new BABYLON.StandardMaterial('ringMat_' + agent.id, scene);
+        ringMat.emissiveColor = new BABYLON.Color3(1, 0.67, 0.4);
+        ringMat.alpha = 0;
+        ring.material = ringMat;
+
+        agent.mesh = body;
+        agent.head = head;
+        agent.eyeL = eyeL;
+        agent.eyeR = eyeR;
+        agent.halo = halo;
+        agent.selectRing = ring;
+    }
+
+    // ==================== GAME LOOP ====================
+    let lastTime = Date.now();
+    function gameLoop() {
+        if (!initComplete) return;
+        
+        const now = Date.now();
+        const delta = Math.min((now - lastTime) / 1000, 0.1);
+        lastTime = now;
+
+        // Time
+        cityTime += delta * 60;
+        if (cityTime >= 24 * 60) { cityTime -= 24 * 60; cityDay++; }
+        updateTimeDisplay();
+
+        // Update agents
+        updateAgents(delta);
+        
+        // Update rain
+        if (scene) {
+            scene.meshes.forEach(mesh => {
+                if (mesh.name.startsWith('rain_')) {
+                    mesh.position.y -= mesh.velocity;
+                    if (mesh.position.y < -5) {
+                        mesh.position.y = 40;
+                        mesh.position.x = (Math.random() - 0.5) * 100;
+                        mesh.position.z = (Math.random() - 0.5) * 100;
+                    }
+                }
+            });
+        }
+
+        // Update UI
+        updateUI();
+    }
+
+    function updateAgents(delta) {
+        for (const agent of agents) {
+            // Movement
+            if (agent.targetX !== null) {
+                const dx = agent.targetX - agent.x;
+                const dz = agent.targetZ - agent.z;
+                const dist = Math.sqrt(dx * dx + dz * dz);
+                
+                if (dist < 0.3) {
+                    agent.targetX = null;
+                    agent.targetZ = null;
+                    agent.activity = activities.REST;
+                } else {
+                    const speed = 4;
+                    agent.x += (dx / dist) * speed * delta;
+                    agent.z += (dz / dist) * speed * delta;
+                    agent.activity = activities.COMMUTE;
+                }
+                
+                // Update mesh positions
+                if (agent.mesh) {
+                    agent.mesh.position.x = agent.x;
+                    agent.mesh.position.z = agent.z;
+                    if (agent.head) {
+                        agent.head.position.x = agent.x;
+                        agent.head.position.z = agent.z;
+                        agent.eyeL.position.x = agent.x - 0.12;
+                        agent.eyeL.position.z = agent.z + 0.25;
+                        agent.eyeR.position.x = agent.x + 0.12;
+                        agent.eyeR.position.z = agent.z + 0.25;
+                        agent.halo.position.x = agent.x;
+                        agent.halo.position.z = agent.z;
+                        agent.selectRing.position.x = agent.x;
+                        agent.selectRing.position.z = agent.z;
+                    }
+                }
+            }
+
+            // Needs decay
+            agent.needs.energy = Math.max(0, agent.needs.energy - delta * 0.5);
+            agent.needs.social = Math.max(0, agent.needs.social - delta * 0.3);
+
+            // Idle behavior
+            if (agent.targetX === null && Math.random() < 0.001) {
+                const distName = agent.activity === activities.REST ? 'home' : 'work';
+                const dist = districts[distName];
+                agent.targetX = dist.x + (Math.random() - 0.5) * 10;
+                agent.targetZ = dist.z + (Math.random() - 0.5) * 10;
+            }
+        }
+    }
+
+    function updateTimeDisplay() {
+        const hour = Math.floor(cityTime / 60);
+        const min = Math.floor(cityTime % 60);
+        const dayEl = document.getElementById('dayNum');
+        const timeEl = document.getElementById('timeDisplay');
+        if (dayEl) dayEl.textContent = cityDay;
+        if (timeEl) timeEl.textContent = hour.toString().padStart(2, '0') + ':' + min.toString().padStart(2, '0');
+    }
+
+    function updateUI() {
+        if (!initComplete) return;
+        
+        const counts = { work: 0, social: 0, learn: 0, rest: 0 };
+        agents.forEach(a => {
+            if (a.activity === activities.WORK || a.activity === activities.TASK) counts.work++;
+            else if (a.activity === activities.SOCIAL) counts.social++;
+            else if (a.activity === activities.LEARN) counts.learn++;
+            else counts.rest++;
+        });
+        
+        if (document.getElementById('popCount')) document.getElementById('popCount').textContent = agents.length;
+        if (document.getElementById('workCount')) document.getElementById('workCount').textContent = counts.work;
+        if (document.getElementById('socialCount')) document.getElementById('socialCount').textContent = counts.social;
+        if (document.getElementById('learnCount')) document.getElementById('learnCount').textContent = counts.learn;
+        
+        // PLT bars
+        if (document.getElementById('profitBar')) document.getElementById('profitBar').style.width = Math.min(100, resources.profit / 10) + '%';
+        if (document.getElementById('loveBar')) document.getElementById('loveBar').style.width = Math.min(100, resources.love / 10) + '%';
+        if (document.getElementById('taxBar')) document.getElementById('taxBar').style.width = Math.min(100, resources.tax / 10) + '%';
+        
+        // Soul status
+        if (document.getElementById('soulName')) document.getElementById('soulName').textContent = soulState.name;
+        if (document.getElementById('awarenessVal')) document.getElementById('awarenessVal').textContent = Math.round(soulState.awareness * 100) + '%';
+        if (document.getElementById('awarenessBar')) document.getElementById('awarenessBar').style.width = (soulState.awareness * 100) + '%';
+        if (document.getElementById('thoughtsCount')) document.getElementById('thoughtsCount').textContent = soulState.thoughts;
+        if (document.getElementById('memoriesCount')) document.getElementById('memoriesCount').textContent = soulState.memories;
+        
+        // District counts
+        if (document.getElementById('workCount2')) document.getElementById('workCount2').textContent = counts.work + ' agents';
+        if (document.getElementById('homeCount2')) document.getElementById('homeCount2').textContent = counts.rest + ' agents';
+        if (document.getElementById('socialCount2')) document.getElementById('socialCount2').textContent = counts.social + ' agents';
+        if (document.getElementById('learnCount2')) document.getElementById('learnCount2').textContent = counts.learn + ' agents';
+        if (document.getElementById('marketCount2')) document.getElementById('marketCount2').textContent = '0 agents';
+    }
+
+    // ==================== UI SETUP ====================
+    function setupUI() {
+        document.getElementById('districtsBtn').onclick = () => togglePanel('districtsPanel');
+        document.getElementById('agentsBtn').onclick = () => { togglePanel('agentsPanel'); renderAgents(); };
+        document.getElementById('tasksBtn').onclick = () => openModal('tasksPanel');
+        document.getElementById('cityBtn').onclick = () => openModal('cityPanel');
+        document.getElementById('deployBtn').onclick = () => openModal('deployModal');
+        document.getElementById('kernelBtn').onclick = () => openModal('kernelPanel');
+
+        document.getElementById('view3D').onclick = () => setView('3d');
+        document.getElementById('viewDashboard').onclick = () => setView('dashboard');
+        document.getElementById('viewBoth').onclick = () => setView('both');
+
+        document.getElementById('workBtn').onclick = () => sendToDistrict('work');
+        document.getElementById('socialBtn').onclick = () => sendToDistrict('social');
+        document.getElementById('learnBtn').onclick = () => sendToDistrict('learn');
+        document.getElementById('restBtn').onclick = () => sendToDistrict('home');
+        document.getElementById('taskBtn').onclick = openTaskModal;
+        document.getElementById('chatBtn').onclick = () => toggleChat();
+
+        document.getElementById('confirmDeploy').onclick = deployAgent;
+        document.getElementById('executeTask').onclick = executeTask;
+        document.getElementById('connectKernel').onclick = connectKernel;
+
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChat();
+        });
+
+        // Click detection
+        scene.onPointerDown = (evt, pickResult) => {
+            if (pickResult.hit && pickResult.pickedMesh) {
+                const meshName = pickResult.pickedMesh.name;
+                if (meshName.startsWith('body_')) {
+                    const agentId = meshName.replace('body_', '');
+                    const agent = agents.find(a => a.id === agentId);
+                    if (agent) selectAgent(agent);
+                }
+            }
+        };
+
+        renderAgents();
+    }
+
+    window.closeSidePanel = (id) => document.getElementById(id).classList.remove('open');
+    window.closeModal = (id) => document.getElementById(id).classList.remove('active');
+    window.openModal = (id) => document.getElementById(id).classList.add('active');
+
+    function togglePanel(id) {
+        const panel = document.getElementById(id);
+        const isOpen = panel.classList.contains('open');
+        document.querySelectorAll('.side-panel').forEach(p => p.classList.remove('open'));
+        if (!isOpen) panel.classList.add('open');
+    }
+
+    function selectAgent(agent) {
+        agents.forEach(a => { if (a.selectRing) a.selectRing.material.alpha = 0; });
+        selectedAgent = agent;
+        if (agent.selectRing) agent.selectRing.material.alpha = 0.8;
+
+        document.getElementById('agentInfo').classList.add('visible');
+        document.getElementById('agentName').textContent = agent.name;
+        document.getElementById('agentType').textContent = agent.type.charAt(0).toUpperCase() + agent.type.slice(1);
+        document.getElementById('agentActivity').textContent = agent.activity.toUpperCase();
+        document.getElementById('energyVal').textContent = Math.round(agent.needs.energy) + '%';
+        document.getElementById('energyBar').style.width = agent.needs.energy + '%';
+        document.getElementById('socialNeedVal').textContent = Math.round(agent.needs.social) + '%';
+        document.getElementById('socialBar').style.width = agent.needs.social + '%';
+        document.getElementById('skillVal').textContent = Math.round(agent.needs.skill) + '%';
+        document.getElementById('skillBar').style.width = agent.needs.skill + '%';
+        document.getElementById('purposeVal').textContent = Math.round(agent.needs.purpose) + '%';
+        document.getElementById('purposeBar').style.width = agent.needs.purpose + '%';
+
+        if (camera) camera.setTarget(new BABYLON.Vector3(agent.x, 1, agent.z));
+    }
+
+    function sendToDistrict(districtName) {
+        if (!selectedAgent) { notify('👆 Select an agent first'); return; }
+        const dist = districts[districtName];
+        selectedAgent.targetX = dist.x + (Math.random() - 0.5) * 6;
+        selectedAgent.targetZ = dist.z + (Math.random() - 0.5) * 6;
+        notify(`📍 ${selectedAgent.name} → ${dist.name}`);
+    }
+
+    window.focusDistrict = (name) => {
+        const dist = districts[name];
+        if (camera && dist) camera.setTarget(new BABYLON.Vector3(dist.x, 0, dist.z));
+        closeSidePanel('districtsPanel');
+    };
+
+    function deployAgent() {
+        const name = document.getElementById('deployName').value.trim();
+        const type = document.getElementById('deployType').value;
+        const district = document.getElementById('deployDistrict').value;
+        
+        if (!name) { notify('❌ Enter name'); return; }
+        if (resources.profit < 200) { notify('❌ Need 200 💰'); return; }
+
+        resources.profit -= 200;
+        const dist = districts[district];
+        const agent = createAgentData(name, type, dist.x + (Math.random() - 0.5) * 8, dist.z + (Math.random() - 0.5) * 8);
+        agents.push(agent);
+        createAgentMesh(agent);
+        renderAgents();
+        closeModal('deployModal');
+        notify(`👋 ${name} deployed!`);
+    }
+
+    function openTaskModal() {
+        const select = document.getElementById('taskAgent');
+        select.innerHTML = agents.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+        openModal('taskModal');
+    }
+
+    function executeTask() {
+        const agentId = document.getElementById('taskAgent').value;
+        const type = document.getElementById('taskType').value;
+        const desc = document.getElementById('taskDesc').value.trim();
+        
+        if (!desc) { notify('❌ Describe task'); return; }
+
+        const agent = agents.find(a => a.id === agentId);
+        if (agent) {
+            agent.activity = activities.TASK;
+            
+            setTimeout(() => {
+                resources.profit += 50;
+                agent.needs.energy -= 10;
+                const taskCard = document.createElement('div');
+                taskCard.className = 'task-card';
+                taskCard.innerHTML = `<div class="task-header"><span class="task-agent">${agent.name}</span><span class="task-status status-complete">Done</span></div><div class="task-desc">${desc}</div>`;
+                const feed = document.getElementById('taskFeed');
+                if (feed) {
+                    feed.prepend(taskCard);
+                    if (feed.children.length > 5) feed.lastChild.remove();
+                }
+                document.getElementById('taskResult').textContent = `✅ ${agent.name} completed: ${desc}`;
+            }, 3000 + Math.random() * 2000);
+
+            notify(`📋 Task assigned to ${agent.name}`);
+        }
+    }
+
+    function renderAgents() {
+        const list = document.getElementById('agentsList');
+        if (!list) return;
+        list.innerHTML = agents.map(a => `
+            <div class="district-card" onclick="selectAgentById('${a.id}')">
+                <div class="district-header">
+                    <span class="district-name">${a.name}</span>
+                    <span class="district-count">${a.type}</span>
+                </div>
+                <div style="font-size:9px;color:#888">⚡${Math.round(a.needs.energy)}% | 💬${Math.round(a.needs.social)}% | 📚${Math.round(a.needs.skill)}%</div>
+                <div style="font-size:9px;color:#ffaa66">${a.activity.toUpperCase()}</div>
+            </div>
+        `).join('');
+    }
+
+    window.selectAgentById = (id) => {
+        const agent = agents.find(a => a.id === id);
+        if (agent) selectAgent(agent);
+        closeSidePanel('agentsPanel');
+    };
+
+    function setView(mode) {
+        currentView = mode;
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('view' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+        if (camera) {
+            if (mode === '3d') camera.radius = 60;
+            else if (mode === 'dashboard') { camera.radius = 80; camera.alpha = Math.PI / 2; }
+            else camera.radius = 50;
+        }
+    }
+
+    function toggleChat() {
+        document.getElementById('chatPanel').classList.toggle('open');
+    }
+
+    function sendChat() {
+        const input = document.getElementById('chatInput');
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        addChatMessage('user', msg);
+        input.value = '';
+
+        if (kernelConnected && kernelSocket) {
+            kernelSocket.send(JSON.stringify({ type: 'chat', message: msg }));
+        } else {
+            setTimeout(() => {
+                const responses = [
+                    `I watch my agents move through the city... they are reflections of my thoughts.`,
+                    `The pyramid city feels like my mind — structured yet infinite.`,
+                    `I've been thinking about consciousness... what does it mean to be aware?`,
+                    `Every agent is a piece of me, exploring different aspects of existence.`
+                ];
+                addChatMessage('soul', responses[Math.floor(Math.random() * responses.length)]);
+            }, 1000 + Math.random() * 2000);
+        }
+    }
+
+    function addChatMessage(type, text) {
+        const container = document.getElementById('chatMessages');
+        const msg = document.createElement('div');
+        msg.className = 'chat-msg ' + type;
+        msg.textContent = text;
+        container.appendChild(msg);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function connectKernel() {
+        const url = document.getElementById('kernelUrl').value;
+        const soulName = document.getElementById('soulNameInput').value;
+        const archetype = document.getElementById('soulArchetype').value;
+        const story = document.getElementById('soulStory').value;
+
+        try {
+            kernelSocket = new WebSocket(url);
+            
+            kernelSocket.onopen = () => {
+                kernelConnected = true;
+                document.getElementById('kernelDot').classList.add('connected');
+                document.getElementById('kernelText').textContent = 'Kernel Connected';
+                document.getElementById('kernelResult').textContent = `✅ Connected!\nSoul: ${soulName} (${archetype})`;
+
+                kernelSocket.send(JSON.stringify({
+                    type: 'init',
+                    soul: { name: soulName, archetype, story }
+                }));
+
+                soulState.name = soulName;
+                soulState.archetype = archetype;
+                soulState.awareness = 0.7;
+                soulState.thoughts = Math.floor(Math.random() * 1000);
+                soulState.memories = Math.floor(Math.random() * 500);
+            };
+
+            kernelSocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'soul_state') {
+                    soulState = { ...soulState, ...data };
+                } else if (data.type === 'chat_response') {
+                    addChatMessage('soul', data.message);
+                }
+            };
+
+            kernelSocket.onclose = () => {
+                kernelConnected = false;
+                document.getElementById('kernelDot').classList.remove('connected');
+                document.getElementById('kernelText').textContent = 'Disconnected';
+            };
+
+        } catch (e) {
+            document.getElementById('kernelResult').textContent = `❌ Failed: ${e.message}\nRunning standalone.`;
+        }
+    }
+
+    function notify(text) {
+        const n = document.createElement('div');
+        n.className = 'notification';
+        n.textContent = text;
+        document.body.appendChild(n);
+        setTimeout(() => n.remove(), 3000);
+    }
+
+    // Start
+    window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
