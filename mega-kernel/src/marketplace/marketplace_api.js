@@ -22,6 +22,9 @@ const { validateSoul, createDefaultSoul } = require('../soul_registry/soul_schem
 const app = express();
 app.use(express.json());
 
+// Serve Soulverse static files
+app.use(express.static(path.resolve(__dirname, '..', '..', '..', 'Soulverse')));
+
 const DATA_DIR = path.resolve(__dirname, '..', '..', 'data');
 const soulManager = new SoulManager(DATA_DIR);
 

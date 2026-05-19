@@ -153,6 +153,12 @@ class SkillsEngine {
                 plt_affinity: { profit: 0.5, love: 0.2, tax: 0.3 },
                 weight: 0.8,
             },
+            memory_search: {
+                name: 'memory_search',
+                description: 'Search through memories for relevant information',
+                plt_affinity: { profit: 0.4, love: 0.3, tax: 0.3 },
+                weight: 0.7,
+            },
             consolidate_session: {
                 name: 'consolidate_session',
                 description: 'Session analysis and summary',
@@ -808,6 +814,26 @@ Respond ONLY with valid JSON:
         
         const response = await this.brain.think(prompt, this._getContext());
         return this._parseJSONResponse(response);
+    }
+    
+    // =========================================================================
+    // MEMORY_SEARCH — Search through memories
+    // =========================================================================
+    
+    async _skill_memory_search(input) {
+        const query = typeof input === 'string' ? input : input.query || '';
+        const memory = this.memory;
+        
+        if (!memory || typeof memory.query !== 'function') {
+            return { found: false, message: 'Memory system unavailable', query };
+        }
+        
+        try {
+            const results = await memory.query({ text: query });
+            return { found: results && results.length > 0, count: results ? results.length : 0, results: results || [], query };
+        } catch (e) {
+            return { found: false, message: e.message, query };
+        }
     }
     
     // =========================================================================

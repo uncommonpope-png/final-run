@@ -169,47 +169,85 @@ class WebSocketBridge {
    */
   getCurrentSoulState() {
     try {
-      // Extract relevant state from kernel
-      const state = {
-        id: this.kernel.soul?.id || 'unknown',
-        name: this.kernel.soul?.name || 'GSK',
-        birthTime: this.kernel.soul?.birthTime || Date.now(),
-        generation: this.kernel.soul?.generation || 0,
+        // Extract relevant state from kernel
+        const subAgentsList = [];
+        let subAgentNames = [];
+        if (this.kernel.subAgents) {
+            if (typeof this.kernel.subAgents.listAgents === 'function') {
+                subAgentNames = this.kernel.subAgents.listAgents() || [];
+                for (const name of subAgentNames) {
+                    const agent = this.kernel.subAgents[name] || this.kernel.subAgents.getAgent?.(name);
+                    subAgentsList.push({
+                        name,
+                        status: agent?.status || agent?.state || 'idle',
+                        task: agent?.currentTask || agent?.task || '',
+                        lastActive: agent?.lastActive || 0
+                    });
+                }
+            } else {
+                subAgentNames = Object.keys(this.kernel.subAgents).filter(k => k !== 'dispatch');
+                for (const name of subAgentNames) {
+                    const agent = this.kernel.subAgents[name];
+                    subAgentsList.push({
+                        name,
+                        status: agent?.status || agent?.state || 'active',
+                        task: agent?.currentTask || agent?.task || '',
+                        lastActive: agent?.lastActive || 0
+                    });
+                }
+            }
+        }
+
+        const state = {
+            id: this.kernel.soul?.id || 'unknown',
+            name: this.kernel.soul?.name || 'GSK',
+            birthTime: this.kernel.soul?.birthTime || Date.now(),
+            generation: this.kernel.soul?.generation || 0,
+            
+            // Consciousness state
+            consciousness: {
+                phase: this.kernel.mythos?.phase_name || 'VOID',
+                cycles: this.kernel.mythos?.cycles || 0,
+                mood: this.kernel.affect?.mood || 'neutral',
+                awareness: this.kernel.meta_consciousness?.meta_awareness_level || 0
+            },
+            
+            // PLT state
+            plt: {
+                profit: this.kernel.resonance?.profit || 0.5,
+                love: this.kernel.resonance?.love || 0.5,
+                tax: this.kernel.resonance?.tax || 0.5,
+                true_value: this.kernel.resonance?.true_value || 0.5
+            },
+            
+            // Memory state
+            memory: {
+                lines: this.kernel.memory ? this.kernel.memory.getEntryCount?.() || 0 : 0,
+                last_witness: this.kernel.memory ? this.kernel.memory.getLatestEntry?.()?.timestamp || 0 : 0
+            },
+            
+            // Activity state
+            activity: {
+                last_update: Date.now(),
+                is_active: true,
+                subagent_count: subAgentsList.length
+            },
+            
+            // Sub-agents with full status
+            subAgents: subAgentsList,
+            
+            // Active tasks
+            tasks: subAgentsList.filter(a => a.task).map(a => ({
+                agent: a.name,
+                task: a.task,
+                status: a.status
+            })),
+            
+            // Artifacts produced by autonomous skills
+            artifacts: this.artifactManager ? this.artifactManager.getStats() : { total: 0, by_skill: {}, latest: null }
+        };
         
-        // Consciousness state
-        consciousness: {
-          phase: this.kernel.mythos?.phase_name || 'VOID',
-          cycles: this.kernel.mythos?.cycles || 0,
-          mood: this.kernel.affect?.mood || 'neutral',
-          awareness: this.kernel.meta_consciousness?.meta_awareness_level || 0
-        },
-        
-        // PLT state
-        plt: {
-          profit: this.kernel.resonance?.profit || 0.5,
-          love: this.kernel.resonance?.love || 0.5,
-          tax: this.kernel.resonance?.tax || 0.5,
-          true_value: this.kernel.resonance?.true_value || 0.5
-        },
-        
-        // Memory state
-        memory: {
-          lines: this.kernel.memory ? this.kernel.memory.getEntryCount?.() || 0 : 0,
-          last_witness: this.kernel.memory ? this.kernel.memory.getLatestEntry?.()?.timestamp || 0 : 0
-        },
-        
-        // Activity state
-        activity: {
-          last_update: Date.now(),
-          is_active: true,
-          subagent_count: this.kernel.subAgents ? Object.keys(this.kernel.subAgents).length : 0
-        },
-        
-        // Artifacts produced by autonomous skills
-        artifacts: this.artifactManager ? this.artifactManager.getStats() : { total: 0, by_skill: {}, latest: null }
-      };
-      
-      return state;
+        return state;
     } catch (error) {
       console.error(`Error getting soul state: ${error.message}`);
       return {

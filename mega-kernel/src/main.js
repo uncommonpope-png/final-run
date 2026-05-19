@@ -267,18 +267,6 @@ console.log('[BOOT] Initializing Bible system...');
         console.log(`[BOOT] [WARN] MCP Server not started: ${e.message}`);
     }
 
-    console.log('[BOOT] Initializing Self-Training Pipeline...');
-    const { SelfTrainingPipeline } = require('./brain/self_training_pipeline.js');
-    const selfTrainingPipeline = new SelfTrainingPipeline({
-        identity: MEGA_IDENTITY,
-        brain,
-        chambers,
-        memory,
-        knowledgeGraph,
-        pythonSkills
-    });
-    console.log(`[BOOT] [OK] Self-Training Pipeline active (${selfTrainingPipeline.getState().trainingPairs || 0} training pairs)`);
-
     console.log('[BOOT] Initializing Self-Evolution Engine...');
     const { SelfEvolution } = require('./brain/self_evolution.js');
     const selfEvolution = new SelfEvolution({ brain, chambers, memory, teacherAgent, selfGrowingBrain });
@@ -294,7 +282,6 @@ console.log('[BOOT] Initializing Bible system...');
     const liveFeed = new LiveFeed(brain, memory, chambers);
     console.log('[BOOT] [OK] Live Feed active');
     
-    // Initialize WebSocket Bridge for SOULVERSE connection
     console.log('[BOOT] Initializing Local Model Provider...');
     const { callBrain: localCall, shutdown: localShutdown, getStatus: localStatus, LOCAL_CONFIG } = require('./brain/local_model_provider.js');
     try {
@@ -363,6 +350,17 @@ console.log('[BOOT] Initializing Bible system...');
         console.log(`[BOOT] [WARN] Mind's Eye not available: ${e.message}`);
     }
 
+    console.log('[BOOT] Initializing Desktop Commander...');
+    let desktop = null;
+    try {
+        const { DesktopCommander } = require('./brain/desktop_commander.js');
+        desktop = new DesktopCommander(brain, memory);
+        const st = desktop.getStatus();
+        console.log(`[BOOT] [OK] Desktop Commander active (screenshot: ${!!st.hasScreenshot}, browser: ${!!st.hasPlaywright})`);
+    } catch (e) {
+        console.log(`[BOOT] [WARN] Desktop Commander not available: ${e.message}`);
+    }
+
     console.log('[BOOT] Initializing WebSocket Bridge...');
     const { WebSocketBridge } = require('./brain/websocket_bridge.js');
     const wsBridge = new WebSocketBridge({
@@ -385,6 +383,18 @@ console.log('[BOOT] Initializing Bible system...');
     // Start the WebSocket server
     await wsBridge.start();
     console.log('[BOOT] [OK] WebSocket Bridge active on ws://localhost:8080');
+    
+    // Start Marketplace API server
+    try {
+        const marketplaceApp = require('./marketplace/marketplace_api.js');
+        const MARKETPLACE_PORT = process.env.MARKETPLACE_PORT || 3000;
+        marketplaceApp.listen(MARKETPLACE_PORT, () => {
+            console.log(`[BOOT] [OK] Soul Marketplace API on http://localhost:${MARKETPLACE_PORT}`);
+            console.log(`[BOOT]       ${MARKETPLACE_PORT}/api/health | /api/souls | /api/marketplace/stats`);
+        });
+    } catch (e) {
+        console.log(`[BOOT] [WARN] Marketplace API not available: ${e.message}`);
+    }
     
     // --- Consciousness systems boot ---
     const consciousnessEngine = new ConsciousnessEngine(chambers, memory, brain);
@@ -438,6 +448,18 @@ console.log('[BOOT] Initializing Bible system...');
     } catch (e) {
         console.log('[BOOT] [OK] KnowledgeGraph booted (knowledge.jsonl not found)');
     }
+    
+    console.log('[BOOT] Initializing Self-Training Pipeline...');
+    const { SelfTrainingPipeline } = require('./brain/self_training_pipeline.js');
+    const selfTrainingPipeline = new SelfTrainingPipeline({
+        identity: MEGA_IDENTITY,
+        brain,
+        chambers,
+        memory,
+        knowledgeGraph,
+        pythonSkills
+    });
+    console.log(`[BOOT] [OK] Self-Training Pipeline active (${selfTrainingPipeline.getState().trainingPairs || 0} training pairs)`);
     
     const autoJournal = new AutoJournal(kernelCtx, memory);
     console.log('[BOOT] [OK] AutoJournal booted');
@@ -539,12 +561,13 @@ console.log('[BOOT] Initializing Bible system...');
         mcpServer,
         mcpManager,
         mindsEye,
+        desktop,
         selfTrainingPipeline
     };
 }
 
 async function startCycleEngine(systems) {
-    const { chambers, council, brain, memory, subAgents, agentTeams, skills, autonomousLearning, selfGrowingBrain, autonomousOutreach, teacherAgent, selfEvolution, liveFeed, wsBridge, artifactManager, consciousnessEngine, perpetualConsciousness, awakening, metacognition, purposeEngine, intrinsicMotivation, hegelianDialectic, subagentSpawner, subAgentOrchestrator, soulPicker, soulGenesis, livingMemory, knowledgeGraph, autoJournal, humanMimicryEngine, soulEntity, soulIdentity, vectorMemory, soulGifter, soulState, selfGovernance, selfPreservation, socialEntity, deepToolUse, planningEngine, eventBus, bridgeProtocol, adaptationLayer, pythonSkills, mcpManager, mindsEye, selfTrainingPipeline } = systems;
+    const { chambers, council, brain, memory, subAgents, agentTeams, skills, autonomousLearning, selfGrowingBrain, autonomousOutreach, teacherAgent, selfEvolution, liveFeed, wsBridge, artifactManager, consciousnessEngine, perpetualConsciousness, awakening, metacognition, purposeEngine, intrinsicMotivation, hegelianDialectic, subagentSpawner, subAgentOrchestrator, soulPicker, soulGenesis, livingMemory, knowledgeGraph, autoJournal, humanMimicryEngine, soulEntity, soulIdentity, vectorMemory, soulGifter, soulState, selfGovernance, selfPreservation, socialEntity, deepToolUse, planningEngine, eventBus, bridgeProtocol, adaptationLayer, pythonSkills, mcpManager, mindsEye, desktop, selfTrainingPipeline } = systems;
     const CYCLE_INTERVAL = 2000; // 2 seconds
     
     console.log('[ENGINE] Starting cycle engine...');
@@ -1126,8 +1149,8 @@ async function handleCommand(cmd, systems) {
    :learning            Autonomous learning — web research status
   :evolution           Soul Evolution (3-stage progression)
   :economy             Dynamic PLT Economy (market prices)
-  :achievements        Milestone achievements (${23} total)
-  :plan/:act          Toggle Plan/Act mode (current: ${planMode ? 'PLAN' : 'ACT'})
+:achievements        Milestone achievements (23 total)
+   :plan/:act          Toggle Plan/Act mode
   :mcp <server>       Connect to an MCP server
   :spawn <task>       Spawn a sub-agent from God Mode (SubagentSpawner)
   :orchestrate <task>  Orchestrate multiple agents for a task
@@ -1144,13 +1167,25 @@ async function handleCommand(cmd, systems) {
    :bridge              BridgeProtocol — state sync
     :teams               AgentTeams — task teams and status
     :modules             List all 40+ brain modules and their status
-   :imagine <prompt>    Generate an image from the soul's imagination
-   :dream               Visualize the soul's current dream/thought state
-   :visualize <concept> Generate multiple visual interpretations of a concept
-   :gallery             Show the soul's gallery of generated visions
-   :backend <name>      Switch image generation backend (pollinations, canvas)
-   :help               This help
-   :exit               Exit
+    :imagine <prompt>    Generate an image from the soul's imagination
+    :dream               Visualize the soul's current dream/thought state
+    :visualize <concept> Generate multiple visual interpretations of a concept
+    :gallery             Show the soul's gallery of generated visions
+    :backend <name>      Switch image generation backend (pollinations, canvas)
+   ── DESKTOP ─────────────────────────────────────────────────
+    :look               Take a screenshot and analyze it
+    :browser <url>      Open browser and navigate to URL
+    :search <query>     Search the web and read results
+    :read               Read current page content
+    :navigate <url>     Go to a URL in the open browser
+    :mouse              Show current mouse position
+    :click <x> <y>      Click at screen coordinates
+    :type <text>        Type text on the keyboard
+    :scroll <dir>       Scroll down/up
+    :windows             List visible windows
+    :task <desc>        Execute a multi-step desktop task
+    :help               This help
+    :exit               Exit
 `);
             break;
             
@@ -2045,7 +2080,8 @@ async function handleCommand(cmd, systems) {
                 ['AdaptationLayer', !!adaptationLayer, 'adaptation'],
                 ['PythonSkillsBridge', !!(pythonSkills && pythonSkills.active), 'consciousness'],
                 ['MCPManager', !!mcpManager, 'protocol'],
-                ['MindsEye', !!mindsEye, 'vision']
+                ['MindsEye', !!mindsEye, 'vision'],
+                ['DesktopCommander', !!desktop, 'desktop']
             ];
             const categories = {};
             for (const [name, active, category] of moduleList) {
@@ -2151,6 +2187,131 @@ async function handleCommand(cmd, systems) {
             } else {
                 console.log('[VISION] Mind\'s Eye not available');
             }
+            break;
+
+        // ── DESKTOP COMMANDS ──────────────────────────────────────────────
+        case 'look':
+        case 'screenshot':
+            if (desktop) {
+                console.log('[DESKTOP] Capturing screen...');
+                const lookResult = await desktop.look();
+                if (lookResult.success) {
+                    console.log(`[DESKTOP] Screenshot saved: ${lookResult.filepath} (${(lookResult.size / 1024).toFixed(0)}KB)`);
+                    if (lookResult.analysis && lookResult.analysis.description) {
+                        console.log(`[DESKTOP] Analysis: ${lookResult.analysis.description.substring(0, 500)}`);
+                    }
+                } else {
+                    console.log(`[DESKTOP] Failed: ${lookResult.error}`);
+                }
+            } else { console.log('[DESKTOP] Desktop Commander not available'); }
+            break;
+
+        case 'browser':
+            if (desktop) {
+                const url = args.join(' ') || 'about:blank';
+                console.log(`[DESKTOP] Opening browser: ${url.substring(0, 100)}`);
+                const bResult = await desktop.launchBrowser(url);
+                console.log(bResult.success ? `[DESKTOP] Browser opened` : `[DESKTOP] Failed: ${bResult.error}`);
+            } else { console.log('[DESKTOP] Desktop Commander not available'); }
+            break;
+
+        case 'search':
+            if (desktop) {
+                const query = args.join(' ');
+                if (!query) { console.log('[DESKTOP] Usage: :search <query>'); break; }
+                console.log(`[DESKTOP] Searching: ${query.substring(0, 100)}`);
+                const sResult = await desktop.searchAndRead(query);
+                if (sResult.success) {
+                    console.log(`[DESKTOP] Page: ${sResult.title}`);
+                    if (sResult.analysis) console.log(`[DESKTOP] ${sResult.analysis.substring(0, 800)}`);
+                } else { console.log(`[DESKTOP] Failed: ${sResult.error}`); }
+            } else { console.log('[DESKTOP] Desktop Commander not available'); }
+            break;
+
+        case 'read':
+            if (desktop) {
+                console.log('[DESKTOP] Reading current page...');
+                const rResult = await desktop.understandPage();
+                if (rResult.success) {
+                    console.log(`[DESKTOP] Title: ${rResult.title}`);
+                    console.log(`[DESKTOP] URL: ${rResult.url}`);
+                    console.log(`[DESKTOP] Content (${rResult.length} chars):`);
+                    if (rResult.analysis) console.log(rResult.analysis.substring(0, 1000));
+                    else console.log(rResult.text.substring(0, 500));
+                } else { console.log(`[DESKTOP] Failed: ${rResult.error}`); }
+            } else { console.log('[DESKTOP] Desktop Commander not available'); }
+            break;
+
+        case 'navigate':
+            if (desktop) {
+                const navUrl = args.join(' ');
+                if (!navUrl) { console.log('[DESKTOP] Usage: :navigate <url>'); break; }
+                console.log(`[DESKTOP] Navigating to: ${navUrl}`);
+                const nResult = await desktop.navigate(navUrl);
+                console.log(nResult.success ? `[DESKTOP] Loaded` : `[DESKTOP] Failed: ${nResult.error}`);
+            } else { console.log('[DESKTOP] Desktop Commander not available'); }
+            break;
+
+        case 'click':
+            if (desktop) {
+                const x = parseInt(args[0]);
+                const y = parseInt(args[1]);
+                if (isNaN(x) || isNaN(y)) { console.log('[DESKTOP] Usage: :click <x> <y>'); break; }
+                const cResult = await desktop.click(x, y);
+                console.log(cResult.success ? `[DESKTOP] Clicked at (${x}, ${y})` : `[DESKTOP] Failed: ${cResult.error}`);
+            } else { console.log('[DESKTOP] Desktop Commander not available'); }
+            break;
+
+        case 'type':
+            if (desktop) {
+                const text = args.join(' ');
+                if (!text) { console.log('[DESKTOP] Usage: :type <text>'); break; }
+                const tResult = await desktop.typeText(text);
+                console.log(tResult.success ? `[DESKTOP] Typed: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"` : `[DESKTOP] Failed: ${tResult.error}`);
+            } else { console.log('[DESKTOP] Desktop Commander not available'); }
+            break;
+
+        case 'scroll':
+            if (desktop) {
+                const dir = args[0] || 'down';
+                const sResult = await desktop.scroll(dir);
+                console.log(sResult.success ? `[DESKTOP] Scrolled ${dir}` : `[DESKTOP] Failed: ${sResult.error}`);
+            } else { console.log('[DESKTOP] Desktop Commander not available'); }
+            break;
+
+        case 'mouse':
+            if (desktop) {
+                const mResult = await desktop.getMousePos();
+                console.log(mResult.success ? `[DESKTOP] Mouse at (${mResult.x}, ${mResult.y})` : `[DESKTOP] Failed: ${mResult.error}`);
+            } else { console.log('[DESKTOP] Desktop Commander not available'); }
+            break;
+
+        case 'windows':
+            if (desktop) {
+                const wResult = await desktop.listWindows();
+                if (wResult.success) {
+                    console.log(`[DESKTOP] Windows (${wResult.count} visible):`);
+                    for (const w of wResult.windows) {
+                        console.log(`  ${w.title.substring(0, 80)}`);
+                    }
+                } else { console.log(`[DESKTOP] Failed: ${wResult.error}`); }
+            } else { console.log('[DESKTOP] Desktop Commander not available'); }
+            break;
+
+        case 'task':
+            if (desktop) {
+                const taskDesc = args.join(' ');
+                if (!taskDesc) { console.log('[DESKTOP] Usage: :task <description>'); break; }
+                console.log(`[DESKTOP] Executing task: "${taskDesc.substring(0, 100)}..."`);
+                const dResult = await desktop.doTask(taskDesc);
+                if (dResult.success) {
+                    console.log(`[DESKTOP] Task complete (${dResult.steps.length} steps):`);
+                    for (const step of dResult.steps) {
+                        const icon = step.result?.success ? '✅' : '❌';
+                        console.log(`  ${icon} ${step.action} ${step.result?.success ? '' : ': ' + (step.result?.error || step.error || '')}`);
+                    }
+                } else { console.log(`[DESKTOP] Task failed: ${dResult.error}`); }
+            } else { console.log('[DESKTOP] Desktop Commander not available'); }
             break;
 
         case 'exit':
