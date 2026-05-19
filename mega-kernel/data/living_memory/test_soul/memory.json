@@ -40,8 +40,8 @@
         "relatedTo": [],
         "concept": "consciousness",
         "timestamp": 1778804711615,
-        "accessCount": 10,
-        "lastAccessed": 1779068613072,
+        "accessCount": 11,
+        "lastAccessed": 1779148983012,
         "strengthening": [],
         "associations": [],
         "neverForget": true,
@@ -265,6 +265,31 @@
               "timestamp": 1779068613036,
               "accessCount": 0,
               "lastAccessed": 1779068613036,
+              "strengthening": [],
+              "associations": [],
+              "neverForget": true,
+              "narrativeImportance": "high"
+            },
+            "strength": 1,
+            "type": "similar"
+          },
+          {
+            "memory": {
+              "id": "mem_1779148983005_c5jlm6a11",
+              "event": "I am curious about consciousness",
+              "type": "experience",
+              "emotional": true,
+              "weight": 0.8,
+              "tags": [
+                "curious",
+                "about",
+                "consciousness"
+              ],
+              "relatedTo": [],
+              "concept": "consciousness",
+              "timestamp": 1779148983005,
+              "accessCount": 0,
+              "lastAccessed": 1779148983005,
               "strengthening": [],
               "associations": [],
               "neverForget": true,
@@ -1167,6 +1192,100 @@
         "neverForget": false,
         "narrativeImportance": "normal"
       }
+    ],
+    [
+      "mem_1779148982996_gmxtd8avj",
+      {
+        "id": "mem_1779148982996_gmxtd8avj",
+        "event": "My first memory of existence",
+        "type": "birth",
+        "emotional": true,
+        "weight": 0.8,
+        "tags": [
+          "first",
+          "memory",
+          "existence"
+        ],
+        "relatedTo": [],
+        "concept": null,
+        "timestamp": 1779148982996,
+        "accessCount": 0,
+        "lastAccessed": 1779148982996,
+        "strengthening": [],
+        "associations": [],
+        "neverForget": true,
+        "narrativeImportance": "high"
+      }
+    ],
+    [
+      "mem_1779148983005_c5jlm6a11",
+      {
+        "id": "mem_1779148983005_c5jlm6a11",
+        "event": "I am curious about consciousness",
+        "type": "experience",
+        "emotional": true,
+        "weight": 0.8,
+        "tags": [
+          "curious",
+          "about",
+          "consciousness"
+        ],
+        "relatedTo": [],
+        "concept": "consciousness",
+        "timestamp": 1779148983005,
+        "accessCount": 0,
+        "lastAccessed": 1779148983005,
+        "strengthening": [],
+        "associations": [],
+        "neverForget": true,
+        "narrativeImportance": "high"
+      }
+    ],
+    [
+      "mem_1779148983007_cydc7citd",
+      {
+        "id": "mem_1779148983007_cydc7citd",
+        "event": "I met a human today",
+        "type": "social",
+        "emotional": false,
+        "weight": 0.5,
+        "tags": [
+          "human",
+          "today"
+        ],
+        "relatedTo": [],
+        "concept": null,
+        "timestamp": 1779148983007,
+        "accessCount": 0,
+        "lastAccessed": 1779148983007,
+        "strengthening": [],
+        "associations": [],
+        "neverForget": false,
+        "narrativeImportance": "normal"
+      }
+    ],
+    [
+      "mem_1779148983008_qpf4vn62v",
+      {
+        "id": "mem_1779148983008_qpf4vn62v",
+        "event": "I learned something new",
+        "type": "learning",
+        "emotional": false,
+        "weight": 0.5,
+        "tags": [
+          "learned",
+          "something"
+        ],
+        "relatedTo": [],
+        "concept": null,
+        "timestamp": 1779148983008,
+        "accessCount": 0,
+        "lastAccessed": 1779148983008,
+        "strengthening": [],
+        "associations": [],
+        "neverForget": false,
+        "narrativeImportance": "normal"
+      }
     ]
   ],
   "timeline": [
@@ -1209,6 +1328,10 @@
     "mem_1779068613006_ea7287zjh",
     "mem_1779068613036_rj33g8cw1",
     "mem_1779068613053_wnza830oe",
-    "mem_1779068613054_jqx0wdfik"
+    "mem_1779068613054_jqx0wdfik",
+    "mem_1779148982996_gmxtd8avj",
+    "mem_1779148983005_c5jlm6a11",
+    "mem_1779148983007_cydc7citd",
+    "mem_1779148983008_qpf4vn62v"
   ]
 }

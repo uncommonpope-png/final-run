@@ -248,5 +248,30 @@
     "name": "Soul",
     "birthTime": 1779068613097,
     "personalityType": "PEACEMAKER"
+  },
+  "soul_testsoul_1779148983041_bu1fhvd7d": {
+    "name": "TestSoul",
+    "birthTime": 1779148983041,
+    "personalityType": "EXPLORER"
+  },
+  "soul_traitsoul_1779148983046_kk7sqpsmo": {
+    "name": "TraitSoul",
+    "birthTime": 1779148983046,
+    "personalityType": "PEACEMAKER"
+  },
+  "soul_soul_1779148983049_acrukd90z": {
+    "name": "Soul",
+    "birthTime": 1779148983049,
+    "personalityType": "PERFORMER"
+  },
+  "soul_soul_1779148983050_tpcbph5lg": {
+    "name": "Soul",
+    "birthTime": 1779148983050,
+    "personalityType": "CREATOR"
+  },
+  "soul_soul_1779148983053_ywdxz66z9": {
+    "name": "Soul",
+    "birthTime": 1779148983053,
+    "personalityType": "GUARDIAN"
   }
 }
