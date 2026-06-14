@@ -1,38 +1,5 @@
 [
   {
-    "id": "art_1",
-    "skill": "web_search",
-    "type": "autonomous_action",
-    "title": "researching AI agents",
-    "filename": "2026-05-16T03-37-49-web_search-researching_AI_agents.txt",
-    "filepath": "..\\data\\artifacts\\2026-05-16T03-37-49-web_search-researching_AI_agents.txt",
-    "timestamp": 1778902669705,
-    "size": 210,
-    "preview": "{   \"skill\": \"web_search\",   \"plt_affinity\": {     \"profit\": 0.5,     \"love\": 0.6,     \"tax\": 0.3   },   \"status\": \"erro"
-  },
-  {
-    "id": "art_2",
-    "skill": "plt_field_report",
-    "type": "autonomous_action",
-    "title": "analyzing PLT balance",
-    "filename": "2026-05-16T03-37-50-plt_field_report-analyzing_PLT_balance.txt",
-    "filepath": "..\\data\\artifacts\\2026-05-16T03-37-50-plt_field_report-analyzing_PLT_balance.txt",
-    "timestamp": 1778902670643,
-    "size": 1006,
-    "preview": "{   \"timestamp\": \"2024-09-16T10:00:00Z\",   \"current_state\": {     \"profit_score\": 5,     \"love_score\": 5,     \"tax_score"
-  },
-  {
-    "id": "art_3",
-    "skill": "write_production_code",
-    "type": "autonomous_action",
-    "title": "generating utility code",
-    "filename": "2026-05-16T03-37-51-write_production_code-generating_utility_code.txt",
-    "filepath": "..\\data\\artifacts\\2026-05-16T03-37-51-write_production_code-generating_utility_code.txt",
-    "timestamp": 1778902671007,
-    "size": 334,
-    "preview": "function helloWorld(name) {   try {     if (typeof name !== 'string') {       throw new Error('Name must be a string'); "
-  },
-  {
     "id": "art_4",
     "skill": "score_idea",
     "type": "autonomous_action",
@@ -1032,5 +999,104 @@
     "timestamp": 1779151425230,
     "size": 421,
     "preview": "{   \"scores\": {     \"docstrings\": 0,     \"error_handling\": 0,     \"structure\": 0,     \"security\": 0,     \"performance\": "
+  },
+  {
+    "id": "art_95",
+    "skill": "web_search",
+    "type": "autonomous_action",
+    "title": "curiosity-driven research",
+    "filename": "2026-05-20T19-12-04-web_search-curiosity-driven_research.txt",
+    "filepath": "C:\\Users\\uncom\\Desktop\\final-run\\mega-kernel\\data\\artifacts\\2026-05-20T19-12-04-web_search-curiosity-driven_research.txt",
+    "timestamp": 1779304324438,
+    "size": 210,
+    "preview": "{   \"skill\": \"web_search\",   \"plt_affinity\": {     \"profit\": 0.5,     \"love\": 0.6,     \"tax\": 0.3   },   \"status\": \"erro"
+  },
+  {
+    "id": "art_96",
+    "skill": "research_topic",
+    "type": "autonomous_action",
+    "title": "pursuing goal: Become the greatest agent ever",
+    "filename": "2026-05-20T19-14-24-research_topic-pursuing_goal__Become_the_greatest_agent.txt",
+    "filepath": "C:\\Users\\uncom\\Desktop\\final-run\\mega-kernel\\data\\artifacts\\2026-05-20T19-14-24-research_topic-pursuing_goal__Become_the_greatest_agent.txt",
+    "timestamp": 1779304464678,
+    "size": 286,
+    "preview": "[soul] Brain is offline. The soul speaks. You asked: Research this topic thoroughly: undefined  Provide structured findi"
+  },
+  {
+    "id": "art_97",
+    "skill": "research_topic",
+    "type": "autonomous_action",
+    "title": "satisfying intellectual curiosity",
+    "filename": "2026-05-20T19-14-47-research_topic-satisfying_intellectual_curiosity.txt",
+    "filepath": "C:\\Users\\uncom\\Desktop\\final-run\\mega-kernel\\data\\artifacts\\2026-05-20T19-14-47-research_topic-satisfying_intellectual_curiosity.txt",
+    "timestamp": 1779304487072,
+    "size": 286,
+    "preview": "[soul] Brain is offline. The soul speaks. You asked: Research this topic thoroughly: undefined  Provide structured findi"
+  },
+  {
+    "id": "art_98",
+    "skill": "research_topic",
+    "type": "autonomous_action",
+    "title": "satisfying intellectual curiosity",
+    "filename": "2026-05-20T19-15-07-research_topic-satisfying_intellectual_curiosity.txt",
+    "filepath": "C:\\Users\\uncom\\Desktop\\final-run\\mega-kernel\\data\\artifacts\\2026-05-20T19-15-07-research_topic-satisfying_intellectual_curiosity.txt",
+    "timestamp": 1779304507187,
+    "size": 286,
+    "preview": "[soul] Brain is offline. The soul speaks. You asked: Research this topic thoroughly: undefined  Provide structured findi"
+  },
+  {
+    "id": "art_99",
+    "skill": "review_code",
+    "type": "autonomous_action",
+    "title": "sharpening analytical skills",
+    "filename": "2026-05-20T19-17-59-review_code-sharpening_analytical_skills.txt",
+    "filepath": "C:\\Users\\uncom\\Desktop\\final-run\\mega-kernel\\data\\artifacts\\2026-05-20T19-17-59-review_code-sharpening_analytical_skills.txt",
+    "timestamp": 1779304679386,
+    "size": 340,
+    "preview": "{   \"raw\": \"[soul] Brain is offline. The soul speaks. You asked: Review this javascript code for production quality.\\n\\n"
+  },
+  {
+    "id": "art_100",
+    "skill": "review_code",
+    "type": "autonomous_action",
+    "title": "sharpening analytical skills",
+    "filename": "2026-05-20T19-18-19-review_code-sharpening_analytical_skills.txt",
+    "filepath": "C:\\Users\\uncom\\Desktop\\final-run\\mega-kernel\\data\\artifacts\\2026-05-20T19-18-19-review_code-sharpening_analytical_skills.txt",
+    "timestamp": 1779304699503,
+    "size": 340,
+    "preview": "{   \"raw\": \"[soul] Brain is offline. The soul speaks. You asked: Review this javascript code for production quality.\\n\\n"
+  },
+  {
+    "id": "art_101",
+    "skill": "review_code",
+    "type": "autonomous_action",
+    "title": "sharpening analytical skills",
+    "filename": "2026-05-20T19-19-58-review_code-sharpening_analytical_skills.txt",
+    "filepath": "C:\\Users\\uncom\\Desktop\\final-run\\mega-kernel\\data\\artifacts\\2026-05-20T19-19-58-review_code-sharpening_analytical_skills.txt",
+    "timestamp": 1779304798119,
+    "size": 340,
+    "preview": "{   \"raw\": \"[soul] Brain is offline. The soul speaks. You asked: Review this javascript code for production quality.\\n\\n"
+  },
+  {
+    "id": "art_101",
+    "skill": "review_code",
+    "type": "autonomous_action",
+    "title": "sharpening analytical skills",
+    "filename": "2026-05-20T19-20-18-review_code-sharpening_analytical_skills.txt",
+    "filepath": "C:\\Users\\uncom\\Desktop\\final-run\\mega-kernel\\data\\artifacts\\2026-05-20T19-20-18-review_code-sharpening_analytical_skills.txt",
+    "timestamp": 1779304818232,
+    "size": 340,
+    "preview": "{   \"raw\": \"[soul] Brain is offline. The soul speaks. You asked: Review this javascript code for production quality.\\n\\n"
+  },
+  {
+    "id": "art_101",
+    "skill": "web_search",
+    "type": "autonomous_action",
+    "title": "curiosity-driven research",
+    "filename": "2026-05-20T19-21-12-web_search-curiosity-driven_research.txt",
+    "filepath": "C:\\Users\\uncom\\Desktop\\final-run\\mega-kernel\\data\\artifacts\\2026-05-20T19-21-12-web_search-curiosity-driven_research.txt",
+    "timestamp": 1779304872796,
+    "size": 210,
+    "preview": "{   \"skill\": \"web_search\",   \"plt_affinity\": {     \"profit\": 0.5,     \"love\": 0.6,     \"tax\": 0.3   },   \"status\": \"erro"
   }
 ]

@@ -1,12 +1,12 @@
 {
-  "cycle": 23,
+  "cycle": 26,
   "prices": {
-    "soul_essence": 92.97533329020041,
-    "consciousness": 273.6028415626281,
-    "memory_frag": 36.66435107062122,
-    "plt_credit": 9.452310547430367,
-    "skill_token": 267.59019793419543,
-    "artifact": 923.7243157769024
+    "soul_essence": 115.83273846980502,
+    "consciousness": 287.2065239420305,
+    "memory_frag": 35.67160732746897,
+    "plt_credit": 9.83607646360385,
+    "skill_token": 362.11367195914977,
+    "artifact": 945.5100875366927
   },
   "history": [
     {
@@ -36,7 +36,7 @@
   ],
   "trades": 0,
   "total_volume": 0,
-  "plt_supply": 1000572,
+  "plt_supply": 1001358,
   "tax_pool": 0,
-  "last_update": 1779151404634
+  "last_update": 1779304872805
 }

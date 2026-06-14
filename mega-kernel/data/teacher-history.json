@@ -76,14 +76,22 @@
     "awslabs/multi-agent-orchestrator",
     "e2b-dev/e2b",
     "mckaywrigley/chatbot-ui",
-    "chatchat-space/Langchain-Chatchat"
+    "chatchat-space/Langchain-Chatchat",
+    "microsoft/semantic-kernel",
+    "anthropics/anthropic-cookbook",
+    "trimstray/the-book-of-secret-knowledge",
+    "ripienaar/free-for-dev",
+    "pandas-dev/pandas",
+    "jakevdp/PythonDataScienceHandbook",
+    "labmlai/annotated_deep_learning_paper_implementations",
+    "deepfakes/faceswap"
   ],
   "stats": {
-    "reposScanned": 0,
-    "reposStudied": 4,
-    "filesAnalyzed": 1579,
-    "learningsFed": 44,
+    "reposScanned": 30,
+    "reposStudied": 8,
+    "filesAnalyzed": 6323,
+    "learningsFed": 82,
     "errors": 0
   },
-  "updatedAt": 1779151577200
+  "updatedAt": 1779304778053
 }

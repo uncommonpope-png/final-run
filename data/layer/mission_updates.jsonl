@@ -58,3 +58,4 @@
 {"id":"u_1778306062_4k8u","ts":1778306062,"iso":"2026-05-09T05:54:22.244Z","type":"chat_in","title":"Message received (aria)","detail":"Craig: Who am I?","tags":["chat","aria"]}
 {"id":"u_1778306103_ndye","ts":1778306103,"iso":"2026-05-09T05:55:03.725Z","type":"ingest_run","title":"GitHub ingest cycle complete","detail":"Checked 12, ingested 12, failed 0","tags":["layer","github","ingest"]}
 {"id":"u_1778306296_6vix","ts":1778306296,"iso":"2026-05-09T05:58:16.054Z","type":"chat_in","title":"Message received (aria)","detail":"Craig: What is your current state?","tags":["chat","aria"]}
+{"id":"u_1779304085_wsdj","ts":1779304085,"iso":"2026-05-20T19:08:05.655Z","type":"boot","title":"SCRIBE chat boot","detail":"Chat module and sovereign layer initialized.","tags":["boot","layer"]}

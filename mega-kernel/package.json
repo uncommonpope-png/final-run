@@ -26,6 +26,8 @@
   "dependencies": {
     "express": "^5.2.1",
     "playwright": "^1.60.0",
-    "screenshot-desktop": "^1.15.4"
+    "screenshot-desktop": "^1.15.4",
+    "uuid": "^14.0.0",
+    "ws": "^8.20.1"
   }
 }
