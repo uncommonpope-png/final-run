@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌌 SOULVERSE UNIVERSE | Multi-Grid AI World</title>
+    <title>🌌 SOULVERSE UNIVERSE | Dark City Spatial OS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/lib/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/lib/codemirror.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/python/python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; height: 100vh; width: 100vw; }
@@ -1273,15 +1280,29 @@
             </div>
         </div>
 
-        <div id="inspectPanel" class="glass-panel" style="display:none;width:280px">
+        <div id="inspectPanel" class="glass-panel" style="display:none;width:340px;max-height:500px">
             <button class="collapse-toggle" onclick="closeInspect()">✕</button>
             <div class="panel-content">
                 <h4 id="inspectName">Building</h4>
                 <div id="inspectType" style="color:#888;font-size:10px">Type: -</div>
                 <div id="inspectSystemNode" style="color:#66ff66;font-size:9px">System Node: -</div>
-                <pre id="inspectJson" style="background:rgba(0,0,0,0.5);border-radius:4px;padding:6px;margin-top:6px;font-size:9px;max-height:200px;overflow:auto;color:#88ff88"></pre>
-                <button onclick="deleteInspectBuilding()" style="width:100%;padding:4px;margin-top:4px;background:rgba(255,50,50,0.3);border:1px solid #ff3232;border-radius:4px;color:#fff;font-size:10px;cursor:pointer">🗑️ Delete Building</button>
+                <div style="display:flex;gap:4px;margin-top:4px;margin-bottom:4px">
+                    <button id="inspectViewBtn" onclick="switchInspectView('json')" style="flex:1;padding:3px;background:rgba(50,200,255,0.3);border:1px solid #32c8ff;border-radius:4px;color:#fff;font-size:9px;cursor:pointer">📋 JSON</button>
+                    <button id="inspectEditBtn" onclick="switchInspectView('edit')" style="flex:1;padding:3px;background:rgba(50,200,150,0.3);border:1px solid #32c896;border-radius:4px;color:#fff;font-size:9px;cursor:pointer">✏️ Edit</button>
+                </div>
+                <pre id="inspectJson" style="background:rgba(0,0,0,0.5);border-radius:4px;padding:6px;margin-top:2px;font-size:9px;max-height:250px;overflow:auto;color:#88ff88;display:block"></pre>
+                <div id="inspectEditor" style="border:1px solid rgba(255,255,255,0.2);border-radius:4px;margin-top:2px;display:none;height:200px"></div>
+                <button id="inspectSaveBtn" onclick="saveInspectCode()" style="display:none;width:100%;padding:4px;margin-top:4px;background:rgba(50,200,150,0.3);border:1px solid #32c896;border-radius:4px;color:#fff;font-size:10px;cursor:pointer">💾 Save to GSK</button>
+                <button onclick="deleteInspectBuilding()" style="width:100%;padding:4px;margin-top:2px;background:rgba(255,50,50,0.3);border:1px solid #ff3232;border-radius:4px;color:#fff;font-size:10px;cursor:pointer">🗑️ Delete Building</button>
             </div>
+        </div>
+
+        <div id="terminalPanel" class="glass-panel" style="display:none;width:500px;height:350px;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:2002">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span style="color:#88ff88;font-size:11px">⬛ Dark City Terminal</span>
+                <button onclick="closeTerminal()" style="background:none;border:none;color:#ff6666;font-size:14px;cursor:pointer">✕</button>
+            </div>
+            <div id="terminalContainer" style="height:290px;border-radius:4px;overflow:hidden"></div>
         </div>
 
         <div id="chatPanel" class="glass-panel" style="display:none;width:300px;height:350px">
@@ -3976,6 +3997,9 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
         if (e.key === 'p' || e.key === 'P') {
             openWorldPortal();
         }
+        if (e.key === 't' || e.key === 'T') {
+            toggleTerminal();
+        }
         if (e.key === 'n' || e.key === 'N') {
             spawnNPCArmy(10);
         }
@@ -4960,6 +4984,144 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
         notify('�s��,? Kernel Error: ' + error.message);
     }
 
+    // ── PHASE 5: SPATIAL CODE EDITOR ─────────────────────────────
+    let _codeEditor = null;
+    let _editView = 'json';
+
+    function switchInspectView(view) {
+        _editView = view;
+        const jsonEl = document.getElementById('inspectJson');
+        const editorEl = document.getElementById('inspectEditor');
+        const saveBtn = document.getElementById('inspectSaveBtn');
+        if (view === 'json') {
+            jsonEl.style.display = 'block';
+            editorEl.style.display = 'none';
+            if (saveBtn) saveBtn.style.display = 'none';
+        } else {
+            jsonEl.style.display = 'none';
+            editorEl.style.display = 'block';
+            if (saveBtn) saveBtn.style.display = 'block';
+            if (!_codeEditor && typeof CodeMirror !== 'undefined') {
+                _codeEditor = CodeMirror(editorEl, {
+                    value: jsonEl.textContent || '// Select a building to edit',
+                    mode: 'javascript',
+                    theme: 'material',
+                    lineNumbers: true,
+                    lineWrapping: true,
+                    tabSize: 2,
+                    viewportMargin: Infinity
+                });
+            } else if (_codeEditor) {
+                _codeEditor.setValue(jsonEl.textContent || '');
+                _codeEditor.refresh();
+            }
+        }
+    }
+
+    function saveInspectCode() {
+        if (!_codeEditor || !_inspectBuildingId) return;
+        const code = _codeEditor.getValue();
+        // Send updated code to GSK via bridge
+        if (kernelWs && kernelWs.readyState === WebSocket.OPEN) {
+            kernelWs.send(JSON.stringify({
+                type: 'command',
+                payload: { command: 'dispatch_subagent', args: {
+                    task: `Update building ${_inspectBuildingId}`,
+                    tool: 'write_file',
+                    args: { path: `data/city_buildings/${_inspectBuildingId}.json`, content: code }
+                }}
+            }));
+            notify(`💾 Building ${_inspectBuildingId} saved to GSK`);
+        } else {
+            notify('❌ Bridge not connected — cannot save');
+        }
+    }
+
+    // ── PHASE 5: CITY TERMINAL ────────────────────────────────
+    let _terminal = null;
+    let _termSocket = null;
+
+    function openTerminal() {
+        const panel = document.getElementById('terminalPanel');
+        if (!panel) return;
+        panel.style.display = 'block';
+        setTimeout(() => {
+            const container = document.getElementById('terminalContainer');
+            if (!container) return;
+            if (!_terminal && typeof Terminal !== 'undefined') {
+                _terminal = new Terminal({
+                    theme: { background: '#0a0a14', foreground: '#88ff88', cursor: '#88ff88', fontSize: 12 },
+                    cursorBlink: true,
+                    rows: 18,
+                    cols: 60
+                });
+                const fitAddon = new FitAddon.FitAddon();
+                _terminal.loadAddon(fitAddon);
+                _terminal.open(container);
+                fitAddon.fit();
+                _terminal.write('Dark City Terminal v1.0\r\n');
+                _terminal.write('Connecting to GSK...\r\n');
+                // Try WebSocket to bridge
+                try {
+                    _termSocket = new WebSocket('ws://127.0.0.1:8080');
+                    _termSocket.onopen = () => {
+                        _terminal.write('Connected.\r\n> ');
+                    };
+                    _termSocket.onmessage = (e) => {
+                        _terminal.write(e.data + '\r\n> ');
+                    };
+                    _termSocket.onclose = () => {
+                        _terminal.write('\r\nDisconnected. Type to run locally.\r\n> ');
+                    };
+                } catch (e) {
+                    _terminal.write('Bridge unavailable. Local mode.\r\n> ');
+                }
+                _terminal.onData((data) => {
+                    if (data === '\r') {
+                        const line = _terminal.buffer.active.getLine(_terminal.buffer.active.length - 1);
+                        const cmd = line ? line.translateToString().trim() : '';
+                        _terminal.write('\r\n');
+                        if (_termSocket && _termSocket.readyState === WebSocket.OPEN) {
+                            _termSocket.send(cmd);
+                        } else if (cmd === 'clear' || cmd === 'cls') {
+                            _terminal.clear();
+                        } else if (cmd === 'help') {
+                            _terminal.write('Commands: clear, help, spawn, build, status, citizens\r\n');
+                        } else if (cmd === 'citizens') {
+                            const count = Object.keys(_citizens).length;
+                            _terminal.write(`Active citizens: ${count}\r\n`);
+                        } else if (cmd) {
+                            _terminal.write(`[Local] ${cmd}: not connected to GSK\r\n`);
+                        }
+                        _terminal.write('> ');
+                    } else if (data === '\x7f') {
+                        // Backspace
+                        const line = _terminal.buffer.active.getLine(_terminal.buffer.active.length - 1);
+                        if (line) {
+                            const text = line.translateToString();
+                            if (text.length > 2) {
+                                _terminal.write('\b \b');
+                            }
+                        }
+                    } else {
+                        _terminal.write(data);
+                    }
+                });
+            }
+        }, 100);
+    }
+
+    function closeTerminal() {
+        const panel = document.getElementById('terminalPanel');
+        if (panel) panel.style.display = 'none';
+    }
+
+    function toggleTerminal() {
+        const panel = document.getElementById('terminalPanel');
+        if (panel && panel.style.display === 'block') { closeTerminal(); }
+        else { openTerminal(); }
+    }
+
     // ── PHASE 3: BUILDING INSPECT ──────────────────────────────────
     let _inspectBuildingId = null;
 
@@ -5220,6 +5382,9 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
     window.terminateCitizen = terminateCitizen;
     window.pauseAllCitizens = pauseAllCitizens;
     window.resumeAllCitizens = resumeAllCitizens;
+    window.openTerminal = openTerminal;
+    window.closeTerminal = closeTerminal;
+    window.toggleTerminal = toggleTerminal;
 
     function togglePortalInput() {
         document.getElementById('portalNode').classList.toggle('active');
