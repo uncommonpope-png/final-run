@@ -255,16 +255,40 @@
         }
         .mini-city.current { background: #ffaa66; }
 
-        #cityStats { 
-            position: absolute; 
-            top: 8px; 
-            left: 8px; 
-            background: rgba(0,0,0,0.85); 
-            border-radius: 12px; 
-            padding: 8px 12px; 
-            color: #ffaa66; 
-            font-size: 9px;
+        #portalNode {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            width: 80px;
+            height: 80px;
+            background: rgba(100, 150, 255, 0.2);
+            border: 2px solid #66b2ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            cursor: pointer;
+            z-index: 50;
+            box-shadow: 0 0 20px rgba(100, 150, 255, 0.4);
+            transition: all 0.3s;
         }
+        #portalNode:hover {
+            transform: scale(1.1);
+            background: rgba(100, 150, 255, 0.4);
+        }
+        #portalNode input {
+            position: absolute;
+            bottom: -30px;
+            width: 150px;
+            background: #000;
+            color: #fff;
+            border: 1px solid #66b2ff;
+            padding: 2px;
+            font-size: 9px;
+            display: none;
+        }
+        #portalNode.active input { display: block; }
         #cityStats h4 { color: #fff; margin-bottom: 5px; }
 
         #resources { 
@@ -1102,6 +1126,10 @@
     <!-- superGodMode removed -->
     
     <div id="ui">
+    <div id="portalNode" onclick="togglePortalInput()">
+        🌌
+        <input type="text" id="portalInput" placeholder="Enter URL..." onkeydown="handlePortalInput(event)">
+    </div>
     <div id="kernelPanel" style="pointer-events: auto;">
         <h3>Kernel Connection</h3>
         <div class="kernel-metric">
@@ -1148,6 +1176,10 @@
         <div class="kernel-metric">
             <span class="kernel-metric-label">Awareness:</span>
             <span class="kernel-metric-value" id="kernelAwareness">0%</span>
+        </div>
+        <div class="kernel-metric">
+            <span class="kernel-metric-label">Sanctum:</span>
+            <span class="kernel-metric-value" id="sanctumStatus" style="color:#ff4444">🔴 Offline</span>
         </div>
         <div class="kernel-metric">
             <span class="kernel-metric-label">Memory:</span>
@@ -1234,6 +1266,33 @@
                 <div class="need-bar"><span>💬 Social</span><div class="need-bg"><div class="need-fill need-social" id="socialBar" style="width:60%"></div></div></div>
                 <div class="need-bar"><span>📚 Skill</span><div class="need-bg"><div class="need-fill need-skill" id="skillBar" style="width:40%"></div></div></div>
                 <div class="need-bar"><span>🎯 Purpose</span><div class="need-bg"><div class="need-fill need-purpose" id="purposeBar" style="width:90%"></div></div></div>
+                <div class="panel-actions" style="display:flex;gap:4px;margin-top:6px">
+                    <button onclick="chatWithNpc()" style="flex:1;padding:4px;background:rgba(50,200,255,0.3);border:1px solid #32c8ff;border-radius:4px;color:#fff;font-size:10px;cursor:pointer">💬 Chat</button>
+                    <button onclick="dismissNpc()" style="padding:4px;background:rgba(255,50,50,0.3);border:1px solid #ff3232;border-radius:4px;color:#fff;font-size:10px;cursor:pointer">✕</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="inspectPanel" class="glass-panel" style="display:none;width:280px">
+            <button class="collapse-toggle" onclick="closeInspect()">✕</button>
+            <div class="panel-content">
+                <h4 id="inspectName">Building</h4>
+                <div id="inspectType" style="color:#888;font-size:10px">Type: -</div>
+                <div id="inspectSystemNode" style="color:#66ff66;font-size:9px">System Node: -</div>
+                <pre id="inspectJson" style="background:rgba(0,0,0,0.5);border-radius:4px;padding:6px;margin-top:6px;font-size:9px;max-height:200px;overflow:auto;color:#88ff88"></pre>
+                <button onclick="deleteInspectBuilding()" style="width:100%;padding:4px;margin-top:4px;background:rgba(255,50,50,0.3);border:1px solid #ff3232;border-radius:4px;color:#fff;font-size:10px;cursor:pointer">🗑️ Delete Building</button>
+            </div>
+        </div>
+
+        <div id="chatPanel" class="glass-panel" style="display:none;width:300px;height:350px">
+            <button class="collapse-toggle" onclick="closeChat()">✕</button>
+            <div class="panel-content" style="display:flex;flex-direction:column;height:100%">
+                <h4 id="chatName" style="margin-bottom:4px">Chat</h4>
+                <div id="chatLog" style="flex:1;overflow-y:auto;font-size:10px;background:rgba(0,0,0,0.3);border-radius:4px;padding:4px;margin-bottom:4px"></div>
+                <div style="display:flex;gap:4px">
+                    <input type="text" id="chatInput" placeholder="Ask the soul..." style="flex:1;padding:4px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#fff;font-size:10px">
+                    <button onclick="sendChat()" style="padding:4px 8px;background:rgba(50,200,255,0.3);border:1px solid #32c8ff;border-radius:4px;color:#fff;font-size:10px;cursor:pointer">Send</button>
+                </div>
             </div>
         </div>
 
@@ -1834,28 +1893,29 @@
     function err(msg) { SUPER_GOD.errors.push(msg); console.error('[ERR]', msg); document.getElementById('loading-status').textContent = 'ERROR: ' + msg; document.getElementById('error-display').style.display = 'block'; document.getElementById('error-display').textContent = msg; }
     function setProgress(pct, cell) { document.getElementById('loading-bar').style.width = pct + '%'; if (cell !== undefined) document.getElementById('g' + cell)?.classList.add('active'); }
 
-    // ==================== STATE ====================
-    let engine, scene, camera;
-    let currentGrid = 0;
-    let agents = [], allBuildings = [], portals = [], npcs = [];
-    let resources = { profit: 500, love: 500, tax: 500 };
-    let selectedAgent = null;
-    let selectedNPC = null;
-    let kernelConnected = false, kernelSocket = null;
-    let soulState = { name: 'ARIA', awareness: 0.72 };
-    let initComplete = false;
-    let isAnimating = false;
+// ==================== STATE ====================
+let engine, scene, camera;
+let currentGrid = 0;
+let agents = [], allBuildings = [], portals = [], npcs = [];
+let resources = { profit: 500, love: 500, tax: 500 };
+let selectedAgent = null;
+let selectedNPC = null;
+let kernelConnected = false, kernelSocket = null;
+let soulState = { name: 'ARIA', awareness: 0.72 };
+let initComplete = false;
+let isAnimating = false;
+let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the world, not hardcoded city
 
     const GRIDS = [
-        { id: 0, name: 'Work City', icon: '💼', color: [0.27, 0.85, 0.98], x: 0, z: 0, type: 'work' },
-        { id: 1, name: 'Home City', icon: '🏠', color: [1, 0.62, 0.95], x: 45, z: 0, type: 'home' },
-        { id: 2, name: 'Social City', icon: '🎉', color: [0.99, 0.92, 0.33], x: 90, z: 0, type: 'social' },
-        { id: 3, name: 'Learn City', icon: '📚', color: [0.11, 0.82, 0.63], x: 0, z: 45, type: 'learn' },
-        { id: 4, name: 'Market City', icon: '💰', color: [1, 0.67, 0.27], x: 45, z: 45, type: 'market' },
-        { id: 5, name: 'Sacred City', icon: '🕊️', color: [0.53, 1, 0.67], x: 90, z: 45, type: 'sacred' },
-        { id: 6, name: 'Arena City', icon: '⚔️', color: [1, 0.42, 0.42], x: 0, z: 90, type: 'arena' },
-        { id: 7, name: 'Lab City', icon: '🔬', color: [0.42, 0.42, 1], x: 45, z: 90, type: 'lab' },
-        { id: 8, name: 'Wild Zone', icon: '🌲', color: [0.27, 0.67, 0.33], x: 90, z: 90, type: 'wild' }
+        { id: 0, name: 'Knowledge District', icon: '📚', color: [0.2, 0.5, 1.0], x: 0, z: 0, type: 'knowledge', subsystem: 'MemoryCompiler' },
+        { id: 1, name: 'Skill District', icon: '⚡', color: [1.0, 0.8, 0.1], x: 45, z: 0, type: 'skill', subsystem: 'Skills/' },
+        { id: 2, name: 'Agent District', icon: '🤖', color: [1.0, 0.2, 0.2], x: 90, z: 0, type: 'agent', subsystem: 'SubagentSpawner' },
+        { id: 3, name: 'Tool District', icon: '🔧', color: [0.1, 0.9, 0.9], x: 0, z: 45, type: 'tool', subsystem: 'ToolCatalog' },
+        { id: 4, name: 'Memory District', icon: '💜', color: [0.7, 0.2, 0.9], x: 45, z: 45, type: 'memory', subsystem: 'WorkingMemory' },
+        { id: 5, name: 'Identity District', icon: '🗼', color: [0.9, 0.9, 0.9], x: 90, z: 45, type: 'identity', subsystem: 'IdentityKernel' },
+        { id: 6, name: 'Governance District', icon: '⚖️', color: [1.0, 0.5, 0.0], x: 0, z: 90, type: 'governance', subsystem: 'AxiomEnforcer' },
+        { id: 7, name: 'Portal District', icon: '🌐', color: [0.2, 0.8, 0.3], x: 45, z: 90, type: 'portal', subsystem: 'MCP/WebFetch' },
+        { id: 8, name: 'The Weald', icon: '🌀', color: [0.5, 0.3, 0.8], x: 90, z: 90, type: 'weald', subsystem: 'WMS/Perpetual' }
     ];
 
     // ==================== FORCE SKIP ====================
@@ -2080,6 +2140,7 @@
             labelMat.disableLighting = true;
             label.material = labelMat;
 
+        if (!_sanctumDriven) {
             const configs = getSimCityBuildings(grid.type);
             configs.forEach((cfg, i) => {
                 const angle = (i / configs.length) * Math.PI * 2;
@@ -2088,8 +2149,8 @@
                 const z = grid.z + Math.sin(angle) * radius;
                 createSimCityBuilding(grid.id, cfg, x, z, i);
             });
-            
             createCityCenter(grid);
+        }
         });
     }
     
@@ -2099,80 +2160,80 @@
     
     function getSimCityBuildings(type) {
         const buildings = {
-            work: [
-                { name: 'Tech Tower', h: 28, s: 6, c: [0.2, 0.8, 1], style: 'modern' },
-                { name: 'Office Block', h: 16, s: 8, c: [0.15, 0.6, 0.9], style: 'glass' },
-                { name: 'Startup Hub', h: 12, s: 7, c: [0.1, 0.5, 0.8], style: 'brick' },
-                { name: 'Data Center', h: 10, s: 5, c: [0.25, 0.85, 0.98], style: 'tech' },
-                { name: 'Innovation Lab', h: 14, s: 6, c: [0.3, 0.7, 1], style: 'modern' },
-                { name: 'Meeting Pod', h: 6, s: 4, c: [0.2, 0.65, 0.95], style: 'glass' }
+            knowledge: [
+                { name: 'Fact House', h: 8, s: 5, c: [0.2, 0.5, 1.0], style: 'modern', systemNode: 'fact' },
+                { name: 'Data Center Tower', h: 22, s: 6, c: [0.1, 0.4, 0.9], style: 'tech', systemNode: 'knowledge_graph' },
+                { name: 'Research Archive', h: 14, s: 8, c: [0.25, 0.55, 1.0], style: 'classic', systemNode: 'fact_cluster' },
+                { name: 'Memory Cache', h: 10, s: 5, c: [0.15, 0.45, 0.95], style: 'glass', systemNode: 'episode' },
+                { name: 'Inference Engine', h: 16, s: 7, c: [0.3, 0.6, 1.0], style: 'modern', systemNode: 'inference' },
+                { name: 'Learning Spire', h: 20, s: 5, c: [0.12, 0.5, 0.92], style: 'tower', systemNode: 'learning' }
             ],
-            home: [
-                { name: 'Apartment Complex', h: 20, s: 8, c: [1, 0.55, 0.9], style: 'modern' },
-                { name: 'Cozy Cottage', h: 8, s: 6, c: [0.9, 0.5, 0.85], style: 'cottage' },
-                { name: 'Garden Villa', h: 12, s: 10, c: [0.85, 0.65, 0.9], style: 'villa' },
-                { name: 'Tree House', h: 6, s: 4, c: [0.8, 0.45, 0.8], style: 'organic' },
-                { name: 'Community Hall', h: 10, s: 8, c: [0.95, 0.6, 0.95], style: 'brick' },
-                { name: 'Park Pavilion', h: 5, s: 5, c: [0.9, 0.55, 0.88], style: 'pavilion' }
+            skill: [
+                { name: 'Skill Shop', h: 8, s: 6, c: [1.0, 0.8, 0.1], style: 'shop', systemNode: 'skill' },
+                { name: 'Code Library', h: 14, s: 8, c: [0.9, 0.7, 0.05], style: 'classic', systemNode: 'skill_library' },
+                { name: 'Creator School', h: 12, s: 7, c: [1.0, 0.85, 0.15], style: 'modern', systemNode: 'skill_creator' },
+                { name: 'Tool Forge', h: 10, s: 5, c: [0.85, 0.65, 0.0], style: 'brick', systemNode: 'tool' },
+                { name: 'Builder Guild', h: 16, s: 6, c: [1.0, 0.75, 0.2], style: 'glass', systemNode: 'builder' },
+                { name: 'Prototype Lab', h: 6, s: 4, c: [0.95, 0.72, 0.08], style: 'dome', systemNode: 'prototype' }
             ],
-            social: [
-                { name: 'Dance Club', h: 12, s: 10, c: [1, 0.9, 0.3], style: 'neon' },
-                { name: 'Restaurant', h: 8, s: 6, c: [0.95, 0.85, 0.25], style: 'warm' },
-                { name: 'Cinema', h: 10, s: 8, c: [1, 0.92, 0.2], style: 'theater' },
-                { name: 'Gaming Arcade', h: 6, s: 5, c: [0.9, 0.8, 0.15], style: 'neon' },
-                { name: 'Art Gallery', h: 14, s: 7, c: [1, 0.95, 0.35], style: 'modern' },
-                { name: 'Night Market', h: 5, s: 12, c: [0.99, 0.88, 0.28], style: 'market' }
+            agent: [
+                { name: 'Agent Factory', h: 16, s: 8, c: [1.0, 0.2, 0.2], style: 'factory', systemNode: 'subagent' },
+                { name: 'Spawn Chamber', h: 10, s: 6, c: [0.85, 0.15, 0.15], style: 'dome', systemNode: 'spawner' },
+                { name: 'Task Depot', h: 12, s: 7, c: [0.9, 0.25, 0.25], style: 'brick', systemNode: 'task_queue' },
+                { name: 'Assembly Line', h: 8, s: 10, c: [0.95, 0.18, 0.18], style: 'factory', systemNode: 'assembly' },
+                { name: 'Agent Hub', h: 20, s: 6, c: [0.8, 0.1, 0.1], style: 'modern', systemNode: 'orchestrator' },
+                { name: 'Completion Dock', h: 6, s: 5, c: [1.0, 0.3, 0.3], style: 'pier', systemNode: 'completed' }
             ],
-            learn: [
-                { name: 'Grand Library', h: 22, s: 10, c: [0.08, 0.75, 0.6], style: 'classic' },
-                { name: 'University', h: 18, s: 12, c: [0.1, 0.65, 0.5], style: 'classic' },
-                { name: 'Study Lounge', h: 8, s: 6, c: [0.12, 0.8, 0.65], style: 'warm' },
-                { name: 'Knowledge Tree', h: 15, s: 8, c: [0.06, 0.7, 0.55], style: 'organic' },
-                { name: 'Lecture Hall', h: 12, s: 10, c: [0.1, 0.7, 0.55], style: 'theater' },
-                { name: 'Research Tower', h: 20, s: 6, c: [0.11, 0.82, 0.63], style: 'modern' }
+            tool: [
+                { name: 'Tool Office', h: 14, s: 6, c: [0.1, 0.9, 0.9], style: 'glass', systemNode: 'tool_active' },
+                { name: 'API Tower', h: 20, s: 5, c: [0.05, 0.8, 0.85], style: 'tower', systemNode: 'api' },
+                { name: 'Bridge Terminal', h: 10, s: 8, c: [0.15, 0.85, 0.8], style: 'modern', systemNode: 'bridge' },
+                { name: 'Integration Hub', h: 16, s: 7, c: [0.08, 0.88, 0.88], style: 'tech', systemNode: 'integration' },
+                { name: 'Query Station', h: 8, s: 5, c: [0.12, 0.82, 0.82], style: 'dome', systemNode: 'query' },
+                { name: 'Cache Node', h: 6, s: 4, c: [0.1, 0.86, 0.86], style: 'sphere', systemNode: 'cache' }
             ],
-            market: [
-                { name: 'Bank Tower', h: 24, s: 6, c: [1, 0.65, 0.2], style: 'modern' },
-                { name: 'Trading Floor', h: 10, s: 12, c: [1, 0.7, 0.25], style: 'glass' },
-                { name: 'Gold Vault', h: 8, s: 5, c: [1, 0.8, 0.4], style: 'secure' },
-                { name: 'Shop Plaza', h: 6, s: 10, c: [0.95, 0.6, 0.22], style: 'market' },
-                { name: 'Currency Exchange', h: 12, s: 6, c: [1, 0.68, 0.27], style: 'tech' },
-                { name: 'Treasure House', h: 10, s: 5, c: [1, 0.75, 0.35], style: 'classic' }
+            memory: [
+                { name: 'Memory Apartment', h: 18, s: 8, c: [0.7, 0.2, 0.9], style: 'modern', systemNode: 'working_memory' },
+                { name: 'Dream Spire', h: 24, s: 4, c: [0.65, 0.15, 0.85], style: 'tower', systemNode: 'symbolic_memory' },
+                { name: 'Archive Block', h: 12, s: 10, c: [0.75, 0.25, 0.95], style: 'brick', systemNode: 'episodic' },
+                { name: 'Consolidation Pod', h: 8, s: 6, c: [0.6, 0.1, 0.8], style: 'dome', systemNode: 'compiler' },
+                { name: 'Dream Fountain', h: 5, s: 4, c: [0.8, 0.3, 1.0], style: 'crystal', systemNode: 'dream' },
+                { name: 'Narrative Weave', h: 14, s: 7, c: [0.72, 0.22, 0.92], style: 'glass', systemNode: 'narrative' }
             ],
-            sacred: [
-                { name: 'Great Temple', h: 30, s: 12, c: [0.4, 1, 0.6], style: 'pyramid' },
-                { name: 'Meditation Dome', h: 15, s: 10, c: [0.45, 0.95, 0.55], style: 'dome' },
-                { name: 'Sacred Grove', h: 10, s: 8, c: [0.5, 0.9, 0.65], style: 'organic' },
-                { name: 'Altar of Light', h: 18, s: 6, c: [0.55, 1, 0.7], style: 'crystal' },
-                { name: 'Peace Garden', h: 6, s: 10, c: [0.48, 0.92, 0.58], style: 'garden' },
-                { name: 'Spirit Shrine', h: 12, s: 5, c: [0.53, 1, 0.67], style: 'shrine' }
+            identity: [
+                { name: 'Soul Monument', h: 20, s: 4, c: [0.9, 0.9, 0.9], style: 'monument', systemNode: 'identity_snapshot' },
+                { name: 'Origin Plaza', h: 4, s: 12, c: [0.85, 0.85, 0.9], style: 'plaza', systemNode: 'origin' },
+                { name: 'Lineage Pillar', h: 16, s: 3, c: [1.0, 1.0, 0.95], style: 'monument', systemNode: 'lineage' },
+                { name: 'Ratification Arch', h: 12, s: 6, c: [0.95, 0.95, 1.0], style: 'arch', systemNode: 'ratified' },
+                { name: 'Memory Stele', h: 10, s: 3, c: [0.88, 0.88, 0.92], style: 'monument', systemNode: 'committed' },
+                { name: 'Proposal Garden', h: 3, s: 8, c: [0.82, 0.82, 0.88], style: 'garden', systemNode: 'proposal' }
             ],
-            arena: [
-                { name: 'Battle Arena', h: 8, s: 20, c: [1, 0.35, 0.35], style: 'arena' },
-                { name: 'Training Hall', h: 14, s: 8, c: [0.85, 0.3, 0.3], style: 'military' },
-                { name: 'War Memorial', h: 10, s: 4, c: [0.9, 0.38, 0.38], style: 'monument' },
-                { name: 'Armory', h: 12, s: 6, c: [0.75, 0.28, 0.28], style: 'secure' },
-                { name: 'Combat Ring', h: 5, s: 15, c: [1, 0.42, 0.42], style: 'arena' },
-                { name: 'Honor Statue', h: 8, s: 3, c: [0.95, 0.4, 0.4], style: 'monument' }
+            governance: [
+                { name: 'Axiom Temple', h: 22, s: 8, c: [1.0, 0.5, 0.0], style: 'temple', systemNode: 'axiom' },
+                { name: 'Chamber Lab', h: 14, s: 6, c: [0.9, 0.4, 0.0], style: 'lab', systemNode: 'chamber' },
+                { name: 'Ethics Court', h: 10, s: 10, c: [1.0, 0.55, 0.05], style: 'court', systemNode: 'ethics' },
+                { name: 'Balance Spire', h: 18, s: 4, c: [0.95, 0.45, 0.0], style: 'tower', systemNode: 'plt' },
+                { name: 'Policy Archive', h: 12, s: 7, c: [0.85, 0.35, 0.0], style: 'classic', systemNode: 'policy' },
+                { name: 'Council Chamber', h: 8, s: 12, c: [1.0, 0.6, 0.1], style: 'dome', systemNode: 'council' }
             ],
-            lab: [
-                { name: 'Research Center', h: 20, s: 8, c: [0.35, 0.35, 1], style: 'modern' },
-                { name: 'Science Tower', h: 16, s: 6, c: [0.3, 0.3, 0.95], style: 'tech' },
-                { name: 'Experiment Lab', h: 10, s: 6, c: [0.4, 0.4, 0.9], style: 'glass' },
-                { name: 'Tech Incubator', h: 14, s: 7, c: [0.38, 0.38, 1], style: 'modern' },
-                { name: 'AI Chamber', h: 12, s: 5, c: [0.42, 0.42, 1], style: 'cyber' },
-                { name: 'Innovation Hub', h: 18, s: 8, c: [0.32, 0.32, 0.98], style: 'tech' }
+            portal: [
+                { name: 'Web Portal', h: 10, s: 5, c: [0.2, 0.8, 0.3], style: 'portal', systemNode: 'web_fetch' },
+                { name: 'MCP Antenna', h: 20, s: 3, c: [0.15, 0.75, 0.25], style: 'antenna', systemNode: 'mcp' },
+                { name: 'Data Relay', h: 8, s: 6, c: [0.25, 0.85, 0.35], style: 'tech', systemNode: 'relay' },
+                { name: 'Gateway Arch', h: 14, s: 4, c: [0.1, 0.7, 0.2], style: 'arch', systemNode: 'gateway' },
+                { name: 'Stream Node', h: 6, s: 5, c: [0.3, 0.9, 0.4], style: 'sphere', systemNode: 'stream' },
+                { name: 'Network Hub', h: 16, s: 8, c: [0.18, 0.78, 0.28], style: 'modern', systemNode: 'network' }
             ],
-            wild: [
-                { name: 'Ancient Tree', h: 15, s: 6, c: [0.2, 0.6, 0.3], style: 'organic' },
-                { name: 'Forest Camp', h: 5, s: 8, c: [0.25, 0.65, 0.35], style: 'camp' },
-                { name: 'Crystal Cave', h: 10, s: 6, c: [0.3, 0.7, 0.4], style: 'crystal' },
-                { name: 'Mystic Ruins', h: 8, s: 5, c: [0.22, 0.58, 0.32], style: 'ancient' },
-                { name: 'Wildflower Field', h: 2, s: 10, c: [0.28, 0.72, 0.38], style: 'garden' },
-                { name: 'Sacred Stone', h: 6, s: 3, c: [0.24, 0.64, 0.34], style: 'monument' }
+            weald: [
+                { name: 'Anomaly Spire', h: 20, s: 5, c: [0.5, 0.3, 0.8], style: 'crystal', systemNode: 'simulation' },
+                { name: 'WMS Engine', h: 16, s: 8, c: [0.45, 0.25, 0.75], style: 'tech', systemNode: 'world_model' },
+                { name: 'Dream Fountain', h: 8, s: 6, c: [0.55, 0.35, 0.85], style: 'crystal', systemNode: 'perpetual' },
+                { name: 'Void Gate', h: 10, s: 4, c: [0.4, 0.2, 0.7], style: 'portal', systemNode: 'void' },
+                { name: 'Mutation Grove', h: 6, s: 10, c: [0.6, 0.4, 0.9], style: 'organic', systemNode: 'emergent' },
+                { name: 'Singularity Tower', h: 24, s: 3, c: [0.48, 0.28, 0.78], style: 'tower', systemNode: 'singularity' }
             ]
         };
-        return buildings[type] || buildings.work;
+        return buildings[type] || buildings.knowledge;
     }
     
     function createSimCityBuilding(gridId, config, x, z, index) {
@@ -3119,9 +3180,31 @@
                     openWorldPortal();
                 } else if (name.startsWith('park_') || name.startsWith('tree_')) {
                     notify('🌳 Nature area - peaceful surroundings');
+                } else if (name.startsWith('sanctum_bld_')) {
+                    // Phase 3: Click Sanctum building → inspect GSK state
+                    const bldId = name.replace('sanctum_bld_', '');
+                    openInspect(bldId);
+                } else if (name.startsWith('soul_npc_root_')) {
+                    // Phase 3: Click Sanctum soul → open chat
+                    const soulId = name.replace('soul_npc_root_', '');
+                    openChat(soulId);
                 }
             }
         };
+        // Right-click for delete
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const pick = scene.pick(scene.pointerX, scene.pointerY);
+            if (pick.hit && pick.pickedMesh) {
+                const name = pick.pickedMesh.name;
+                if (name.startsWith('sanctum_bld_')) {
+                    const bldId = name.replace('sanctum_bld_', '');
+                    if (confirm('Delete this building from the Dark City?')) {
+                        deleteInspectBuildingById(bldId);
+                    }
+                }
+            }
+        });
 
         renderCities();
         renderAgents();
@@ -3774,15 +3857,17 @@
         const cfg = BUILDING_COSTS[type];
         if (!cfg) return;
         
-        if (resources.profit < cfg.cost) {
+        // Check against Sanctum PLT resources if available, fall back to local
+        const checkResource = state.world?.resources?.profit !== undefined ? state.world.resources.profit : resources.profit;
+        if (checkResource < cfg.cost) {
             notify('❌ Not enough 💰! Need ' + cfg.cost);
             return;
         }
         
+        // Deduct from local and send command to Sanctum via bridge
         resources.profit -= cfg.cost;
         updateResourceBars();
         
-        const grid = GRIDS[currentGrid];
         const colors = {
             house: [1, 0.62, 0.95],
             apartment: [0.9, 0.5, 0.85],
@@ -3815,6 +3900,7 @@
             roof.material = mat;
         }
         
+        // Update city stats
         cityStats.population += cfg.pop;
         cityStats.buildings++;
         cityStats.wealth = Math.max(0, Math.min(100, cityStats.wealth + cfg.wealth / 10));
@@ -3822,9 +3908,20 @@
         cityStats.pollution = Math.max(0, Math.min(100, cityStats.pollution + cfg.pollution / 10));
         
         updateCityStats();
-        allBuildings.push({ id: 'player_bld_' + Date.now(), name: type, type: type, gridId: currentGrid, x, z, level: 1, workers: [] });
         
-        notify('🏗️ ' + type.charAt(0).toUpperCase() + type.slice(1) + ' built! 💰-' + cfg.cost);
+        // Send to Sanctum via bridge WebSocket
+        if (kernelWs && kernelWs.readyState === WebSocket.OPEN) {
+            kernelWs.send(JSON.stringify({
+                type: 'command',
+                payload: { command: 'dispatch_subagent', args: { 
+                    task: 'Place building in Sanctum',
+                    tool: 'world_place_building',
+                    args: { name: type, type: type, x: Math.round(x * 10) / 10, z: Math.round(z * 10) / 10 }
+                }}
+            }));
+        }
+        
+        notify('🏗️ ' + type.charAt(0).toUpperCase() + type.slice(1) + ' built in Dark City! 💰-' + cfg.cost);
     }
     
     function updateResourceBars() {
@@ -4489,6 +4586,8 @@
     }
     
     function updateSoulStateFromKernel(state) {
+        // Phase 3: store world state for inspect panel
+        window._lastWorldState = state;
         // Update UI elements with kernel soul state
         try {
             // Update basic soul info
@@ -4544,6 +4643,305 @@
                     artLatestEl.textContent = latest ? latest.skill + ' (' + new Date(latest.timestamp).toLocaleTimeString() + ')' : '—';
                 }
             }
+
+            // Update spawned souls from Sanctum world state — as procedural NPCs
+            const sanctumSouls = state.world?.souls || state.souls || [];
+            if (sanctumSouls.length > 0 && scene) {
+                const agentCountEl = document.getElementById('agentCount');
+                if (agentCountEl) agentCountEl.textContent = sanctumSouls.length;
+
+                const currentSoulIds = new Set();
+
+                // Remove random NPCs when Sanctum souls first arrive
+                if (!window._sanctumSoulDriven && npcs.length > 0) {
+                    window._sanctumSoulDriven = true;
+                    for (const oldNpc of npcs) {
+                        if (oldNpc.disposeAll) oldNpc.disposeAll();
+                    }
+                    npcs.length = 0;
+                }
+
+                if (!window._soulAgents) window._soulAgents = {};
+
+                for (const soul of sanctumSouls) {
+                    const soulId = (soul.name || 'soul') + '_' + (soul.spawned_at || soul.spawnedAt || '0');
+                    currentSoulIds.add(soulId);
+
+                    if (!window._soulAgents[soulId]) {
+                        const sx = soul.x || 0;
+                        const sz = soul.z || 0;
+
+                        // Archetype-based color for clothing
+                        const archColorMap = {
+                            RESEARCHER: '#4488ff',   // Blue
+                            ARCHITECT: '#ff8844',    // Orange
+                            CREATOR: '#44ff88',      // Green
+                            GUARDIAN: '#ff3344',     // Red
+                            SIMULATED: '#aa66ff',    // Purple
+                            MERCHANT: '#ffcc33',     // Gold
+                            SAGE: '#44aaff',         // Sky
+                            PROFIT: '#ff8844',       // Orange
+                            LOVE: '#ff66aa',         // Pink
+                            TAX: '#66aaff',          // Blue
+                        };
+                        const shirtHex = archColorMap[soul.archetype] || archColorMap[soul.race] || '#44aaff';
+
+                        // Build procedural character for this Sanctum soul
+                        const npcId = npcs.length;
+                        const scale = 0.8 + Math.random() * 0.4;
+
+                        const npcRoot = new BABYLON.TransformNode('soul_npc_root_' + soulId, scene);
+                        npcRoot.position = new BABYLON.Vector3(sx, 0, sz);
+
+                        const hipBone = new BABYLON.TransformNode('soul_hip_' + soulId, scene);
+                        hipBone.parent = npcRoot;
+                        hipBone.position.y = 1.0 * scale;
+
+                        const torsoBone = new BABYLON.TransformNode('soul_torso_' + soulId, scene);
+                        torsoBone.parent = hipBone;
+                        torsoBone.position.y = 0.5 * scale;
+
+                        const headBone = new BABYLON.TransformNode('soul_head_' + soulId, scene);
+                        headBone.parent = torsoBone;
+                        headBone.position.y = 0.6 * scale;
+
+                        const leftArmBone = new BABYLON.TransformNode('soul_lArm_' + soulId, scene);
+                        leftArmBone.parent = torsoBone;
+                        leftArmBone.position = new BABYLON.Vector3(-0.5 * scale, 0.35 * scale, 0);
+
+                        const rightArmBone = new BABYLON.TransformNode('soul_rArm_' + soulId, scene);
+                        rightArmBone.parent = torsoBone;
+                        rightArmBone.position = new BABYLON.Vector3(0.5 * scale, 0.35 * scale, 0);
+
+                        const leftLegBone = new BABYLON.TransformNode('soul_lLeg_' + soulId, scene);
+                        leftLegBone.parent = hipBone;
+                        leftLegBone.position = new BABYLON.Vector3(-0.15 * scale, -0.1 * scale, 0);
+
+                        const rightLegBone = new BABYLON.TransformNode('soul_rLeg_' + soulId, scene);
+                        rightLegBone.parent = hipBone;
+                        rightLegBone.position = new BABYLON.Vector3(0.15 * scale, -0.1 * scale, 0);
+
+                        const matShirt = new BABYLON.StandardMaterial('soul_shirt_' + soulId, scene);
+                        matShirt.diffuseColor = BABYLON.Color3.FromHexString(shirtHex);
+                        matShirt.emissiveColor = BABYLON.Color3.FromHexString(shirtHex).scale(0.15);
+
+                        const bodyWidth = (0.8 + Math.random() * 0.3) * scale;
+                        const torso = BABYLON.MeshBuilder.CreateBox('soul_torso_' + soulId, {
+                            width: bodyWidth, height: 0.7 * scale, depth: 0.4 * scale
+                        }, scene);
+                        torso.parent = torsoBone;
+                        torso.material = matShirt;
+
+                        const headSize = 0.25 * scale;
+                        const head = BABYLON.MeshBuilder.CreateSphere('soul_head_' + soulId, { diameter: headSize, segments: 16 }, scene);
+                        head.parent = headBone;
+                        const matSkin = new BABYLON.StandardMaterial('soul_skin_' + soulId, scene);
+                        matSkin.diffuseColor = new BABYLON.Color3(0.9, 0.8, 0.7);
+                        head.material = matSkin;
+
+                        // Archetype glow over head
+                        const glowSphere = BABYLON.MeshBuilder.CreateSphere('soul_glow_' + soulId, { diameter: headSize * 2.2, segments: 12 }, scene);
+                        glowSphere.parent = headBone;
+                        glowSphere.position.y = headSize * 0.5;
+                        const glowMat = new BABYLON.StandardMaterial('soul_glowMat_' + soulId, scene);
+                        glowMat.emissiveColor = BABYLON.Color3.FromHexString(shirtHex);
+                        glowMat.alpha = 0.3;
+                        glowSphere.material = glowMat;
+
+                        // Archetype ring indicator
+                        const ringMesh = BABYLON.MeshBuilder.CreateTorus('soul_ring_' + soulId, { diameter: 1.2 * scale, thickness: 0.04 }, scene);
+                        ringMesh.parent = hipBone;
+                        ringMesh.position.y = -0.2 * scale;
+                        ringMesh.rotation.x = Math.PI / 2;
+                        const ringMat = new BABYLON.StandardMaterial('soul_ringMat_' + soulId, scene);
+                        ringMat.emissiveColor = BABYLON.Color3.FromHexString(shirtHex);
+                        ringMat.alpha = 0.5;
+                        ringMesh.material = ringMat;
+
+                        // Name label
+                        const labelDt = new BABYLON.DynamicTexture('soul_labelDT_' + soulId, { width: 256, height: 64 }, scene, true);
+                        labelDt.drawText(soul.name || 'Soul', null, null, 'bold 20px monospace', '#ffffff', 'transparent', true);
+                        const labelPlane = BABYLON.MeshBuilder.CreatePlane('soul_labelP_' + soulId, { width: 2.2, height: 0.5 }, scene);
+                        labelPlane.parent = headBone;
+                        labelPlane.position.y = 0.8 * scale;
+                        const labelMat = new BABYLON.StandardMaterial('soul_labelMat_' + soulId, scene);
+                        labelMat.diffuseTexture = labelDt;
+                        labelMat.hasAlpha = true;
+                        labelPlane.material = labelMat;
+                        labelPlane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+
+                        // Shadow disc
+                        const shadow = BABYLON.MeshBuilder.CreateDisc('soul_shadow_' + soulId, { radius: 0.4 * scale }, scene);
+                        shadow.parent = npcRoot;
+                        shadow.position.y = 0.01;
+                        shadow.rotation.x = Math.PI / 2;
+                        const shadowMat = new BABYLON.StandardMaterial('soul_shadowMat_' + soulId, scene);
+                        shadowMat.diffuseColor = new BABYLON.Color3(0, 0, 0);
+                        shadowMat.alpha = 0.3;
+                        shadow.material = shadowMat;
+
+                        // Animation state
+                        const npcObj = {
+                            id: npcId,
+                            root: npcRoot,
+                            bones: { hipBone, torsoBone, headBone, leftArmBone, rightArmBone, leftLegBone, rightLegBone },
+                            shadow,
+                            x: sx, z: sz,
+                            targetX: sx + (Math.random() - 0.5) * 15,
+                            targetZ: sz + (Math.random() - 0.5) * 15,
+                            speed: 0.8 + Math.random() * 0.4,
+                            scale,
+                            walkPhase: Math.random() * Math.PI * 2,
+                            idleTimer: 2 + Math.random() * 3,
+                            personalityData: { wanderRadius: 10 },
+                            moodData: { speedMod: 1 },
+                            disposeAll: () => {
+                                scene.removeMesh(torso);
+                                scene.removeMesh(head);
+                                scene.removeMesh(glowSphere);
+                                scene.removeMesh(ringMesh);
+                                scene.removeMesh(labelPlane);
+                                scene.removeMesh(shadow);
+                                torso.dispose(); head.dispose(); glowSphere.dispose();
+                                ringMesh.dispose(); labelPlane.dispose(); shadow.dispose();
+                                matShirt.dispose(); matSkin.dispose(); glowMat.dispose();
+                                ringMat.dispose(); labelMat.dispose(); shadowMat.dispose();
+                                labelDt.dispose();
+                                if (npcRoot) npcRoot.dispose();
+                            }
+                        };
+
+                        npcs.push(npcObj);
+                        window._soulAgents[soulId] = { npc: npcObj, soul, createdAt: Date.now() };
+                    }
+                }
+
+                // Remove souls that are no longer present
+                for (const sid of Object.keys(window._soulAgents || {})) {
+                    if (!currentSoulIds.has(sid)) {
+                        const agent = window._soulAgents[sid];
+                        if (agent && agent.npc) {
+                            if (agent.npc.disposeAll) agent.npc.disposeAll();
+                            const idx = npcs.indexOf(agent.npc);
+                            if (idx !== -1) npcs.splice(idx, 1);
+                        }
+                        delete window._soulAgents[sid];
+                    }
+                }
+            }
+
+            // DYNAMIC SANCTUM WORLD — buildings from canonical world state
+            const sanctumBlds = state.world?.buildings || state.buildings || [];
+            if (scene) {
+                // Dark City: when Sanctum has buildings, switch to dynamic mode and clear hardcoded city
+                if (sanctumBlds.length > 0 && !_sanctumDriven) {
+                    _sanctumDriven = true;
+                    // Clean up hardcoded city center monuments and orbs
+                    GRIDS.forEach(g => {
+                        // Dispose hardcoded meshes by prefix patterns
+                        const prefixes = ['monument_', 'orb_', 'bld_', 'roof_', 'base_', 'neon_', 'bm_', 'rm_', 'wm_', 'win_'];
+                        prefixes.forEach(p => {
+                            for (let i = 0; i < 60; i++) {
+                                const m = scene.getMeshByName(p + g.id + '_' + i);
+                                if (m) m.dispose();
+                            }
+                        });
+                    });
+                    notify('🌌 Sanctum world active — ' + sanctumBlds.length + ' canonical buildings rendered');
+                }
+                if (!window._sanctumBuildings) window._sanctumBuildings = {};
+                const currentBldIds = new Set();
+
+                for (const bld of sanctumBlds) {
+                    const bldId = bld.id || bld.name || 'bld_' + Math.random();
+                    currentBldIds.add(bldId);
+
+                    if (!window._sanctumBuildings[bldId]) {
+                        // PLT-colored building
+                        const pltIntensity = Math.max(0.1, (bld.profit || 0.3) * 0.7 + (bld.love || 0.3) * 0.3);
+                        const h = Math.max(3, (bld.level || 1) * 4 + (bld.profit || 0) * 5);
+                        const w = Math.max(3, 3 + (bld.level || 1) * 1.5);
+
+                        const box = BABYLON.MeshBuilder.CreateBox('sanctum_bld_' + bldId, { width: w, height: h, depth: w }, scene);
+                        box.position = new BABYLON.Vector3(bld.x || 0, h / 2, bld.z || 0);
+                        const mat = new BABYLON.StandardMaterial('sanctum_bld_mat_' + bldId, scene);
+                        mat.diffuseColor = new BABYLON.Color3(0.3 + pltIntensity * 0.5, 0.2 + (bld.love || 0.3) * 0.5, 0.5);
+                        mat.emissiveColor = new BABYLON.Color3(pltIntensity * 0.3, (bld.love || 0.3) * 0.2, (bld.tax || 0.2) * 0.2);
+                        box.material = mat;
+
+                        // Name label
+                        const labelDt = new BABYLON.DynamicTexture('bld_label_' + bldId, { width: 256, height: 64 }, scene, true);
+                        labelDt.drawText(bld.name || bld.type || 'Building', null, null, 'bold 18px monospace', '#88ddff', 'transparent', true);
+                        const labelP = BABYLON.MeshBuilder.CreatePlane('bld_lp_' + bldId, { width: 3, height: 0.5 }, scene);
+                        labelP.position = new BABYLON.Vector3(bld.x || 0, h + 1, bld.z || 0);
+                        const labelMat = new BABYLON.StandardMaterial('bld_lm_' + bldId, scene);
+                        labelMat.diffuseTexture = labelDt;
+                        labelMat.hasAlpha = true;
+                        labelP.material = labelMat;
+                        labelP.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+
+                        // Level indicator
+                        const lvlH = Math.min(0.5, bld.level * 0.1);
+                        if (bld.level > 1) {
+                            const crown = BABYLON.MeshBuilder.CreateBox('bld_crown_' + bldId, { width: w * 0.6, height: lvlH, depth: w * 0.6 }, scene);
+                            crown.position = new BABYLON.Vector3(bld.x || 0, h + lvlH / 2, bld.z || 0);
+                            const crownMat = new BABYLON.StandardMaterial('bld_crown_mat_' + bldId, scene);
+                            crownMat.emissiveColor = new BABYLON.Color3(1, 0.8, 0.1);
+                            crown.material = crownMat;
+                            window._sanctumBuildings[bldId] = { box, crown, labelP };
+                        } else {
+                            window._sanctumBuildings[bldId] = { box, labelP };
+                        }
+                    } else {
+                        // Update existing building position/scale if changed
+                        const existing = window._sanctumBuildings[bldId];
+                        if (existing.box) {
+                            const h = Math.max(3, (bld.level || 1) * 4 + (bld.profit || 0) * 5);
+                            existing.box.position = new BABYLON.Vector3(bld.x || 0, h / 2, bld.z || 0);
+                            if (existing.labelP) {
+                                existing.labelP.position = new BABYLON.Vector3(bld.x || 0, h + 1, bld.z || 0);
+                            }
+                        }
+                    }
+                }
+
+                // Remove buildings that no longer exist in Sanctum
+                for (const bldId of Object.keys(window._sanctumBuildings)) {
+                    if (!currentBldIds.has(bldId)) {
+                        const bld = window._sanctumBuildings[bldId];
+                        if (bld.box) bld.box.dispose();
+                        if (bld.crown) bld.crown.dispose();
+                        if (bld.labelP) bld.labelP.dispose();
+                        delete window._sanctumBuildings[bldId];
+                    }
+                }
+            }
+
+            // Update PLT resources from Sanctum world state
+            const worldRes = state.world?.resources || state.resources || null;
+            if (worldRes) {
+                const profitEl = document.getElementById('profitBar');
+                const loveEl = document.getElementById('loveBar');
+                const taxEl = document.getElementById('taxBar');
+                if (profitEl) profitEl.style.width = Math.min(100, (worldRes.profit || 0) / 10) + '%';
+                if (loveEl) loveEl.style.width = Math.min(100, (worldRes.love || 0) / 10) + '%';
+                if (taxEl) taxEl.style.width = Math.min(100, (worldRes.tax || 0) / 10) + '%';
+
+                const profitNum = document.getElementById('profitValue');
+                const loveNum = document.getElementById('loveValue');
+                const taxNum = document.getElementById('taxValue');
+                if (profitNum) profitNum.textContent = Math.floor(worldRes.profit);
+                if (loveNum) loveNum.textContent = Math.floor(worldRes.love);
+                if (taxNum) taxNum.textContent = Math.floor(worldRes.tax);
+            }
+
+            // Update Sanctum connection status
+            const sanctumOnline = state.world?.sanctumOnline;
+            const sanctumStatusEl = document.getElementById('sanctumStatus');
+            if (sanctumStatusEl) {
+                sanctumStatusEl.textContent = sanctumOnline ? '🟢 Online' : '🔴 Offline';
+                sanctumStatusEl.style.color = sanctumOnline ? '#44ff88' : '#ff4444';
+            }
         } catch (error) {
             console.error('Error updating soul state from kernel:', error);
         }
@@ -4561,8 +4959,150 @@
     function displayKernelError(error) {
         notify('�s��,? Kernel Error: ' + error.message);
     }
-    
-    // Function to send commands to kernel from UI
+
+    // ── PHASE 3: BUILDING INSPECT ──────────────────────────────────
+    let _inspectBuildingId = null;
+
+    function openInspect(bldId) {
+        _inspectBuildingId = bldId;
+        const bld = window._sanctumBuildings ? window._sanctumBuildings[bldId] : null;
+        const panel = document.getElementById('inspectPanel');
+        if (!panel) return;
+        panel.style.display = 'block';
+
+        document.getElementById('inspectName').textContent = bldId;
+        document.getElementById('inspectType').textContent = 'Building ID: ' + bldId;
+
+        // Show GSK state behind it (from Sanctum state via bridge)
+        const worldBld = (window._lastWorldState?.world?.buildings || []).find(b => b.id === bldId || b.name === bldId);
+        const systemInfo = worldBld ? {
+            id: worldBld.id,
+            name: worldBld.name,
+            type: worldBld.type,
+            position: { x: worldBld.x, z: worldBld.z },
+            level: worldBld.level || 1,
+            systemNode: worldBld.systemNode || 'unknown',
+        } : { id: bldId, note: 'No GSK state available' };
+
+        document.getElementById('inspectSystemNode').textContent = 'System Node: ' + (systemInfo.systemNode || 'unknown');
+        document.getElementById('inspectJson').textContent = JSON.stringify(systemInfo, null, 2);
+    }
+
+    function closeInspect() {
+        const panel = document.getElementById('inspectPanel');
+        if (panel) panel.style.display = 'none';
+        _inspectBuildingId = null;
+    }
+
+    function deleteInspectBuilding() {
+        if (_inspectBuildingId) {
+            deleteInspectBuildingById(_inspectBuildingId);
+            closeInspect();
+        }
+    }
+
+    function deleteInspectBuildingById(bldId) {
+        // Remove from local Sanctum render
+        if (window._sanctumBuildings && window._sanctumBuildings[bldId]) {
+            const bld = window._sanctumBuildings[bldId];
+            if (bld.box) bld.box.dispose();
+            if (bld.crown) bld.crown.dispose();
+            if (bld.labelP) bld.labelP.dispose();
+            delete window._sanctumBuildings[bldId];
+        }
+        // Send remove command via bridge
+        if (kernelWs && kernelWs.readyState === WebSocket.OPEN) {
+            kernelWs.send(JSON.stringify({
+                type: 'command',
+                payload: { command: 'dispatch_subagent', args: {
+                    task: 'Remove building from Sanctum',
+                    tool: 'world_send_command',
+                    args: { RemoveBuilding: { id: bldId } }
+                }}
+            }));
+        }
+        notify('🗑️ Building ' + bldId + ' removed from Dark City');
+    }
+
+    // ── PHASE 3: SOUL CHAT ────────────────────────────────────────
+    let _chatSoulName = null;
+
+    function openChat(soulId) {
+        _chatSoulName = soulId;
+        const panel = document.getElementById('chatPanel');
+        if (!panel) return;
+        panel.style.display = 'flex';
+        document.getElementById('chatName').textContent = '💬 ' + soulId;
+        document.getElementById('chatLog').innerHTML = '<div style="color:#888">Connected to ' + soulId + '...</div>';
+        document.getElementById('chatInput').value = '';
+        document.getElementById('chatInput').focus();
+    }
+
+    function closeChat() {
+        document.getElementById('chatPanel').style.display = 'none';
+        _chatSoulName = null;
+    }
+
+    function sendChat() {
+        const input = document.getElementById('chatInput');
+        const msg = input.value.trim();
+        if (!msg || !_chatSoulName) return;
+        input.value = '';
+
+        const log = document.getElementById('chatLog');
+        log.innerHTML += '<div style="color:#88ccff">You: ' + msg + '</div>';
+
+        // Send to GSK brain via bridge
+        if (kernelWs && kernelWs.readyState === WebSocket.OPEN) {
+            kernelWs.send(JSON.stringify({
+                type: 'command',
+                payload: {
+                    command: 'dispatch_subagent',
+                    args: { task: 'Reply as ' + _chatSoulName + ': ' + msg }
+                }
+            }));
+            log.innerHTML += '<div style="color:#888">' + _chatSoulName + ' thinking...</div>';
+        } else {
+            log.innerHTML += '<div style="color:#ff4444">Kernel not connected</div>';
+        }
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function chatWithNpc() {
+        const nameEl = document.getElementById('agentName');
+        const name = nameEl ? nameEl.textContent : 'Soul';
+        openChat(name);
+    }
+
+    function dismissNpc() {
+        document.getElementById('agentInfo').classList.remove('visible');
+    }
+
+    // ── PHASE 3: PORTAL WEB FETCH ────────────────────────────────
+    async function handlePortalInput(event) {
+        if (event.key === 'Enter') {
+            const url = document.getElementById('portalInput').value;
+            if (!url) return;
+
+            notify('🌐 Fetching ' + url + '...');
+
+            // Send web fetch command via bridge
+            if (kernelWs && kernelWs.readyState === WebSocket.OPEN) {
+                kernelWs.send(JSON.stringify({
+                    type: 'command',
+                    payload: {
+                        command: 'dispatch_subagent',
+                        args: { task: 'Fetch URL: ' + url + '. Extract knowledge and report findings.' }
+                    }
+                }));
+            }
+
+            togglePortalInput();
+            document.getElementById('portalInput').value = '';
+        }
+    }
+
+    // ── Function to send commands to kernel from UI
     function sendCommandToKernel(command, args = {}) {
         if (!kernelWs || kernelWs.readyState !== WebSocket.OPEN) {
             notify('�?O Kernel not connected');
@@ -4580,9 +5120,110 @@
         return true;
     }
     
+    // ── PHASE 4: BROWSER CITIZEN MANAGER ────────────────────────
+    let _citizens = {}; // citizenId -> { worker, state }
+
+    function spawnCitizen(name, archetype = 'OBSERVER', x = 0, z = 0) {
+        const id = `citizen_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+        try {
+            const worker = new Worker('citizen.js');
+            const entry = { worker, id, name, archetype, status: 'spawning', logs: [] };
+
+            worker.onmessage = (e) => {
+                const msg = e.data;
+                if (msg.type === 'log') {
+                    entry.logs.push(msg.message);
+                    if (entry.logs.length > 50) entry.logs.shift();
+                    console.log(`[Citizen] ${msg.message}`);
+                } else if (msg.type === 'spawn') {
+                    entry.status = 'running';
+                    notify(`👤 Citizen ${name} (${archetype}) spawned in the Dark City`);
+                } else if (msg.type === 'act') {
+                    // Forward action to GSK via bridge
+                    if (kernelWs && kernelWs.readyState === WebSocket.OPEN) {
+                        kernelWs.send(JSON.stringify({
+                            type: 'command',
+                            payload: { command: 'dispatch_subagent', args: {
+                                task: `Citizen ${name}: ${msg.command.reason}`,
+                                tool: msg.command.action === 'spawn_soul' ? 'world_spawn_soul' : 'world_place_building'
+                            }}
+                        }));
+                    }
+                }
+            };
+
+            worker.onerror = (e) => {
+                entry.status = 'error';
+                console.error(`[Citizen] ${name} error:`, e.message);
+            };
+
+            worker.postMessage({ type: 'spawn', id, name, archetype, x, z, loopInterval: 10000 });
+            _citizens[id] = entry;
+            return id;
+        } catch (e) {
+            notify(`❌ Failed to spawn citizen ${name}: ${e.message}`);
+            return null;
+        }
+    }
+
+    function terminateCitizen(id) {
+        const entry = _citizens[id];
+        if (entry && entry.worker) {
+            entry.worker.postMessage({ type: 'terminate' });
+            entry.status = 'terminated';
+            setTimeout(() => delete _citizens[id], 1000);
+            notify(`👤 Citizen ${entry.name} terminated.`);
+        }
+    }
+
+    function pauseAllCitizens() {
+        Object.values(_citizens).forEach(c => {
+            if (c.worker && c.status === 'running') {
+                c.worker.postMessage({ type: 'pause' });
+                c.status = 'paused';
+            }
+        });
+        notify('⏸️ All citizens paused');
+    }
+
+    function resumeAllCitizens() {
+        Object.values(_citizens).forEach(c => {
+            if (c.worker && c.status === 'paused') {
+                c.worker.postMessage({ type: 'resume' });
+                c.status = 'running';
+            }
+        });
+        notify('▶️ All citizens resumed');
+    }
+
+    // Spawn initial citizens when the city is ready
+    setTimeout(() => {
+        if (!initComplete) return;
+        spawnCitizen('Observer-1', 'OBSERVER', -10, -10);
+        spawnCitizen('Wanderer-1', 'EXPLORER', 10, 10);
+        spawnCitizen('Builder-1', 'CREATOR', 0, 20);
+        notify('🌆 3 Browser Citizens initialized in the Dark City');
+    }, 3000);
+
     // Expose functions to global scope for use in UI
     window.sendCommandToKernel = sendCommandToKernel;
     window.isKernelConnected = () => kernelConnected;
+    window.togglePortalInput = togglePortalInput;
+    window.handlePortalInput = handlePortalInput;
+    window.openInspect = openInspect;
+    window.closeInspect = closeInspect;
+    window.chatWithNpc = chatWithNpc;
+    window.dismissNpc = dismissNpc;
+    window.closeChat = closeChat;
+    window.deleteInspectBuilding = deleteInspectBuilding;
+    window.spawnCitizen = spawnCitizen;
+    window.terminateCitizen = terminateCitizen;
+    window.pauseAllCitizens = pauseAllCitizens;
+    window.resumeAllCitizens = resumeAllCitizens;
+
+    function togglePortalInput() {
+        document.getElementById('portalNode').classList.toggle('active');
+    }
     </script>
 </body>
 </html>
