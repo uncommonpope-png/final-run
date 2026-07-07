@@ -3213,7 +3213,8 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
             }
         };
         // Right-click for delete
-        canvas.addEventListener('contextmenu', (e) => {
+        const _canvas = document.getElementById('renderCanvas');
+        if (_canvas) _canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             const pick = scene.pick(scene.pointerX, scene.pointerY);
             if (pick.hit && pick.pickedMesh) {
