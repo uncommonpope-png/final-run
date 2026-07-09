@@ -1280,10 +1280,10 @@
             <div class="panel-content">
                 <h4>🗺️ UNIVERSE MAP</h4>
                 <div id="minimap-grid">
-                    <div class="mini-city" onclick="teleportTo(0)">💼</div>
-                    <div class="mini-city" onclick="teleportTo(1)">🏠</div>
-                    <div class="mini-city" onclick="teleportTo(2)">🎉</div>
-                    <div class="mini-city" onclick="teleportTo(3)">📚</div>
+                    <div class="mini-city" onclick="event.preventDefault(); teleportTo(0); return false;">💼</div>
+                    <div class="mini-city" onclick="event.preventDefault(); teleportTo(1); return false;">🏠</div>
+                    <div class="mini-city" onclick="event.preventDefault(); teleportTo(2); return false;">🎉</div>
+                    <div class="mini-city" onclick="event.preventDefault(); teleportTo(3); return false;">📚</div>
                     <div class="mini-city" onclick="teleportTo(4)">💰</div>
                     <div class="mini-city" onclick="teleportTo(5)">🕊️</div>
                     <div class="mini-city" onclick="teleportTo(6)">⚔️</div>
@@ -1399,10 +1399,10 @@
         </div>
 
         <div id="action-bar">
-            <button class="action-btn" onclick="teleportTo(0)">💼</button>
-            <button class="action-btn" onclick="teleportTo(1)">🏠</button>
-            <button class="action-btn" onclick="teleportTo(2)">🎉</button>
-            <button class="action-btn" onclick="teleportTo(3)">📚</button>
+            <button class="action-btn" onclick="event.preventDefault(); teleportTo(0); return false;">💼</button>
+            <button class="action-btn" onclick="event.preventDefault(); teleportTo(1); return false;">🏠</button>
+            <button class="action-btn" onclick="event.preventDefault(); teleportTo(2); return false;">🎉</button>
+            <button class="action-btn" onclick="event.preventDefault(); teleportTo(3); return false;">📚</button>
             <button class="action-btn" onclick="openModal('deployModal')">➕</button>
             <button class="action-btn" onclick="cycleView()">🌍</button>
         </div>
