@@ -2347,6 +2347,12 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
                 document.getElementById('loading').style.display = 'none';
                 notify('🌌 Universe ready! ' + allBuildings.length + ' buildings across ' + GRIDS.length + ' cities');
                 
+                // Fix #6: Explicitly kill panels
+                ['kernelPanel', 'compassNav', 'godModePanel', 'commandCenterPanel', 'deployModal', 'ideModal', 'portalModal', 'emotionPanel', 'thinkBar', 'actionWheel', 'holographicOverlay'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+                
                 SoulEmotions.set('content');
                 ContextHUD.set('idle', 'Standing by...');
                 document.getElementById('compassNav').classList.add('visible');
@@ -2623,14 +2629,31 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
         allBuildings.push({ id: 'bld_' + gridId + '_' + index, name: config.name, type: mappedType, gridId, x, z, style: config.style, level: 1,
             gskState: { energyLevel: 0.5, activityLevel: 0.5, lastPulse: 0, emissiveBase: [(config.c || [0.5,0.5,0.5])[0] * 0.15, (config.c || [0.5,0.5,0.5])[1] * 0.15, (config.c || [0.5,0.5,0.5])[2] * 0.15] }
         });
-        if (mappedType === 'shop') {
-            loadShopDirectBuilding('bld_' + gridId + '_' + index, building, roof ? [roof] : [], config.h, [(config.c || [0.5,0.5,0.5])[0] * 0.15, (config.c || [0.5,0.5,0.5])[1] * 0.15, (config.c || [0.5,0.5,0.5])[2] * 0.15]);
-        }
-        if (mappedType === 'factory') {
-            loadFactoryKitBuilding('bld_' + gridId + '_' + index, building, roof ? [roof] : [], config.h, [(config.c || [0.5,0.5,0.5])[0] * 0.15, (config.c || [0.5,0.5,0.5])[1] * 0.15, (config.c || [0.5,0.5,0.5])[2] * 0.15]);
-        }
-        if (mappedType === 'tower') {
-            loadTowerDirectBuilding('bld_' + gridId + '_' + index, building, roof ? [roof] : [], config.h, [(config.c || [0.5,0.5,0.5])[0] * 0.15, (config.c || [0.5,0.5,0.5])[1] * 0.15, (config.c || [0.5,0.5,0.5])[2] * 0.15]);
+        
+        // Fix #3: Load Real Building GLBs
+        if (mappedType === 'shop' || config.style === 'shop') {
+            BABYLON.SceneLoader.ImportMeshAsync('', 'assets/buildings/shop-direct/', 'brick-shop-building.glb', scene).then(result => {
+                const mesh = result.meshes[0];
+                mesh.position = building.position.clone();
+                building.isVisible = false;
+            });
+        } else if (mappedType === 'factory' || config.style === 'factory') {
+            BABYLON.SceneLoader.ImportMeshAsync('', 'assets/buildings/factory-direct/', 'industrial-building.glb', scene).then(result => {
+                const mesh = result.meshes[0];
+                mesh.position = building.position.clone();
+                building.isVisible = false;
+            });
+        } else if (mappedType === 'tower' || config.style === 'tower') {
+            BABYLON.SceneLoader.ImportMeshAsync('', 'assets/buildings/tower-direct/', 'skyscraper-tower.glb', scene).then(result => {
+                const mesh = result.meshes[0];
+                mesh.position = building.position.clone();
+                building.isVisible = false;
+            });
+        } else {
+            // Fallback for older building logic
+            if (mappedType === 'shop') loadShopDirectBuilding('bld_' + gridId + '_' + index, building, roof ? [roof] : [], config.h, [(config.c || [0.5,0.5,0.5])[0] * 0.15, (config.c || [0.5,0.5,0.5])[1] * 0.15, (config.c || [0.5,0.5,0.5])[2] * 0.15]);
+            if (mappedType === 'factory') loadFactoryKitBuilding('bld_' + gridId + '_' + index, building, roof ? [roof] : [], config.h, [(config.c || [0.5,0.5,0.5])[0] * 0.15, (config.c || [0.5,0.5,0.5])[1] * 0.15, (config.c || [0.5,0.5,0.5])[2] * 0.15]);
+            if (mappedType === 'tower') loadTowerDirectBuilding('bld_' + gridId + '_' + index, building, roof ? [roof] : [], config.h, [(config.c || [0.5,0.5,0.5])[0] * 0.15, (config.c || [0.5,0.5,0.5])[1] * 0.15, (config.c || [0.5,0.5,0.5])[2] * 0.15]);
         }
     }
     
