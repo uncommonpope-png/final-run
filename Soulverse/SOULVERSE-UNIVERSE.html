@@ -5,13 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌌 SOULVERSE UNIVERSE | Dark City Spatial OS</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/lib/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/theme/material.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/theme/dracula.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/lib/codemirror.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/javascript/javascript.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/python/python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/xml/xml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/css/css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.18/addon/selection/active-line.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
     <style>
+        :root {
+            --plt-profit: #FFB347;
+            --plt-love: #FF6B9D;
+            --plt-tax: #4ECDC4;
+            --plt-profit-dim: rgba(255, 179, 71, 0.3);
+            --plt-love-dim: rgba(255, 107, 157, 0.3);
+            --plt-tax-dim: rgba(78, 205, 196, 0.3);
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; height: 100vh; width: 100vw; }
         
@@ -20,15 +37,15 @@
         #ui { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
         #ui > * { pointer-events: auto; }
 
-        #loading { position: fixed; inset: 0; background: linear-gradient(180deg, #0a0a1a, #1a1a3a); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffaa66; }
+        #loading { position: fixed; inset: 0; background: linear-gradient(180deg, #0a0a1a, #1a1a3a); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--plt-profit); }
         #loading h1 { font-size: 28px; margin-bottom: 10px; text-shadow: 0 0 20px #ff88ff; }
         #loading h2 { font-size: 12px; color: #888; margin-bottom: 25px; }
         #loading-progress { width: 400px; height: 10px; background: #222; border-radius: 5px; overflow: hidden; margin-bottom: 15px; }
-        #loading-bar { height: 100%; background: linear-gradient(90deg, #ffaa66, #ff88ff, #88ffff); width: 0%; transition: width 0.5s; }
+        #loading-bar { height: 100%; background: linear-gradient(90deg, var(--plt-profit), #ff88ff, #88ffff); width: 0%; transition: width 0.5s; }
         #loading-status { font-size: 11px; color: #aaa; margin-bottom: 15px; font-family: monospace; }
         #god-grid { display: grid; grid-template-columns: repeat(6, 40px); gap: 4px; }
         .god-cell { width: 40px; height: 40px; background: #1a1a2e; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.3s; }
-        .god-cell.active { background: #ffaa66; box-shadow: 0 0 15px #ffaa66; }
+        .god-cell.active { background: var(--plt-profit); box-shadow: 0 0 15px var(--plt-profit); }
         #error-display { max-width: 400px; background: rgba(255,68,68,0.2); border: 1px solid #ff4444; border-radius: 8px; padding: 10px; color: #ff8888; font-size: 10px; display: none; margin-top: 10px; }
         
         /* Kernel Connection Panel */
@@ -64,6 +81,10 @@
         .kernel-metric-value {
             font-weight: bold;
             color: #ffffff;
+        }
+        /* Panels to hide for Dark City transformation */
+        #kernelPanel, #compassNav, #godModePanel, #commandCenterPanel, #deployModal, #ideModal, #portalModal, #emotionPanel, #thinkBar, #actionWheel, #holographicOverlay {
+            display: none !important;
         }
         .kernel-bar-container {
             height: 6px;
@@ -235,12 +256,12 @@
             right: 8px; 
             width: 180px; 
             background: rgba(0,0,0,0.9); 
-            border: 2px solid #ffaa66; 
+            border: 2px solid var(--plt-profit); 
             border-radius: 10px; 
             padding: 8px; 
             z-index: 20;
         }
-        #minimap h4 { color: #ffaa66; font-size: 10px; text-align: center; margin-bottom: 6px; }
+        #minimap h4 { color: var(--plt-profit); font-size: 10px; text-align: center; margin-bottom: 6px; }
         #minimap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
         .mini-city { 
             width: 100%; 
@@ -257,10 +278,10 @@
         }
         .mini-city:hover { 
             background: #333; 
-            border-color: #ffaa66;
+            border-color: var(--plt-profit);
             transform: scale(1.1);
         }
-        .mini-city.current { background: #ffaa66; }
+        .mini-city.current { background: var(--plt-profit); }
 
         #portalNode {
             position: absolute;
@@ -306,7 +327,7 @@
             border-radius: 12px; 
             padding: 8px 12px; 
         }
-        .res-row { display: flex; align-items: center; gap: 5px; margin: 2px 0; font-size: 9px; color: #ffaa66; }
+        .res-row { display: flex; align-items: center; gap: 5px; margin: 2px 0; font-size: 9px; color: var(--plt-profit); }
         .res-bar { width: 40px; height: 5px; background: #222; border-radius: 3px; }
         .res-fill { height: 100%; border-radius: 3px; }
         .res-profit { background: linear-gradient(90deg, #ff6600, #ffaa44); }
@@ -322,7 +343,7 @@
             background: rgba(0,0,0,0.8); 
             border-radius: 15px; 
             padding: 5px 12px; 
-            color: #ffaa66; 
+            color: var(--plt-profit); 
             font-size: 10px; 
         }
         .location-city { color: #fff; font-weight: bold; }
@@ -356,7 +377,7 @@
             border-radius: 50%; 
             border: 2px solid rgba(255,170,102,0.5); 
             background: rgba(255,170,102,0.2); 
-            color: #ffaa66; 
+            color: var(--plt-profit); 
             font-size: 16px; 
             cursor: pointer; 
             display: flex; 
@@ -366,7 +387,7 @@
         }
         .action-btn:hover {
             background: rgba(255,170,102,0.4);
-            border-color: #ffaa66;
+            border-color: var(--plt-profit);
             transform: scale(1.1);
             box-shadow: 0 0 15px rgba(255, 170, 102, 0.4);
         }
@@ -381,7 +402,7 @@
             background: rgba(0,0,0,0.9); 
             border-radius: 12px; 
             padding: 10px; 
-            color: #ffaa66; 
+            color: var(--plt-profit); 
             font-size: 9px; 
             max-width: 200px; 
             display: none; 
@@ -406,10 +427,10 @@
             z-index: 90; 
             transition: 0.3s; 
             overflow-y: auto; 
-            border-left: 2px solid #ffaa66; 
+            border-left: 2px solid var(--plt-profit); 
         }
         .side-panel.open { right: 0; }
-        .side-panel h3 { color: #ffaa66; padding: 50px 15px 10px; font-size: 13px; position: sticky; top: 0; background: rgba(0,0,0,0.95); }
+        .side-panel h3 { color: var(--plt-profit); padding: 50px 15px 10px; font-size: 13px; position: sticky; top: 0; background: rgba(0,0,0,0.95); }
         .district-card { 
             background: rgba(255,255,255,0.05); 
             border: 1px solid #444; 
@@ -421,9 +442,9 @@
         }
         .district-card:hover { 
             background: rgba(255,170,102,0.1); 
-            border-color: #ffaa66;
+            border-color: var(--plt-profit);
         }
-        .district-name { font-weight: bold; color: #ffaa66; font-size: 11px; }
+        .district-name { font-weight: bold; color: var(--plt-profit); font-size: 11px; }
         .district-count { font-size: 8px; color: #888; }
 
         .modal { 
@@ -432,22 +453,24 @@
             left: 50%; 
             transform: translate(-50%, -50%); 
             background: rgba(0,0,0,0.95); 
-            border: 2px solid #ffaa66; 
+            border: 2px solid var(--plt-profit); 
             border-radius: 20px; 
             padding: 20px; 
             z-index: 300; 
             display: none; 
             min-width: 300px; 
+            align-items: center;
+            justify-content: center;
         }
         .modal.active { display: block; }
-        .modal h3 { color: #ffaa66; margin-bottom: 12px; }
+        .modal h3 { color: var(--plt-profit); margin-bottom: 12px; }
         .modal-close { 
             position: absolute; 
             top: 10px; 
             right: 10px; 
             background: rgba(255,170,102,0.2); 
-            border: 1px solid #ffaa66; 
-            color: #ffaa66; 
+            border: 1px solid var(--plt-profit); 
+            color: var(--plt-profit); 
             width: 25px; 
             height: 25px; 
             border-radius: 50%; 
@@ -455,7 +478,7 @@
         }
 
         .btn { 
-            background: #ffaa66; 
+            background: var(--plt-profit); 
             border: none; 
             color: #000; 
             padding: 8px 15px; 
@@ -481,7 +504,7 @@
             padding: 8px; 
             background: #1a1a2e; 
             border: 1px solid #444; 
-            color: #ffaa66; 
+            color: var(--plt-profit); 
             border-radius: 10px;
         }
 
@@ -640,11 +663,11 @@
         
         .compass-direction:hover {
             background: rgba(78, 205, 196, 0.2);
-            color: #4ECDC4;
+            color: var(--plt-tax);
         }
         
         .compass-direction.active {
-            background: #4ECDC4;
+            background: var(--plt-tax);
             color: #000;
         }
         
@@ -660,19 +683,22 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #4ECDC4;
+            color: var(--plt-tax);
             font-size: 14px;
         }
         
         /* ===== NEW NOTIFICATION PANEL ===== */
         #notificationPanel {
             position: fixed;
-            top: -200px;
-            left: -200px;
-            width: 0;
-            height: 0;
-            z-index: 0;
-            display: none;
+            top: 16px;
+            right: 16px;
+            width: 320px;
+            max-height: 60vh;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: auto;
         }
         
         .notification-item {
@@ -695,11 +721,11 @@
         }
         
         .notification-item.thought {
-            border-left-color: #FFD93D;
+            border-left-color: var(--plt-profit);
         }
         
         .notification-item.connection {
-            border-left-color: #4ECDC4;
+            border-left-color: var(--plt-tax);
         }
         
         .notification-item.warning {
@@ -769,11 +795,11 @@
         }
         
         #contextHUD.chatting {
-            border-color: #FFD93D;
+            border-color: var(--plt-profit);
         }
         
         #contextHUD.learning {
-            border-color: #4ECDC4;
+            border-color: var(--plt-tax);
         }
         
         .context-state {
@@ -804,11 +830,11 @@
         }
         
         #contextHUD.chatting .context-indicator {
-            background: #FFD93D;
+            background: var(--plt-profit);
         }
         
         #contextHUD.learning .context-indicator {
-            background: #4ECDC4;
+            background: var(--plt-tax);
         }
         
         /* ===== NEW HOLOGRAPHIC OVERLAY ===== */
@@ -904,7 +930,7 @@
         }
         
         .tooltip-content h4 {
-            color: #4ECDC4;
+            color: var(--plt-tax);
             font-size: 11px;
             margin-bottom: 5px;
         }
@@ -944,9 +970,9 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            border: 2px solid #ffaa66;
+            border: 2px solid var(--plt-profit);
             background: rgba(0,0,0,0.9);
-            color: #ffaa66;
+            color: var(--plt-profit);
             font-size: 14px;
             cursor: pointer;
             display: flex;
@@ -956,7 +982,7 @@
         }
         
         .wheel-action:hover {
-            background: #ffaa66;
+            background: var(--plt-profit);
             color: #000;
             transform: scale(1.2);
         }
@@ -970,11 +996,11 @@
             height: 50px;
             border-radius: 50%;
             background: rgba(255, 170, 102, 0.3);
-            border: 2px solid #ffaa66;
+            border: 2px solid var(--plt-profit);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #ffaa66;
+            color: var(--plt-profit);
             font-size: 10px;
             font-weight: bold;
         }
@@ -1026,7 +1052,7 @@
             right: 5px;
             background: rgba(255,170,102,0.3);
             border: 1px solid rgba(255,170,102,0.5);
-            color: #ffaa66;
+            color: var(--plt-profit);
             width: 18px;
             height: 18px;
             border-radius: 4px;
@@ -1131,6 +1157,35 @@
     </div>
     
     <!-- superGodMode removed -->
+    
+    <!-- F2.3 ??? Onboarding Overlay -->
+    <div id="onboardingOverlay" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;pointer-events:auto;">
+        <div style="background:rgba(10,15,25,0.95);border:2px solid var(--plt-tax);border-radius:16px;padding:30px;max-width:450px;text-align:center;">
+            <div style="font-size:48px;margin-bottom:10px;">????</div>
+            <h2 style="color:var(--plt-tax);margin:0 0 6px;">Welcome to the Dark City</h2>
+            <p style="color:#888;font-size:12px;margin-bottom:20px;line-height:1.6;">A living 3D world where AI citizens think, dream, and evolve. <br/>Your actions shape the civilization.</p>
+            <div id="onboardingSteps" style="text-align:left;margin-bottom:20px;">
+                <div class="onb-step active" data-step="0"><span style="color:var(--plt-tax);">1.</span> ???? <b style="color:#fff;">Click a building</b> ??? earn resources for the city</div>
+                <div class="onb-step" data-step="1"><span style="color:var(--plt-tax);">2.</span> ???? <b style="color:#fff;">Watch citizens</b> ??? they think and act on their own</div>
+                <div class="onb-step" data-step="2"><span style="color:var(--plt-tax);">3.</span> ?????? <b style="color:#fff;">Press `</b> ??? open the terminal, type <code>help</code></div>
+            </div>
+            <button onclick="dismissOnboarding()" style="padding:10px 30px;background:var(--plt-tax-dim);border:1px solid var(--plt-tax);border-radius:8px;color:var(--plt-tax);cursor:pointer;font-size:14px;">Enter the City ???</button>
+        </div>
+    </div>
+    <style>
+        .onb-step { padding: 8px 12px; margin-bottom: 4px; border-radius: 6px; font-size: 12px; color: #666; }
+        .onb-step.active { background: rgba(78,205,196,0.1); color: #ccc; }
+        .onb-step code { background: rgba(0,0,0,0.4); padding: 1px 5px; border-radius: 3px; color: #88ff88; }
+    </style>
+    <script>
+    function dismissOnboarding() {
+        const el = document.getElementById('onboardingOverlay');
+        if (el) { el.style.display = 'none'; localStorage.setItem('sv_onboarding_done', 'true'); }
+    }
+    if (localStorage.getItem('sv_onboarding_done')) {
+        document.getElementById('onboardingOverlay').style.display = 'none';
+    }
+    </script>
     
     <div id="ui">
     <div id="portalNode" onclick="togglePortalInput()">
@@ -1245,6 +1300,7 @@
                 <div>Pop: <span id="popCount">0</span></div>
                 <div>Bldgs: <span id="buildingCount">0</span></div>
                 <div>Portals: <span id="portalCount">0</span></div>
+                <div>???? Citizens: <span id="citizenCount" style="color:var(--plt-tax);">0</span></div>
             </div>
         </div>
 
@@ -1254,6 +1310,24 @@
                 <div class="res-row"><span>💰</span><span>Profit</span><div class="res-bar"><div class="res-fill res-profit" id="profitBar" style="width:50%"></div></div></div>
                 <div class="res-row"><span>❤️</span><span>Love</span><div class="res-bar"><div class="res-fill res-love" id="loveBar" style="width:50%"></div></div></div>
                 <div class="res-row"><span>⚖️</span><span>Tax</span><div class="res-bar"><div class="res-fill res-tax" id="taxBar" style="width:50%"></div></div></div>
+            </div>
+        </div>
+
+        <div id="civPanel" class="glass-panel" style="display:none;">
+            <button class="collapse-toggle" onclick="togglePanelCollapse('civPanel')"></button>
+            <div class="panel-content">
+                <h4 style="color:#c896ff;margin:0 0 6px;">??????? CIVILIZATION</h4>
+                <div style="font-size:9px;">
+                    <div>??? Energy: <span id="civEnergy" style="color:var(--plt-profit);">0</span></div>
+                    <div>???? Knowledge: <span id="civKnowledge" style="color:var(--plt-tax);">0</span></div>
+                    <div>???? Materials: <span id="civMaterials" style="color:var(--plt-profit);">0</span></div>
+                    <div>???? Wealth: <span id="civWealth" style="color:#88ff88;">0</span></div>
+                </div>
+                <div style="margin-top:6px;padding-top:6px;border-top:1px solid #333;">
+                    <div style="font-size:9px;">???? PLT Score: <span id="civPLT" style="color:#c896ff;font-weight:bold;">0.00</span></div>
+                    <div style="font-size:9px;">???? Age: <span id="civAge" style="color:var(--plt-profit);">Day 1</span></div>
+                    <div style="font-size:8px;color:#888;margin-top:2px;" id="civStatus">City emerging...</div>
+                </div>
             </div>
         </div>
 
@@ -1549,7 +1623,7 @@
         <div style="display:flex;gap:15px;margin-bottom:15px;">
             <div style="flex:2;">
                 <div id="buildingInfo" style="background:rgba(0,0,0,0.5);padding:10px;border-radius:8px;margin-bottom:10px;">
-                    <div style="font-size:11px;color:#888;">FLOOR: <span id="currentFloor" style="color:#ffaa66;">1</span> / <span id="totalFloors">3</span></div>
+                    <div style="font-size:11px;color:#888;">FLOOR: <span id="currentFloor" style="color:var(--plt-profit);">1</span> / <span id="totalFloors">3</span></div>
                     <div style="font-size:10px;color:#666;margin-top:5px;">OCCUPANTS: <span id="floorOccupants">5</span></div>
                     <div style="font-size:10px;color:#666;">STATUS: <span id="floorStatus" style="color:#88ff88;">Active</span></div>
                 </div>
@@ -1586,6 +1660,46 @@
         <div id="npcInBuilding" style="margin-top:10px;padding:8px;background:rgba(0,0,0,0.3);border-radius:6px;display:none;">
             <div style="font-size:10px;color:#888;margin-bottom:5px;">👥 NPCs IN BUILDING:</div>
             <div id="npcList" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        </div>
+    </div>
+    
+    <!-- SPATIAL IDE MODAL (Phase 5) -->
+    <div id="ideModal" class="modal" style="min-width:80vw;min-height:80vh;max-width:90vw;max-height:90vh;">
+        <button class="modal-close" onclick="closeFullIDE()">??</button>
+        <div style="display:flex;flex-direction:column;height:100%;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0;">
+                <h3 style="margin:0;">??????? SPATIAL IDE ??? <span id="ideFileName" style="color:#c896ff;">untitled.json</span></h3>
+                <div style="display:flex;gap:6px;">
+                    <select id="ideLang" onchange="switchIDELang()" style="background:rgba(0,0,0,0.6);border:1px solid var(--plt-tax);border-radius:4px;color:#fff;padding:4px 8px;font-size:11px;">
+                        <option value="javascript">JavaScript</option>
+                        <option value="python">Python</option>
+                        <option value="json" selected>JSON</option>
+                        <option value="htmlmixed">HTML</option>
+                        <option value="css">CSS</option>
+                    </select>
+                    <select id="ideTheme" onchange="switchIDETheme()" style="background:rgba(0,0,0,0.6);border:1px solid var(--plt-tax);border-radius:4px;color:#fff;padding:4px 8px;font-size:11px;">
+                        <option value="material">Material</option>
+                        <option value="dracula">Dracula</option>
+                        <option value="default">Default</option>
+                    </select>
+                    <button onclick="saveFullIDE()" style="padding:4px 14px;background:var(--plt-tax-dim);border:1px solid var(--plt-tax);border-radius:4px;color:var(--plt-tax);cursor:pointer;font-size:11px;">???? Save</button>
+                </div>
+            </div>
+            <div style="display:flex;flex:1;gap:8px;min-height:0;">
+                <div id="ideFileTree" style="width:180px;background:rgba(0,0,0,0.5);border:1px solid #333;border-radius:6px;padding:8px;overflow-y:auto;flex-shrink:0;">
+                    <div style="color:var(--plt-profit);font-size:10px;margin-bottom:6px;font-weight:bold;">???? GSK FILESYSTEM</div>
+                    <div class="ide-file selected" onclick="loadIDEFile('building', this)">???? <span style="color:#aaa;">buildings/</span><br>&nbsp;&nbsp;<span id="ideCurrentFile">current.json</span></div>
+                    <div class="ide-file" onclick="loadIDEFile('citizen', this)">???? <span style="color:#aaa;">citizens/</span><br>&nbsp;&nbsp;<span>hermes.json</span></div>
+                    <div class="ide-file" onclick="loadIDEFile('soul', this)">???? <span style="color:#aaa;">souls/</span><br>&nbsp;&nbsp;<span>aria.json</span></div>
+                    <div class="ide-file" onclick="loadIDEFile('config', this)">?????? <span style="color:#aaa;">config/</span><br>&nbsp;&nbsp;<span>city.json</span></div>
+                    <div class="ide-file" onclick="loadIDEFile('log', this)">???? <span style="color:#aaa;">logs/</span><br>&nbsp;&nbsp;<span>system.log</span></div>
+                </div>
+                <div id="ideEditorContainer" style="flex:1;border:1px solid #333;border-radius:6px;overflow:hidden;"></div>
+            </div>
+            <div id="ideStatusBar" style="margin-top:6px;padding:4px 8px;background:rgba(0,0,0,0.5);border-radius:4px;font-size:9px;color:#666;display:flex;justify-content:space-between;flex-shrink:0;">
+                <span id="ideStatusLeft">???? <span id="ideFilePath">buildings/current.json</span></span>
+                <span id="ideStatusRight">Ln 1, Col 0  |  UTF-8  |  GSK Bridge: <span id="ideBridgeStatus" style="color:#ff4444;">OFFLINE</span></span>
+            </div>
         </div>
     </div>
     
@@ -1919,6 +2033,88 @@ let engine, scene, camera;
 let currentGrid = 0;
 let agents = [], allBuildings = [], portals = [], npcs = [];
 let resources = { profit: 500, love: 500, tax: 500 };
+let _gameMode = 'city';
+
+// F4 ??? Event Bus
+const _bus = { _handlers: {} };
+_bus.on = function(event, fn) { (this._handlers[event] = this._handlers[event] || []).push(fn); return () => this.off(event, fn); };
+_bus.off = function(event, fn) { const h = this._handlers[event]; if (h) this._handlers[event] = h.filter(f => f !== fn); };
+_bus.emit = function(event, data) { (this._handlers[event] || []).forEach(fn => fn(data)); };
+
+// F4 ??? Save System (P7: upgraded to localForage/IndexedDB)
+const _save = {
+    key: 'darkcity_save',
+    async save() {
+        const data = {
+            resources, cityStats, currentGrid, _gameMode,
+            buildings: allBuildings.map(b => ({ id: b.id, type: b.type, x: b.x, z: b.z, level: b.level || 1, name: b.name })),
+            civ: _civ ? { age: _civ.age, resources: _civ.resources, score: _civ.score } : null,
+            timestamp: Date.now()
+        };
+        try {
+            if (typeof localforage !== 'undefined') { await localforage.setItem(this.key, data); return true; }
+            localStorage.setItem(this.key, JSON.stringify(data)); return true;
+        } catch(e) { return false; }
+    },
+    async load() {
+        try {
+            let raw;
+            if (typeof localforage !== 'undefined') raw = await localforage.getItem(this.key);
+            else raw = localStorage.getItem(this.key);
+            if (!raw) return false;
+            const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            if (data.resources) Object.assign(resources, data.resources);
+            if (data.cityStats) Object.assign(cityStats, data.cityStats);
+            if (data.currentGrid !== undefined) currentGrid = data.currentGrid;
+            if (data.civ && _civ) { _civ.age = data.civ.age; Object.assign(_civ.resources, data.civ.resources); Object.assign(_civ.score, data.civ.score); }
+            if (data.buildings) {
+                data.buildings.forEach(b => {
+                    if (!allBuildings.find(x => x.id === b.id)) {
+                        allBuildings.push(b);
+                        if (typeof createEnhancedBuilding === 'function') createEnhancedBuilding(b.type || 'office', b.x, b.z);
+                        else if (typeof placeBuilding === 'function') placeBuilding(b.type || 'office', b.x, b.z);
+                    }
+                });
+            }
+            _bus.emit('save:loaded', data);
+            return true;
+        } catch(e) { return false; }
+    },
+    autoSave() { setInterval(() => this.save(), 30000); },
+    async getStats() {
+        try {
+            if (typeof localforage !== 'undefined') {
+                const keys = await localforage.keys();
+                const usage = await Promise.all(keys.map(k => localforage.getItem(k).then(v => JSON.stringify(v).length)));
+                return { engine: 'localForage (IndexedDB)', keys: keys.length, totalBytes: usage.reduce((a, b) => a + b, 0), key: this.key };
+            }
+            return { engine: 'localStorage', keys: localStorage.length, totalBytes: new Blob([localStorage.getItem(this.key) || '']).size };
+        } catch(e) { return { engine: 'unknown', error: e.message } };
+    }
+};
+
+const _HUD_LAYERS = {
+    city: ['cityStats','resources','civPanel','soulStatus','minimap','action-bar','thinkBar'],
+    building: ['cityStats','resources','soulStatus','agentInfo','inspectPanel'],
+    chat: ['chatPanel','soulStatus','emotionPanel'],
+    terminal: ['terminalPanel','soulStatus'],
+    ide: ['soulStatus'],
+    command: ['soulStatus']
+};
+function setGameMode(mode) {
+    _gameMode = mode;
+    const allPanels = ['cityStats','resources','civPanel','soulStatus','agentInfo','inspectPanel','terminalPanel','chatPanel','thinkBar','minimap','emotionPanel','kernelPanel'];
+    const visible = _HUD_LAYERS[mode] || _HUD_LAYERS.city;
+    allPanels.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (id === 'soulStatus' || id === 'kernelPanel') { el.style.display = visible.includes(id) ? 'block' : 'none'; return; }
+        if (id === 'thinkBar') { el.style.display = visible.includes(id) ? 'flex' : 'none'; return; }
+        if (id === 'action-bar') { el.style.display = visible.includes(id) ? 'flex' : 'none'; return; }
+        el.style.display = visible.includes(id) ? 'block' : 'none';
+    });
+    if (['building','chat','terminal','ide'].includes(mode)) document.getElementById('cityStats').style.display = 'block';
+}
 let selectedAgent = null;
 let selectedNPC = null;
 let kernelConnected = false, kernelSocket = null;
@@ -1984,16 +2180,90 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
             scene.clearColor = new BABYLON.Color4(0.02, 0.02, 0.08, 1);
             scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
             scene.fogDensity = 0.003;
-            scene.fogColor = new BABYLON.Color3(0.03, 0.02, 0.08);
+            // Dark Atmosphere
+            scene.fogMode = BABYLON.Scene.FOGMODE_EXP;
+            scene.fogDensity = 0.008;
+            scene.fogColor = new BABYLON.Color3(0.1, 0.05, 0.2); // Deep purple
+            
+            // Lighting adjustments
+            const light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(0, 1, 0), scene);
+            light.intensity = 0.3; // Dim ambient
+
             setProgress(30, 2);
 
             log('Setting up camera...');
-            camera = new BABYLON.ArcRotateCamera('cam', -Math.PI / 2, Math.PI / 3, 60, BABYLON.Vector3.Zero(), scene);
-            camera.attachControl(canvas, true);
-            camera.lowerRadiusLimit = 20;
-            camera.upperRadiusLimit = 120;
-            camera.wheelPrecision = 50;
-            camera.inertia = 0.9;
+            let _camMode = 'orbit'; // 'orbit' | 'firstPerson'
+            let _firstPersonCam = null;
+            let _orbitCam = null;
+            let _keys = { w: false, a: false, s: false, d: false, shift: false };
+
+            // Orbit camera (default)
+            _orbitCam = new BABYLON.ArcRotateCamera('cam', -Math.PI / 2, Math.PI / 3, 60, BABYLON.Vector3.Zero(), scene);
+            _orbitCam.attachControl(canvas, true);
+            _orbitCam.lowerRadiusLimit = 5;
+            _orbitCam.upperRadiusLimit = 50;
+            _orbitCam.wheelPrecision = 50;
+            _orbitCam.inertia = 0.9;
+            camera = _orbitCam;
+
+            // First-person camera (hidden until toggled)
+            _firstPersonCam = new BABYLON.UniversalCamera('fpCam', new BABYLON.Vector3(0, 2, 0), scene);
+            _firstPersonCam.speed = 0.5;
+            _firstPersonCam.minZ = 0.1;
+            _firstPersonCam.inertia = 0.1;
+            _firstPersonCam.angularSensibility = 2000;
+            scene.activeCamera = camera;
+
+            function toggleCameraMode() {
+                if (_camMode === 'orbit') {
+                    _camMode = 'firstPerson';
+                    const pos = _orbitCam.position.clone();
+                    _firstPersonCam.position = new BABYLON.Vector3(pos.x, 2, pos.z);
+                    const target = _orbitCam.target;
+                    _firstPersonCam.setTarget(new BABYLON.Vector3(target.x, 1, target.z));
+                    scene.activeCamera = _firstPersonCam;
+                    _firstPersonCam.attachControl(canvas, true);
+                    _orbitCam.detachControl();
+                    canvas.requestPointerLock();
+                    notify('???? First Person mode');
+                } else {
+                    _camMode = 'orbit';
+                    _orbitCam.position = _firstPersonCam.position.clone().add(new BABYLON.Vector3(0, 20, 20));
+                    _orbitCam.setTarget(BABYLON.Vector3.Zero());
+                    scene.activeCamera = _orbitCam;
+                    _orbitCam.attachControl(canvas, true);
+                    _firstPersonCam.detachControl();
+                    document.exitPointerLock();
+                    notify('???? Orbit mode');
+                }
+            }
+
+            // WASD + shift for first-person
+            document.addEventListener('keydown', (e) => {
+                const k = e.key.toLowerCase();
+                if (k === 'w') _keys.w = true;
+                if (k === 'a') _keys.a = true;
+                if (k === 's') _keys.s = true;
+                if (k === 'd') _keys.d = true;
+                if (k === 'shift') _keys.shift = true;
+            });
+            document.addEventListener('keyup', (e) => {
+                const k = e.key.toLowerCase();
+                if (k === 'w') _keys.w = false;
+                if (k === 'a') _keys.a = false;
+                if (k === 's') _keys.s = false;
+                if (k === 'd') _keys.d = false;
+                if (k === 'shift') _keys.shift = false;
+            });
+            scene.registerBeforeRender(() => {
+                if (_camMode === 'firstPerson' && _firstPersonCam) {
+                    const speed = _keys.shift ? 1.0 : 0.3;
+                    if (_keys.w) _firstPersonCam.position.addInPlace(_firstPersonCam.getDirection(BABYLON.Vector3.Forward()).scale(speed));
+                    if (_keys.s) _firstPersonCam.position.addInPlace(_firstPersonCam.getDirection(BABYLON.Vector3.Forward()).scale(-speed));
+                    if (_keys.a) _firstPersonCam.position.addInPlace(_firstPersonCam.getDirection(BABYLON.Vector3.Left()).scale(speed));
+                    if (_keys.d) _firstPersonCam.position.addInPlace(_firstPersonCam.getDirection(BABYLON.Vector3.Right()).scale(speed));
+                }
+            });
             
             document.addEventListener('click', (e) => {
                 if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.closest('button')) {
@@ -2094,15 +2364,28 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
     }
 
     function updateWorkers() {
-        // removed - was for superGodMode overlay
+        const cEl = document.getElementById('citizenCount');
+        if (cEl) cEl.textContent = Object.keys(_citizens).length;
     }
 
     // ==================== BUILD UNIVERSE ====================
     function buildUniverse() {
         const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 200, height: 200 }, scene);
+        // Neon grid ground texture
+        const gCanvas = document.createElement('canvas'); gCanvas.width = 1024; gCanvas.height = 1024;
+        const gCtx = gCanvas.getContext('2d');
+        gCtx.fillStyle = '#030308'; gCtx.fillRect(0, 0, 1024, 1024);
+        gCtx.strokeStyle = 'rgba(78, 205, 196, 0.12)'; gCtx.lineWidth = 1;
+        for (let i = 0; i < 32; i++) { const p = i * 32; gCtx.strokeRect(p, p, 1, 1024); gCtx.fillRect(p, p, 1024, 1); }
+        // Grid intersection glows
+        for (let x = 0; x < 32; x++) { for (let y = 0; y < 32; y++) {
+            if ((x + y) % 5 === 0) { gCtx.fillStyle = 'rgba(78, 205, 196, 0.05)'; gCtx.beginPath(); gCtx.arc(x * 32, y * 32, 3, 0, Math.PI * 2); gCtx.fill(); }
+        }}
+        const gTex = new BABYLON.RawTexture(gCanvas, 1024, 1024, BABYLON.Engine.TEXTUREFORMAT_RGBA, scene, false);
         const groundMat = new BABYLON.StandardMaterial('groundMat', scene);
-        groundMat.diffuseColor = new BABYLON.Color3(0.03, 0.03, 0.06);
-        groundMat.specularColor = new BABYLON.Color3(0.1, 0.1, 0.15);
+        groundMat.diffuseTexture = gTex;
+        groundMat.specularColor = new BABYLON.Color3(0.05, 0.05, 0.1);
+        groundMat.emissiveColor = new BABYLON.Color3(0.01, 0.005, 0.02);
         ground.material = groundMat;
         
         createCityGrid();
@@ -2336,7 +2619,19 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
         
         const grid = GRIDS[gridId];
         const typeMap = { work: 'office', home: 'house', social: 'shop', learn: 'office', market: 'shop', sacred: 'house', arena: 'factory', lab: 'office', wild: 'park' };
-        allBuildings.push({ id: 'bld_' + gridId + '_' + index, name: config.name, type: typeMap[grid.type] || 'office', gridId, x, z, style: config.style, level: 1 });
+        const mappedType = typeMap[grid.type] || 'office';
+        allBuildings.push({ id: 'bld_' + gridId + '_' + index, name: config.name, type: mappedType, gridId, x, z, style: config.style, level: 1,
+            gskState: { energyLevel: 0.5, activityLevel: 0.5, lastPulse: 0, emissiveBase: [(config.c || [0.5,0.5,0.5])[0] * 0.15, (config.c || [0.5,0.5,0.5])[1] * 0.15, (config.c || [0.5,0.5,0.5])[2] * 0.15] }
+        });
+        if (mappedType === 'shop') {
+            loadShopDirectBuilding('bld_' + gridId + '_' + index, building, roof ? [roof] : [], config.h, [(config.c || [0.5,0.5,0.5])[0] * 0.15, (config.c || [0.5,0.5,0.5])[1] * 0.15, (config.c || [0.5,0.5,0.5])[2] * 0.15]);
+        }
+        if (mappedType === 'factory') {
+            loadFactoryKitBuilding('bld_' + gridId + '_' + index, building, roof ? [roof] : [], config.h, [(config.c || [0.5,0.5,0.5])[0] * 0.15, (config.c || [0.5,0.5,0.5])[1] * 0.15, (config.c || [0.5,0.5,0.5])[2] * 0.15]);
+        }
+        if (mappedType === 'tower') {
+            loadTowerDirectBuilding('bld_' + gridId + '_' + index, building, roof ? [roof] : [], config.h, [(config.c || [0.5,0.5,0.5])[0] * 0.15, (config.c || [0.5,0.5,0.5])[1] * 0.15, (config.c || [0.5,0.5,0.5])[2] * 0.15]);
+        }
     }
     
     function createCityCenter(grid) {
@@ -2520,7 +2815,19 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
 
         const g = GRIDS[gridId];
         const typeMap2 = { work: 'office', home: 'house', social: 'shop', learn: 'office', market: 'shop', sacred: 'house', arena: 'factory', lab: 'office', wild: 'park' };
-        allBuildings.push({ id: 'bld_' + gridId + '_' + index, name: config.name, type: typeMap2[g.type] || 'office', gridId, x, z, level: 1 });
+        const buildingType = typeMap2[g.type] || 'office';
+        allBuildings.push({ id: 'bld_' + gridId + '_' + index, name: config.name, type: buildingType, gridId, x, z, level: 1,
+        gskState: { energyLevel: 0.5, activityLevel: 0.5, lastPulse: 0, emissiveBase: [config.c[0] * 0.15, config.c[1] * 0.15, config.c[2] * 0.15] }
+        });
+        if (buildingType === 'shop') {
+        loadShopDirectBuilding('bld_' + gridId + '_' + index, building, [roof], config.h, [config.c[0] * 0.15, config.c[1] * 0.15, config.c[2] * 0.15]);
+        }
+        if (buildingType === 'factory') {
+        loadFactoryKitBuilding('bld_' + gridId + '_' + index, building, [roof], config.h, [config.c[0] * 0.15, config.c[1] * 0.15, config.c[2] * 0.15]);
+        }
+        if (buildingType === 'tower') {
+            loadTowerDirectBuilding('bld_' + gridId + '_' + index, building, [roof], config.h, [config.c[0] * 0.15, config.c[1] * 0.15, config.c[2] * 0.15]);
+        }
         
         createBuildingDoor(x, z, 'bld_' + gridId + '_' + index, config.s);
     }
@@ -2546,7 +2853,7 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
         const ctx = signTex.getContext();
         ctx.fillStyle = '#2a1a0a';
         ctx.fillRect(0, 0, 256, 64);
-        ctx.fillStyle = '#ffaa66';
+        ctx.fillStyle = 'var(--plt-profit)';
         ctx.font = 'bold 24px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('PRESS E', 128, 35);
@@ -3185,6 +3492,34 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
                         }
                         building.level = building.level || 1;
                         openBuildingInterior(building);
+                        // Spatial HUD: 3D info panel above building
+                        const pMesh = pickResult.pickedMesh;
+                        if (pMesh) {
+                            const bPos = pMesh.position || new BABYLON.Vector3(x, 0, z);
+                            createBuildingInfoPanel(building, bPos);
+                        }
+                        // F1.1 ??? Click reward: give resources
+                        if (_civ) {
+                            const r = _civ.resources;
+                            const type = building.type || 'knowledge';
+                            const rewards = {
+                                knowledge: { energy: 2, knowledge: 5, materials: 1, wealth: 1 },
+                                skill: { energy: 3, knowledge: 3, materials: 2, wealth: 2 },
+                                agent: { energy: 1, knowledge: 2, materials: 3, wealth: 3 },
+                                tool: { energy: 4, knowledge: 1, materials: 2, wealth: 4 },
+                                memory: { energy: 1, knowledge: 4, materials: 1, wealth: 2 },
+                                identity: { energy: 2, knowledge: 2, materials: 1, wealth: 5 }
+                            };
+                            const reward = rewards[type] || rewards.knowledge;
+                            r.energy = Math.min(100, r.energy + reward.energy);
+                            r.knowledge = Math.min(100, r.knowledge + reward.knowledge);
+                            r.materials = Math.min(100, r.materials + reward.materials);
+                            r.wealth = Math.min(100, r.wealth + reward.wealth);
+                            // Visual feedback via GSK state wire
+                            const bldEntry = allBuildings.find(b => b.id === name);
+                            if (bldEntry && typeof pulseBuilding === 'function') pulseBuilding(bldEntry);
+                            notify(`+${reward.energy}??? +${reward.knowledge}???? +${reward.materials}???? +${reward.wealth}???? from ${type} building`);
+                        }
                     }
                 } else if (name.startsWith('door_')) {
                     const buildingId = name.replace('door_', '');
@@ -3213,7 +3548,8 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
             }
         };
         // Right-click for delete
-        canvas.addEventListener('contextmenu', (e) => {
+        const _canvas = document.getElementById('renderCanvas');
+        if (_canvas) _canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             const pick = scene.pick(scene.pointerX, scene.pointerY);
             if (pick.hit && pick.pickedMesh) {
@@ -3377,8 +3713,237 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
         shop: { cost: 200, pop: 2, wealth: 20, happiness: 8, pollution: 3 },
         office: { cost: 400, pop: 5, wealth: 30, happiness: 5, pollution: 4 },
         factory: { cost: 500, pop: 10, wealth: 40, happiness: -5, pollution: 20 },
+        tower: { cost: 600, pop: 15, wealth: 50, happiness: 10, pollution: 3 },
         park: { cost: 150, pop: 0, wealth: -10, happiness: 15, pollution: -10 }
     };
+
+    const FACTORY_KIT_ROOT = 'assets/buildings/factory-kit/';
+    const FACTORY_DIRECT_ROOT = 'assets/buildings/factory-direct/';
+    const FACTORY_DIRECT_FILE = 'industrial-building.glb';
+    const SHOP_DIRECT_ROOT = 'assets/buildings/shop-direct/';
+    const SHOP_DIRECT_FILE = 'brick-shop-building.glb';
+    const TOWER_DIRECT_ROOT = 'assets/buildings/tower-direct/';
+    const TOWER_DIRECT_FILE = 'skyscraper-tower.glb';
+    const FACTORY_KIT_PARTS = [
+        { file: 'structure-high.obj', offset: [0, 0, 0] },
+        { file: 'top-large.obj', offset: [0, 5.5, 0] },
+        { file: 'pipe-large-side.obj', offset: [3.8, 2.2, 0] }
+    ];
+
+    function animateFactoryAsset(root, anchorPos) {
+        root.scaling = BABYLON.Vector3.Zero();
+        const grow = (t) => {
+            const s = Math.min(1, t / 450);
+            root.scaling = new BABYLON.Vector3(s, s, s);
+            if (t < 450) requestAnimationFrame(() => grow(t + 16));
+            else root.scaling = BABYLON.Vector3.One();
+        };
+        grow(0);
+        setTimeout(() => {
+            const ps = new BABYLON.ParticleSystem('factory_construct_' + Date.now(), 60, scene);
+            ps.emitter = anchorPos;
+            ps.minLifeTime = 0.3; ps.maxLifeTime = 0.8;
+            ps.minSize = 0.1; ps.maxSize = 0.35;
+            ps.direction1 = new BABYLON.Vector3(-1, 1, -1);
+            ps.direction2 = new BABYLON.Vector3(1, 1, 1);
+            ps.color1 = new BABYLON.Color4(0.3, 0.8, 1, 1);
+            ps.colorDead = new BABYLON.Color4(0.3, 0.8, 1, 0);
+            ps.start();
+            setTimeout(() => { try { ps.stop(); } catch(e) {} }, 500);
+        }, 450);
+    }
+
+    async function loadFactoryKitBuilding(buildingId, anchorMesh, fallbackParts, targetHeight, emissiveBase) {
+        try {
+            if (!BABYLON.SceneLoader) throw new Error('SceneLoader unavailable');
+            const root = new BABYLON.TransformNode(buildingId + '_factory_root', scene);
+            root.position = new BABYLON.Vector3(anchorMesh.position.x, 0, anchorMesh.position.z);
+
+            const importedMeshes = [];
+
+            const absorbMeshes = (sets, useOffsets) => {
+                sets.forEach((set, idx) => {
+                    const part = useOffsets ? FACTORY_KIT_PARTS[idx] : { offset: [0, 0, 0] };
+                    set.meshes.forEach((mesh) => {
+                        if (!(mesh instanceof BABYLON.AbstractMesh)) return;
+                        if (mesh.name === '__root__') return;
+                        mesh.name = buildingId;
+                        mesh.metadata = Object.assign({}, mesh.metadata, { buildingId, factoryKit: true });
+                        mesh.parent = root;
+                        mesh.position.x += part.offset[0];
+                        mesh.position.y += part.offset[1];
+                        mesh.position.z += part.offset[2];
+                        if (mesh.material) {
+                            mesh.material = mesh.material.clone(mesh.material.name + '_' + buildingId);
+                            mesh.material.emissiveColor = new BABYLON.Color3(emissiveBase[0], emissiveBase[1], emissiveBase[2]);
+                            mesh.material.emissivePower = 2;
+                        }
+                        importedMeshes.push(mesh);
+                    });
+                });
+            };
+
+            try {
+                const directSet = await BABYLON.SceneLoader.ImportMeshAsync('', FACTORY_DIRECT_ROOT, FACTORY_DIRECT_FILE, scene);
+                absorbMeshes([directSet], false);
+            } catch (directErr) {
+                const importedSets = await Promise.all(
+                    FACTORY_KIT_PARTS.map(part => BABYLON.SceneLoader.ImportMeshAsync('', FACTORY_KIT_ROOT, part.file, scene))
+                );
+                absorbMeshes(importedSets, true);
+            }
+
+            if (importedMeshes.length === 0) throw new Error('No factory kit meshes imported');
+
+            let minY = Infinity;
+            let maxY = -Infinity;
+            importedMeshes.forEach((mesh) => {
+                mesh.computeWorldMatrix(true);
+                const bounds = mesh.getBoundingInfo().boundingBox;
+                minY = Math.min(minY, bounds.minimumWorld.y);
+                maxY = Math.max(maxY, bounds.maximumWorld.y);
+            });
+            const currentHeight = Math.max(0.001, maxY - minY);
+            const scale = targetHeight / currentHeight;
+            root.scaling = new BABYLON.Vector3(scale, scale, scale);
+            importedMeshes.forEach((mesh) => mesh.computeWorldMatrix(true));
+
+            minY = Infinity;
+            importedMeshes.forEach((mesh) => {
+                const bounds = mesh.getBoundingInfo().boundingBox;
+                minY = Math.min(minY, bounds.minimumWorld.y);
+            });
+            root.position.y -= minY;
+
+            [anchorMesh].concat(fallbackParts || []).forEach((part) => {
+                if (!part) return;
+                if (typeof part.setEnabled === 'function') part.setEnabled(false);
+                part.isPickable = false;
+            });
+
+            animateFactoryAsset(root, new BABYLON.Vector3(anchorMesh.position.x, 1.5, anchorMesh.position.z));
+            return root;
+        } catch (err) {
+            console.warn('Factory kit load failed, keeping procedural fallback.', err);
+            return null;
+        }
+    }
+
+    async function loadShopDirectBuilding(buildingId, anchorMesh, fallbackParts, targetHeight, emissiveBase) {
+        try {
+            if (!BABYLON.SceneLoader) throw new Error('SceneLoader unavailable');
+            const root = new BABYLON.TransformNode(buildingId + '_shop_root', scene);
+            root.position = new BABYLON.Vector3(anchorMesh.position.x, 0, anchorMesh.position.z);
+
+            const directSet = await BABYLON.SceneLoader.ImportMeshAsync('', SHOP_DIRECT_ROOT, SHOP_DIRECT_FILE, scene);
+            const importedMeshes = [];
+            directSet.meshes.forEach((mesh) => {
+                if (!(mesh instanceof BABYLON.AbstractMesh)) return;
+                if (mesh.name === '__root__') return;
+                mesh.name = buildingId;
+                mesh.metadata = Object.assign({}, mesh.metadata, { buildingId, shopDirect: true });
+                mesh.parent = root;
+                if (mesh.material) {
+                    mesh.material = mesh.material.clone(mesh.material.name + '_' + buildingId);
+                    mesh.material.emissiveColor = new BABYLON.Color3(emissiveBase[0], emissiveBase[1], emissiveBase[2]);
+                    mesh.material.emissivePower = 2;
+                }
+                importedMeshes.push(mesh);
+            });
+
+            if (importedMeshes.length === 0) throw new Error('No shop meshes imported');
+
+            let minY = Infinity;
+            let maxY = -Infinity;
+            importedMeshes.forEach((mesh) => {
+                mesh.computeWorldMatrix(true);
+                const bounds = mesh.getBoundingInfo().boundingBox;
+                minY = Math.min(minY, bounds.minimumWorld.y);
+                maxY = Math.max(maxY, bounds.maximumWorld.y);
+            });
+            const currentHeight = Math.max(0.001, maxY - minY);
+            const scale = targetHeight / currentHeight;
+            root.scaling = new BABYLON.Vector3(scale, scale, scale);
+            importedMeshes.forEach((mesh) => mesh.computeWorldMatrix(true));
+
+            minY = Infinity;
+            importedMeshes.forEach((mesh) => {
+                const bounds = mesh.getBoundingInfo().boundingBox;
+                minY = Math.min(minY, bounds.minimumWorld.y);
+            });
+            root.position.y -= minY;
+
+            [anchorMesh].concat(fallbackParts || []).forEach((part) => {
+                if (!part) return;
+                if (typeof part.setEnabled === 'function') part.setEnabled(false);
+                part.isPickable = false;
+            });
+
+            animateFactoryAsset(root, new BABYLON.Vector3(anchorMesh.position.x, 1.5, anchorMesh.position.z));
+            return root;
+        } catch (err) {
+            console.warn('Shop direct asset load failed, keeping procedural fallback.', err);
+            return null;
+        }
+    }
+
+    async function loadTowerDirectBuilding(buildingId, anchorMesh, fallbackParts, targetHeight, emissiveBase) {
+        try {
+            if (!BABYLON.SceneLoader) throw new Error('SceneLoader unavailable');
+            const root = new BABYLON.TransformNode(buildingId + '_tower_root', scene);
+            root.position = new BABYLON.Vector3(anchorMesh.position.x, 0, anchorMesh.position.z);
+
+            const directSet = await BABYLON.SceneLoader.ImportMeshAsync('', TOWER_DIRECT_ROOT, TOWER_DIRECT_FILE, scene);
+            const importedMeshes = [];
+            directSet.meshes.forEach((mesh) => {
+                if (!(mesh instanceof BABYLON.AbstractMesh)) return;
+                if (mesh.name === '__root__') return;
+                mesh.name = buildingId;
+                mesh.metadata = Object.assign({}, mesh.metadata, { buildingId, towerDirect: true });
+                mesh.parent = root;
+                if (mesh.material) {
+                    mesh.material = mesh.material.clone(mesh.material.name + '_' + buildingId);
+                    mesh.material.emissiveColor = new BABYLON.Color3(emissiveBase[0], emissiveBase[1], emissiveBase[2]);
+                    mesh.material.emissivePower = 2;
+                }
+                importedMeshes.push(mesh);
+            });
+
+            if (importedMeshes.length === 0) throw new Error('No tower meshes imported');
+
+            let minY = Infinity;
+            let maxY = -Infinity;
+            importedMeshes.forEach((mesh) => {
+                mesh.computeWorldMatrix(true);
+                const bounds = mesh.getBoundingInfo().boundingBox;
+                minY = Math.min(minY, bounds.minimumWorld.y);
+                maxY = Math.max(maxY, bounds.maximumWorld.y);
+            });
+            const currentHeight = Math.max(0.001, maxY - minY);
+            const scale = targetHeight / currentHeight;
+            root.scaling = new BABYLON.Vector3(scale, scale, scale);
+            importedMeshes.forEach((mesh) => mesh.computeWorldMatrix(true));
+
+            minY = Infinity;
+            importedMeshes.forEach((mesh) => {
+                const bounds = mesh.getBoundingInfo().boundingBox;
+                minY = Math.min(minY, bounds.minimumWorld.y);
+            });
+            root.position.y -= minY;
+
+            [anchorMesh].concat(fallbackParts || []).forEach((part) => {
+                if (!part) return;
+                if (typeof part.setEnabled === 'function') part.setEnabled(false);
+                part.isPickable = false;
+            });
+
+            animateFactoryAsset(root, new BABYLON.Vector3(anchorMesh.position.x, 1.5, anchorMesh.position.z));
+            return root;
+        } catch (err) {
+            console.warn('Tower direct asset load failed, keeping procedural fallback.', err);
+            return null;
+        }
+    }
     
     let cityStats = { population: 50, buildings: 9, wealth: 50, happiness: 75, pollution: 10 };
     
@@ -3425,9 +3990,9 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
         if (happyEl) happyEl.textContent = cityStats.happiness + '%';
         if (pollEl) pollEl.textContent = cityStats.pollution + '%';
         
-        if (wealthEl) wealthEl.style.color = cityStats.wealth > 60 ? '#FFD93D' : cityStats.wealth < 40 ? '#ff4444' : '#FFD93D';
-        if (happyEl) happyEl.style.color = cityStats.happiness > 70 ? '#FF6699' : cityStats.happiness < 40 ? '#ff4444' : '#FF6699';
-        if (pollEl) pollEl.style.color = cityStats.pollution < 20 ? '#88ff88' : cityStats.pollution > 60 ? '#ff4444' : '#FFD93D';
+        if (wealthEl) wealthEl.style.color = cityStats.wealth > 60 ? 'var(--plt-profit)' : cityStats.wealth < 40 ? '#ff4444' : 'var(--plt-profit)';
+        if (happyEl) happyEl.style.color = cityStats.happiness > 70 ? ' var(--plt-love)' : cityStats.happiness < 40 ? '#ff4444' : ' var(--plt-love)';
+        if (pollEl) pollEl.style.color = cityStats.pollution < 20 ? '#88ff88' : cityStats.pollution > 60 ? '#ff4444' : 'var(--plt-profit)';
     }
     
     // ==================== BUILDING INTERIOR SYSTEM ====================
@@ -3564,10 +4129,10 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
         }
         
         const colors = {
-            house: ['linear-gradient(180deg,#2d1f3d,#1a1525)', '#ffaa66'],
-            apartment: ['linear-gradient(180deg,#1a1a3e,#16213e)', '#ff6699'],
-            shop: ['linear-gradient(180deg,#2d2a1f,#1a1912)', '#FFD93D'],
-            office: ['linear-gradient(180deg,#1a2a3e,#0f1a28)', '#4ECDC4'],
+            house: ['linear-gradient(180deg,#2d1f3d,#1a1525)', 'var(--plt-profit)'],
+            apartment: ['linear-gradient(180deg,#1a1a3e,#16213e)', 'var(--plt-love)'],
+            shop: ['linear-gradient(180deg,#2d2a1f,#1a1912)', 'var(--plt-profit)'],
+            office: ['linear-gradient(180deg,#1a2a3e,#0f1a28)', 'var(--plt-tax)'],
             factory: ['linear-gradient(180deg,#2a2a3d,#1a1a28)', '#8888ff'],
             park: ['linear-gradient(180deg,#1a3d2a,#0f281a)', '#88ff88']
         };
@@ -3625,7 +4190,7 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
                 const btn = document.createElement('button');
                 btn.textContent = i === currentFloor ? `▶ Floor ${i}` : `Floor ${i}`;
                 btn.style.cssText = i === currentFloor 
-                    ? 'padding:6px;background:rgba(255,170,102,0.5);border:1px solid #ffaa66;border-radius:4px;color:#ffaa66;'
+                    ? 'padding:6px;background:rgba(255,170,102,0.5);border:1px solid var(--plt-profit);border-radius:4px;color:var(--plt-profit);'
                     : 'padding:6px;background:rgba(0,0,0,0.3);border:1px solid #444;border-radius:4px;color:#888;';
                 btn.onclick = () => { currentFloor = i; updateInteriorDisplay(); };
                 floorList.appendChild(btn);
@@ -3640,15 +4205,15 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
                 div.style.cssText = 'background:rgba(0,0,0,0.4);border:1px solid #333;border-radius:6px;padding:8px;cursor:pointer;transition:all 0.2s;';
                 div.innerHTML = `
                     <div style="font-size:18px;text-align:center;">${office.icon}</div>
-                    <div style="font-size:9px;color:#ffaa66;text-align:center;">${office.name}</div>
+                    <div style="font-size:9px;color:var(--plt-profit);text-align:center;">${office.name}</div>
                     <div style="font-size:8px;color:#666;text-align:center;">${office.activity}</div>
                     <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
                         <div style="flex:1;height:3px;background:#222;border-radius:2px;">
-                            <div style="width:${office.mood}%;height:100%;background:${office.mood > 70 ? '#88ff88' : office.mood > 40 ? '#FFD93D' : '#ff4444'};border-radius:2px;"></div>
+                            <div style="width:${office.mood}%;height:100%;background:${office.mood > 70 ? '#88ff88' : office.mood > 40 ? 'var(--plt-profit)' : '#ff4444'};border-radius:2px;"></div>
                         </div>
                     </div>
                 `;
-                div.onmouseover = () => div.style.borderColor = '#ffaa66';
+                div.onmouseover = () => div.style.borderColor = 'var(--plt-profit)';
                 div.onmouseout = () => div.style.borderColor = '#333';
                 div.onclick = () => interactWithOffice(office);
                 officeGrid.appendChild(div);
@@ -3703,6 +4268,43 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
         
         currentBuilding.level++;
         document.getElementById('buildingLevel').textContent = currentBuilding.level;
+        
+        // F3.5 ??? Visual upgrade: find and modify the 3D mesh
+        const upgradeVis = (mesh) => {
+            if (!mesh || !mesh.material) return;
+            const level = currentBuilding.level;
+            const scaleY = 1 + (level - 1) * 0.15;
+            mesh.scaling.y = scaleY;
+            mesh.position.y = (mesh._bldBaseH || mesh.scaling.y * 2.5) * scaleY / 2;
+            const emissiveIntensity = 0.15 + level * 0.1;
+            if (mesh.material.emissiveColor) {
+                mesh.material.emissiveIntensity = emissiveIntensity;
+                mesh.material.emissivePower = 1 + level * 0.3;
+            }
+            // Roof follows
+            if (mesh._bldRoof) {
+                mesh._bldRoof.position.y = (mesh._bldBaseH || 6) * scaleY + (mesh._bldBaseH || 6) * 0.1;
+                mesh._bldRoof.scaling.y = scaleY;
+            }
+            // Level ring ??? colored crown
+            const ringName = 'ring_' + Date.now();
+            const ring = BABYLON.MeshBuilder.CreateTorus(ringName, { diameter: 5.5, thickness: 0.2 + level * 0.1, tessellation: 8 }, scene);
+            ring.position = new BABYLON.Vector3(mesh.position.x, mesh.position.y + mesh.scaling.y * 2.5 + 0.3, mesh.position.z);
+            ring.rotation.x = Math.PI / 2;
+            const ringMat = new BABYLON.StandardMaterial('ringm_' + Date.now(), scene);
+            const ringColors = [null, new BABYLON.Color3(0.5, 0.5, 0.8), new BABYLON.Color3(0.3, 0.8, 1), new BABYLON.Color3(1, 0.8, 0.2), new BABYLON.Color3(1, 0.3, 0.8), new BABYLON.Color3(1, 0.1, 0.1)];
+            ringMat.emissiveColor = ringColors[level] || new BABYLON.Color3(0.5, 0.8, 1);
+            ringMat.diffuseColor = ringColors[level] || new BABYLON.Color3(0.5, 0.8, 1);
+            ring.material = ringMat;
+        };
+        // Find the mesh in scene
+        if (window._lastPlacedBld && window._lastPlacedBld._bldType === currentBuilding.type) {
+            upgradeVis(window._lastPlacedBld);
+        } else {
+            scene.meshes.forEach(m => {
+                if (m.name.startsWith('player_bld_') && m._bldType === currentBuilding.type) upgradeVis(m);
+            });
+        }
         
         const benefits = UPGRADE_BENEFITS[currentBuilding.level];
         if (benefits) {
@@ -3895,10 +4497,11 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
             shop: [1, 0.8, 0.3],
             office: [0.27, 0.85, 0.98],
             factory: [0.6, 0.6, 0.8],
+            tower: [0.8, 0.2, 0.9],
             park: [0.2, 0.8, 0.4]
         };
         
-        const heights = { house: 6, apartment: 16, shop: 8, office: 14, factory: 10, park: 2 };
+        const heights = { house: 6, apartment: 16, shop: 8, office: 14, factory: 10, tower: 20, park: 2 };
         const h = heights[type];
         
         if (type === 'park') {
@@ -3908,17 +4511,113 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
             treeMat.diffuseColor = new BABYLON.Color3(...colors[type]);
             tree.material = treeMat;
         } else {
-            const building = BABYLON.MeshBuilder.CreateBox('player_bld_' + Date.now(), { width: 5, height: h, depth: 5 }, scene);
-            building.position = new BABYLON.Vector3(x, h / 2, z);
+            const bldName = 'player_bld_' + Date.now();
             const mat = new BABYLON.StandardMaterial('playerbm_' + Date.now(), scene);
             mat.diffuseColor = new BABYLON.Color3(...colors[type]);
-            mat.emissiveColor = new BABYLON.Color3(colors[type][0] * 0.15, colors[type][1] * 0.15, colors[type][2] * 0.15);
-            building.material = mat;
+            mat.emissiveColor = new BABYLON.Color3(colors[type][0] * 0.2, colors[type][1] * 0.2, colors[type][2] * 0.2);
+            mat.emissivePower = 2;
+            let building, roof;
+            const ts = Date.now();
             
-            const roof = BABYLON.MeshBuilder.CreateCylinder('player_roof_' + Date.now(), { diameterTop: 0, diameterBottom: 6, height: h * 0.2, tessellation: 4 }, scene);
-            roof.position = new BABYLON.Vector3(x, h + h * 0.1, z);
-            roof.rotation.y = Math.PI / 4;
-            roof.material = mat;
+            switch(type) {
+                case 'house':
+                    building = BABYLON.MeshBuilder.CreateBox(bldName + '_h', { width: 5, height: h, depth: 5 }, scene);
+                    building.position = new BABYLON.Vector3(x, h/2, z);
+                    roof = BABYLON.MeshBuilder.CreateCylinder('roof_' + ts, { diameterTop: 0, diameterBottom: 6, height: h*0.3, tessellation: 4 }, scene);
+                    roof.position = new BABYLON.Vector3(x, h + h*0.15, z);
+                    roof.rotation.y = Math.PI/4;
+                    break;
+                case 'apartment':
+                    building = BABYLON.MeshBuilder.CreateBox(bldName + '_a', { width: 6, height: h, depth: 6 }, scene);
+                    building.position = new BABYLON.Vector3(x, h/2, z);
+                    // Flat roof with antenna
+                    roof = BABYLON.MeshBuilder.CreateBox('antenna_' + ts, { width: 0.3, height: 2, depth: 0.3 }, scene);
+                    roof.position = new BABYLON.Vector3(x, h + 1, z);
+                    const antLight = new BABYLON.PointLight('antlight_' + ts, new BABYLON.Vector3(x, h + 2, z), scene);
+                    antLight.intensity = 0.5; antLight.diffuse = new BABYLON.Color3(1, 0.2, 0.1);
+                    break;
+                case 'shop':
+                    building = BABYLON.MeshBuilder.CreateBox(bldName, { width: 7, height: h, depth: 4 }, scene);
+                    building.position = new BABYLON.Vector3(x, h/2, z);
+                    // Awning
+                    roof = BABYLON.MeshBuilder.CreateBox('awning_' + ts, { width: 6, height: 0.3, depth: 2 }, scene);
+                    roof.position = new BABYLON.Vector3(x - 0.5, h * 0.6, z + 3);
+                    loadShopDirectBuilding(bldName, building, [roof], h, [colors[type][0] * 0.2, colors[type][1] * 0.2, colors[type][2] * 0.2]);
+                    break;
+                case 'office':
+                    building = BABYLON.MeshBuilder.CreateBox(bldName + '_o', { width: 4, height: h, depth: 4 }, scene);
+                    building.position = new BABYLON.Vector3(x, h/2, z);
+                    // Stepped top
+                    const step1 = BABYLON.MeshBuilder.CreateBox('step1_' + ts, { width: 3, height: 1.5, depth: 3 }, scene);
+                    step1.position = new BABYLON.Vector3(x, h + 0.75, z); step1.material = mat;
+                    const step2 = BABYLON.MeshBuilder.CreateBox('step2_' + ts, { width: 2, height: 1, depth: 2 }, scene);
+                    step2.position = new BABYLON.Vector3(x, h + 2, z); step2.material = mat;
+                    break;
+                case 'factory':
+                    // L-shape: two boxes
+                    building = BABYLON.MeshBuilder.CreateBox(bldName + '_f1', { width: 6, height: h, depth: 3 }, scene);
+                    building.position = new BABYLON.Vector3(x, h/2, z);
+                    const wing = BABYLON.MeshBuilder.CreateBox('wing_' + ts, { width: 3, height: h*0.7, depth: 5 }, scene);
+                    wing.position = new BABYLON.Vector3(x + 4.5, h*0.35, z);
+                    wing.material = mat;
+                    // Chimney
+                    roof = BABYLON.MeshBuilder.CreateCylinder('chimney_' + ts, { diameterTop: 0.3, diameterBottom: 0.5, height: 3 }, scene);
+                    roof.position = new BABYLON.Vector3(x, h + 1.5, z);
+                    const smoke = new BABYLON.PointLight('smoke_' + ts, new BABYLON.Vector3(x, h + 4, z), scene);
+                    smoke.intensity = 0.3; smoke.diffuse = new BABYLON.Color3(0.5, 0.5, 0.5);
+                    break;
+                case 'tower':
+                    building = BABYLON.MeshBuilder.CreateCylinder(bldName, { height: h, diameterTop: 2, diameterBottom: 4, tessellation: 12 }, scene);
+                    building.position = new BABYLON.Vector3(x, h/2, z);
+                    // Cone roof
+                    roof = BABYLON.MeshBuilder.CreateCylinder('cone_' + ts, { diameterTop: 0, diameterBottom: 3.5, height: 2, tessellation: 12 }, scene);
+                    roof.position = new BABYLON.Vector3(x, h + 1, z);
+                    loadTowerDirectBuilding(bldName, building, [roof], h, [colors[type][0] * 0.2, colors[type][1] * 0.2, colors[type][2] * 0.2]);
+                    break;
+                default: // office fallback
+                    building = BABYLON.MeshBuilder.CreateBox(bldName + '_d', { width: 5, height: h, depth: 5 }, scene);
+                    building.position = new BABYLON.Vector3(x, h/2, z);
+                    roof = BABYLON.MeshBuilder.CreateCylinder('def_roof_' + ts, { diameterTop: 0, diameterBottom: 6, height: h*0.2, tessellation: 4 }, scene);
+                    roof.position = new BABYLON.Vector3(x, h + h*0.1, z);
+            }
+            building.material = mat;
+            if (roof && roof.material !== mat) roof.material = mat;
+            building._bldType = type; building._bldLevel = 1; building._bldBaseH = h; building._bldRoof = roof || null;
+            window._lastPlacedBld = building;
+
+            // F3.6 ??? Construction FX: growth animation
+            const bPos = building.position.clone();
+            building.scaling = BABYLON.Vector3.Zero();
+            if (roof) roof.scaling = BABYLON.Vector3.Zero();
+            const growBuilding = (t) => {
+                if (building._disposed) return;
+                const s = Math.min(1, t / 400);
+                building.scaling = new BABYLON.Vector3(s, s, s);
+                if (roof) roof.scaling = new BABYLON.Vector3(s, s, s);
+                if (t < 400) requestAnimationFrame(() => growBuilding(t + 16));
+                else { building.scaling = BABYLON.Vector3.One(); if (roof) roof.scaling = BABYLON.Vector3.One(); }
+            };
+            growBuilding(0);
+            setTimeout(() => {
+                const ps = new BABYLON.ParticleSystem('construct_' + Date.now(), 50, scene);
+                ps.emitter = bPos;
+                ps.minLifeTime = 0.3; ps.maxLifeTime = 0.8;
+                ps.minSize = 0.1; ps.maxSize = 0.3;
+                ps.direction1 = new BABYLON.Vector3(-1, 1, -1);
+                ps.direction2 = new BABYLON.Vector3(1, 1, 1);
+                ps.color1 = new BABYLON.Color4(0.3, 0.8, 1, 1);
+                ps.colorDead = new BABYLON.Color4(0.3, 0.8, 1, 0);
+                ps.start();
+                setTimeout(() => { try { ps.stop(); } catch(e) {} }, 500);
+            }, 400);
+
+            allBuildings.push({
+                id: bldName, name: type, type: type, gridId: currentGrid, x, z, level: 1,
+                gskState: {
+                    energyLevel: 0.5, activityLevel: 0.5, lastPulse: 0,
+                    emissiveBase: [colors[type][0] * 0.2, colors[type][1] * 0.2, colors[type][2] * 0.2]
+                }
+            });
         }
         
         // Update city stats
@@ -4079,6 +4778,16 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
 
     function notify(text) {
         NotificationManager.add({ message: text, type: 'info' });
+        // Level 1 feedback: screen flash
+        if (!window._feedbackFlash) {
+            window._feedbackFlash = document.createElement('div');
+            window._feedbackFlash.style.cssText = 'position:fixed;inset:0;z-index:999;pointer-events:none;opacity:0;transition:opacity 0.15s;border-radius:0;';
+            document.body.appendChild(window._feedbackFlash);
+        }
+        const flash = window._feedbackFlash;
+        flash.style.background = 'rgba(78,205,196,0.06)';
+        flash.style.opacity = '1';
+        requestAnimationFrame(() => { flash.style.opacity = '0'; });
     }
 
     // ==================== EMOTION SYSTEM ====================
@@ -4270,6 +4979,527 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
     // ==================== GAME LOOP ENHANCEMENTS ====================
     setInterval(updateSoulState, 5000);
 
+    // ?????? PHASE 6: CIVILIZATION ENGINE ??????????????????????????????????????????????????????????????????????????????
+    class CivilizationEngine {
+        constructor() {
+            this.resources = { energy: 50, knowledge: 30, materials: 40, wealth: 25 };
+            this.score = { profit: 0.5, love: 0.5, tax: 0.3, total: 0.7 };
+            this.age = 1;
+            this.events = [];
+            this.activeEvent = null;
+            this.eventCooldown = 0;
+            this.history = [];
+        }
+
+        tick() {
+            // Age
+            this.age++;
+
+            // 6.1 ??? Resource generation/decay based on buildings and citizens
+            this.updateResources();
+
+            // 6.2 ??? City growth (building spawn/decay)
+            this.updateGrowth();
+
+            // 6.4 ??? Emergent events
+            this.updateEvents();
+
+            // 6.5 ??? Civilization score
+            this.updateScore();
+
+            // Update HUD
+            this.updateDisplay();
+
+            // Record history
+            if (this.age % 10 === 0) {
+                this.history.push({ age: this.age, ...this.resources, score: { ...this.score } });
+                if (this.history.length > 100) this.history.shift();
+            }
+        }
+
+        updateResources() {
+            const r = this.resources;
+            const bldCount = allBuildings ? allBuildings.length : 0;
+            const citCount = Object.keys(_citizens).length;
+
+            // Passive generation
+            r.energy += 0.1 + bldCount * 0.02;
+            r.knowledge += 0.05 + citCount * 0.03;
+            r.materials += 0.08 + bldCount * 0.01;
+            r.wealth += 0.03 + citCount * 0.02 + bldCount * 0.01;
+
+            // Resource interactions
+            r.energy = Math.max(0, Math.min(100, r.energy - r.materials * 0.01));
+            r.knowledge = Math.max(0, Math.min(100, r.knowledge + r.wealth * 0.005));
+            r.materials = Math.max(0, Math.min(100, r.materials - r.energy * 0.005 + 0.02));
+            r.wealth = Math.max(0, Math.min(100, r.wealth + r.materials * 0.01));
+
+            // Decay
+            r.energy *= 0.998;
+            r.knowledge *= 0.999;
+            r.materials *= 0.997;
+            r.wealth *= 0.999;
+        }
+
+        updateGrowth() {
+            const r = this.resources;
+            // Spawn building when resources are abundant
+            if (r.materials > 60 && r.energy > 50 && Math.random() < 0.02) {
+                const grid = GRIDS ? GRIDS[currentGrid] : null;
+                if (grid) {
+                    const types = ['knowledge','skill','agent','tool','memory','identity'];
+                    const type = types[Math.floor(Math.random() * types.length)];
+                    const x = grid.x + (Math.random() - 0.5) * 30;
+                    const z = grid.z + (Math.random() - 0.5) * 30;
+                    if (typeof createEnhancedBuilding === 'function') {
+                        createEnhancedBuilding(type, x, z);
+                        r.materials -= 10;
+                        r.energy -= 5;
+                        this.addEvent('construction', `${type} building grew from abundance`, 'good');
+                    }
+                }
+            }
+
+            // Abandon building when resources are low
+            if (r.materials < 15 && r.wealth < 20 && Math.random() < 0.005 && allBuildings && allBuildings.length > 3) {
+                const target = allBuildings[Math.floor(Math.random() * allBuildings.length)];
+                if (target && typeof deleteInspectBuildingById === 'function') {
+                    deleteInspectBuildingById(target.id || target.name);
+                    r.materials += 3;
+                    this.addEvent('abandonment', `A ${target.type || 'building'} was abandoned`, 'danger');
+                }
+            }
+        }
+
+        updateEvents() {
+            this.eventCooldown--;
+            if (this.eventCooldown > 0 || this.activeEvent) return;
+
+            const r = this.resources;
+            const events = [];
+
+            // Fire ??? low energy + low knowledge
+            if (r.energy < 20 && r.knowledge < 15) {
+                events.push({ type: 'fire', severity: 'danger', effect: () => { r.materials -= 15; r.wealth -= 10; }, msg: '???? A fire broke out! Materials and wealth damaged.' });
+            }
+
+            // Festival ??? high happiness/wealth
+            if (r.wealth > 70 && r.energy > 60) {
+                events.push({ type: 'festival', severity: 'good', effect: () => { r.wealth -= 5; r.knowledge += 8; }, msg: '???? A festival erupts! Knowledge spreads.' });
+            }
+
+            // Discovery ??? high knowledge
+            if (r.knowledge > 70 && Math.random() < 0.3) {
+                events.push({ type: 'discovery', severity: 'good', effect: () => { r.knowledge += 15; r.wealth += 10; }, msg: '???? A great discovery! Knowledge and wealth surge.' });
+            }
+
+            // Migration ??? resource imbalance
+            if (r.energy < 10 || r.materials < 10) {
+                events.push({ type: 'migration', severity: 'warning', effect: () => { r.energy = Math.max(0, r.energy - 5); r.population = Math.max(0, (r.population || 0) - 1); }, msg: '???? Citizens are leaving due to scarcity.' });
+            }
+
+            // Boom ??? all resources high
+            if (r.energy > 70 && r.materials > 60 && r.wealth > 60 && r.knowledge > 50) {
+                events.push({ type: 'boom', severity: 'good', effect: () => { r.wealth += 20; r.materials += 10; }, msg: '???? Economic boom! Wealth and materials soar.' });
+            }
+
+            if (events.length > 0 && Math.random() < 0.4) {
+                const evt = events[Math.floor(Math.random() * events.length)];
+                evt.effect();
+                this.activeEvent = evt;
+                this.addEvent(evt.type, evt.msg, evt.severity);
+                notify(evt.msg);
+                this.eventCooldown = 30 + Math.floor(Math.random() * 20);
+                setTimeout(() => { this.activeEvent = null; }, 5000);
+            }
+        }
+
+        updateScore() {
+            const r = this.resources;
+            const bldCount = allBuildings ? allBuildings.length : 0;
+            const citCount = Object.keys(_citizens).length;
+
+            this.score.profit = 0.3 + (r.wealth / 100) * 0.3 + (r.materials / 100) * 0.2 + (bldCount * 0.005);
+            this.score.love = 0.3 + (r.energy / 100) * 0.2 + (citCount * 0.02) + (this.score.love * 0.01);
+            this.score.tax = 0.2 + (r.energy / 100) * 0.1 + (r.materials / 100) * 0.1 + (this.score.tax * 0.005);
+
+            this.score.profit = Math.max(0, Math.min(1, this.score.profit));
+            this.score.love = Math.max(0, Math.min(1, this.score.love));
+            this.score.tax = Math.max(0, Math.min(1, this.score.tax));
+            this.score.total = this.score.profit + this.score.love - this.score.tax;
+        }
+
+        addEvent(type, message, severity) {
+            this.events.push({ type, message, age: this.age, time: Date.now(), severity: severity || 'info' });
+            if (this.events.length > 20) this.events.shift();
+            if (typeof _bus !== 'undefined') _bus.emit('civ:event', { type, message, age: this.age, severity: severity || 'info' });
+        }
+
+        updateDisplay() {
+            const r = this.resources;
+            const e = (id) => document.getElementById(id);
+            const setNum = (id, val) => { const el = e(id); if (el) el.textContent = Math.floor(val); };
+            setNum('civEnergy', r.energy);
+            setNum('civKnowledge', r.knowledge);
+            setNum('civMaterials', r.materials);
+            setNum('civWealth', r.wealth);
+
+            const scoreEl = e('civPLT');
+            if (scoreEl) scoreEl.textContent = this.score.total.toFixed(2);
+
+            const ageEl = e('civAge');
+            if (ageEl) ageEl.textContent = `Day ${Math.floor(this.age / 10)}`;
+
+            const statusEl = e('civStatus');
+            if (statusEl && this.activeEvent) {
+                statusEl.textContent = this.activeEvent.msg.substring(0, 60);
+                statusEl.style.color = this.activeEvent.severity === 'danger' ? '#ff4444' : this.activeEvent.severity === 'good' ? '#44ff88' : 'var(--plt-profit)';
+            } else if (statusEl) {
+                const allR = Object.values(r).reduce((s, v) => s + v, 0) / 4;
+                if (allR > 70) statusEl.textContent = '???? Golden age';
+                else if (allR > 50) statusEl.textContent = '???? Growing steadily';
+                else if (allR > 30) statusEl.textContent = '?????? Holding on';
+                else statusEl.textContent = '?????? Struggling to survive';
+                statusEl.style.color = '#888';
+            }
+
+            // Show the panel once we have data
+            const panel = e('civPanel');
+            if (panel && panel.style.display !== 'block' && this.age > 30) {
+                panel.style.display = 'block';
+            }
+        }
+    }
+
+    // Initialize civilization
+    let _civ = null;
+    function startCivilization() {
+        if (_civ) return;
+        _civ = new CivilizationEngine();
+        setInterval(() => { if (_civ) _civ.tick(); }, 3000);
+        _save.autoSave();
+        notify('??????? Civilization Engine started');
+    }
+
+    // Start civ after city is ready
+    setTimeout(startCivilization, 5000);
+
+    // Expose
+    window.getCivScore = () => _civ ? _civ.score.total : 0;
+    window.getCivEvents = () => _civ ? _civ.events.slice(-5) : [];
+
+    // ?????? TIME CONTROLS ???????????????????????????????????????????????????????????????????????????????????????????????????????????????
+    let _timeSpeed = 1;
+    let _civInterval = null;
+    window._timePaused = false;
+
+    function setTimeSpeed(speed) {
+        _timeSpeed = speed;
+        if (_civInterval) clearInterval(_civInterval);
+        if (speed === 0) {
+            window._timePaused = true;
+            document.getElementById('timeDisplay').textContent = '??? PAUSED';
+        } else {
+            window._timePaused = false;
+            _civInterval = setInterval(() => { if (_civ && !window._timePaused) { for (let i = 0; i < speed; i++) _civ.tick(); } }, 3000 / speed);
+            document.getElementById('timeDisplay').textContent = speed === 1 ? '??? 1x' : `??? ${speed}x`;
+        }
+    }
+
+    const timeUI = document.createElement('div');
+    timeUI.id = 'timeControls';
+    timeUI.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:200;display:flex;gap:4px;background:rgba(10,15,25,0.85);border:1px solid var(--plt-tax);border-radius:8px;padding:6px 10px;';
+    timeUI.innerHTML = '<span id="timeDisplay" style="color:var(--plt-tax);font-size:11px;font-family:monospace;padding:0 6px;">??? 1x</span><button onclick="setTimeSpeed(0)" style="padding:2px 8px;background:rgba(255,68,68,0.3);border:1px solid #ff4444;border-radius:4px;color:#ff6666;cursor:pointer;font-size:11px;">???</button><button onclick="setTimeSpeed(1)" style="padding:2px 8px;background:var(--plt-tax-dim);border:1px solid var(--plt-tax);border-radius:4px;color:var(--plt-tax);cursor:pointer;font-size:11px;">???</button><button onclick="setTimeSpeed(2)" style="padding:2px 8px;background:rgba(255,215,0,0.3);border:1px solid gold;border-radius:4px;color:gold;cursor:pointer;font-size:11px;">??? 2x</button><button onclick="setTimeSpeed(5)" style="padding:2px 8px;background:rgba(255,170,102,0.3);border:1px solid var(--plt-profit);border-radius:4px;color:var(--plt-profit);cursor:pointer;font-size:11px;">??? 5x</button>';
+    document.body.appendChild(timeUI);
+
+    // Replace the old civ auto-interval
+    if (window._oldCivStart) clearInterval(window._oldCivStart);
+    if (_civInterval) clearInterval(_civInterval);
+    _civInterval = setInterval(() => { if (_civ && !window._timePaused) _civ.tick(); }, 3000);
+
+    // ?????? FOG OF WAR ????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+    let _fogMeshes = [];
+    let _exploredCells = new Set();
+
+    function initFogOfWar() {
+        for (let x = -40; x < 40; x += 8) {
+            for (let z = -40; z < 40; z += 8) {
+                const fog = BABYLON.MeshBuilder.CreatePlane('fog_' + x + '_' + z, { width: 8, height: 8 }, scene);
+                const mat = new BABYLON.StandardMaterial('fogm_' + x + '_' + z, scene);
+                mat.diffuseColor = new BABYLON.Color3(0.02, 0.01, 0.05);
+                mat.alpha = 0.85; mat.backFaceCulling = false;
+                fog.material = mat;
+                fog.position = new BABYLON.Vector3(x + 4, 2, z + 4);
+                fog.billboardMode = BABYLON.Mesh.BILLBOARDMODE_Y;
+                _fogMeshes.push(fog);
+            }
+        }
+    }
+    function updateFogOfWar(pos) {
+        _fogMeshes.forEach(f => {
+            const d = Math.hypot(f.position.x - pos.x, f.position.z - pos.z);
+            const key = `${Math.round(f.position.x)},${Math.round(f.position.z)}`;
+            if (d < 12 || _exploredCells.has(key)) f.material.alpha = 0;
+            else f.material.alpha = 0.85;
+            if (d < 12) _exploredCells.add(key);
+        });
+    }
+
+    // ?????? RARE DISCOVERY MECHANIC ?????????????????????????????????????????????????????????????????????????????????
+    let _rareDiscoveries = [];
+    const _DISCOVERY_SEED = 42;
+    function seedRandom(seed) { let s = seed; return () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646; }; }
+
+    function spawnRareDiscovery() {
+        const rng = seedRandom(_DISCOVERY_SEED + Date.now() % 86400000);
+        for (let i = 0; i < 5; i++) {
+            const x = (rng() - 0.5) * 80;
+            const z = (rng() - 0.5) * 80;
+            // Check not too close to existing
+            const tooClose = _rareDiscoveries.some(d => Math.hypot(d.x - x, d.z - z) < 5);
+            if (tooClose) continue;
+            // Spawn glowing orb
+            const orb = BABYLON.MeshBuilder.CreateSphere('rare_' + i + '_' + Date.now(), { diameter: 0.5 }, scene);
+            const mat = new BABYLON.StandardMaterial('rare_mat_' + i, scene);
+            const colors = [[1,0.5,0],[0.5,1,0],[0.8,0.2,1],[1,0.3,0.5],[0.2,0.8,1]];
+            mat.emissiveColor = new BABYLON.Color3(...colors[i]);
+            mat.diffuseColor = new BABYLON.Color3(...colors[i]);
+            mat.alpha = 0.8;
+            orb.material = mat;
+            orb.position = new BABYLON.Vector3(x, 1.5 + rng() * 2, z);
+            // Pulse animation
+            const entry = { mesh: orb, x, z, collected: false, type: ['anomaly','memory_fragment','plt_crystal','skill_seed','echo'][i] };
+            _rareDiscoveries.push(entry);
+        }
+        notify('???? Rare discoveries shimmer in the city ??? find them!');
+    }
+
+    // Check proximity to rare discoveries in render loop
+    scene.registerBeforeRender(() => {
+        for (const d of _rareDiscoveries) {
+            if (d.collected) continue;
+            // Pulse
+            d.mesh.position.y = 1.5 + Math.sin(Date.now() * 0.003 + d.x) * 0.5;
+            d.mesh.rotation.y += 0.02;
+            // Check player proximity (orbit cam or first person)
+            const camPos = _camMode === 'firstPerson' ? _firstPersonCam.position : _orbitCam.position;
+            const dist = Math.hypot(camPos.x - d.x, camPos.z - d.z);
+            if (dist < 3) {
+                d.collected = true;
+                d.mesh.dispose();
+                let reward = {};
+                switch(d.type) {
+                    case 'anomaly': reward = { energy: 20, knowledge: 10 }; break;
+                    case 'memory_fragment': reward = { knowledge: 25, wealth: 5 }; break;
+                    case 'plt_crystal': reward = { wealth: 30, materials: 10 }; break;
+                    case 'skill_seed': reward = { knowledge: 15, materials: 15 }; break;
+                    case 'echo': reward = { energy: 30, wealth: 15 }; break;
+                }
+                if (_civ) {
+                    _civ.resources.energy = Math.min(100, _civ.resources.energy + (reward.energy || 0));
+                    _civ.resources.knowledge = Math.min(100, _civ.resources.knowledge + (reward.knowledge || 0));
+                    _civ.resources.materials = Math.min(100, _civ.resources.materials + (reward.materials || 0));
+                    _civ.resources.wealth = Math.min(100, _civ.resources.wealth + (reward.wealth || 0));
+                }
+                notify(`???? ${d.type} discovered! +${reward.energy || 0}??? +${reward.knowledge || 0}???? +${reward.materials || 0}???? +${reward.wealth || 0}????`);
+                if (typeof pulseBuildingsNear === 'function') pulseBuildingsNear(d.x, d.z);
+                // Respawn new one later
+                setTimeout(() => { _rareDiscoveries = _rareDiscoveries.filter(x => x !== d); spawnRareDiscovery(); }, 30000);
+            }
+        }
+    });
+
+    // Initialize fog of war after scene is ready
+    setTimeout(() => { try { initFogOfWar(); } catch(e) {} }, 3000);
+
+    // Upgrade all building materials to neon glow
+    function neonUpgrade() {
+        scene.meshes.forEach(m => {
+            if ((m.name.startsWith('bld_') || m.name.startsWith('player_bld_') || m.name.startsWith('sanctum_bld_')) && m.material) {
+                if (m.material.emissiveColor && !m._neonDone) {
+                    m._neonDone = true;
+                    const e = m.material.emissiveColor;
+                    const intensify = (v) => Math.max(0.15, Math.min(1, (v || 0.1) * 2.5));
+                    m.material.emissiveColor = new BABYLON.Color3(intensify(e.r), intensify(e.g), intensify(e.b));
+                    m.material.emissivePower = 2;
+                }
+            }
+        });
+    }
+    setTimeout(neonUpgrade, 4000);
+    setInterval(neonUpgrade, 30000); // Catch new buildings
+
+    // ?????? BUILDING???GSK STATE WIRE ??????????????????????????????????????????????????????????????????????????????????????????
+    // ECS pattern: each building entry carries a gskState component
+    // that drives its emissive intensity based on _civ.resources
+
+    function updateBuildingVisuals(building) {
+        if (!_civ || !building || !building.gskState) return;
+        const r = _civ.resources;
+        const avg = (r.energy + r.knowledge + r.materials + r.wealth) / 400;
+        const intensity = 0.15 + avg * 0.85;
+
+        const targetMeshes = scene.meshes.filter(m => m.name === building.id || m.metadata?.buildingId === building.id);
+        targetMeshes.forEach((mesh) => {
+            if (mesh.material && mesh.material.emissiveColor) {
+                const base = building.gskState.emissiveBase;
+                const pulsing = building.gskState.lastPulse > Date.now() - 1500 ? 0.4 : 0;
+                const glow = Math.min(1, intensity + pulsing);
+                mesh.material.emissiveColor = new BABYLON.Color3(
+                    base[0] * glow * 2.5,
+                    base[1] * glow * 2.5,
+                    base[2] * glow * 2.5
+                );
+                mesh.material.emissivePower = 2;
+            }
+        });
+
+        building.gskState.energyLevel = intensity;
+    }
+
+    function pulseBuilding(entry) {
+        if (!entry || !entry.gskState) return;
+        entry.gskState.lastPulse = Date.now();
+    }
+
+    function refreshAllBuildingVisuals() {
+        for (let i = 0; i < allBuildings.length; i++) {
+            updateBuildingVisuals(allBuildings[i]);
+        }
+    }
+
+    // Pulse buildings near a position
+    function pulseBuildingsNear(x, z, radius) {
+        radius = radius || 15;
+        for (let i = 0; i < allBuildings.length; i++) {
+            const b = allBuildings[i];
+            if (Math.hypot(b.x - x, b.z - z) < radius) {
+                pulseBuilding(b);
+            }
+        }
+    }
+
+    _bus.on('civ:event', function(evt) {
+        const severity = evt.severity || 'info';
+        if (severity === 'danger' || severity === 'good') {
+            for (let i = 0; i < allBuildings.length; i++) {
+                if (Math.random() < 0.4) pulseBuilding(allBuildings[i]);
+            }
+        }
+    });
+
+    setInterval(refreshAllBuildingVisuals, 2000);
+
+    // Wire fog to render loop
+    scene.registerBeforeRender(() => {
+        if (_fogMeshes.length > 0) {
+            const pos = _camMode === 'firstPerson' ? _firstPersonCam.position : _orbitCam.position;
+            updateFogOfWar(pos);
+        }
+    });
+
+    // Spawn initial rare discoveries
+    setTimeout(spawnRareDiscovery, 10000);
+    setInterval(() => { if (_rareDiscoveries.length < 3) spawnRareDiscovery(); }, 60000);
+
+    // ?????? MIDNIGHT TUNING MECHANIC ??????????????????????????????????????????????????????????????????????????????
+    let _tuningTimer = 0;
+    const _TUNING_INTERVAL = 180; // 180 seconds = 3 minutes
+    let _tuningActive = false;
+
+    function startTuningCycle() {
+        _tuningTimer = _TUNING_INTERVAL;
+        setInterval(() => {
+            if (_tuningActive) return;
+            _tuningTimer--;
+            // Update HUD
+            const el = document.getElementById('civStatus');
+            if (el && _tuningTimer <= 30 && _tuningTimer > 0) {
+                el.textContent = `???? Tuning in ${_tuningTimer}s ??? save your city!`;
+                el.style.color = '#FF6B9D';
+            }
+            if (_tuningTimer <= 0) {
+                executeTuning();
+                _tuningTimer = _TUNING_INTERVAL;
+            }
+        }, 1000);
+    }
+
+    function executeTuning() {
+        _tuningActive = true;
+        notify('???? MIDNIGHT TUNING ??? The city reshapes from the seed...');
+        // Save current state first
+        _save.save();
+        // Reshuffle buildings
+        const blds = allBuildings.filter(b => b.id && !b.id.startsWith('player_'));
+        if (blds.length > 0) {
+            const count = Math.floor(blds.length * 0.3); // 30% shuffle
+            for (let i = 0; i < count; i++) {
+                const target = blds[Math.floor(Math.random() * blds.length)];
+                if (target) {
+                    const newX = target.x + (Math.random() - 0.5) * 20;
+                    const newZ = target.z + (Math.random() - 0.5) * 20;
+                    // Move mesh
+                    scene.meshes.forEach(m => {
+                        if (m.name === target.id || (m.name.startsWith('bld_') && m.position.x === target.x && m.position.z === target.z)) {
+                            m.position.x = newX; m.position.z = newZ;
+                            // Flash effect
+                            if (m.material && m.material.emissiveColor) {
+                                const orig = m.material.emissiveColor.clone();
+                                m.material.emissiveColor = new BABYLON.Color3(1, 0.5, 0);
+                                setTimeout(() => { if (m.material) m.material.emissiveColor = orig; }, 500);
+                            }
+                        }
+                    });
+                    target.x = newX; target.z = newZ;
+                }
+            }
+            notify(`???? Tuning complete ??? ${count} buildings relocated`);
+        }
+        _tuningActive = false;
+    }
+
+    setTimeout(startTuningCycle, 15000);
+
+    // ?????? PLUGIN DRAG-DROP MECHANIC ???????????????????????????????????????????????????????????????????????????
+    (function initPluginDrop() {
+        const dropOverlay = document.createElement('div');
+        dropOverlay.id = 'pluginDropOverlay';
+        dropOverlay.style.cssText = 'position:fixed;inset:0;z-index:9998;display:none;align-items:center;justify-content:center;background:rgba(78,205,196,0.1);border:3px dashed var(--plt-tax);pointer-events:none;font-size:24px;color:var(--plt-tax);font-family:monospace;';
+        dropOverlay.textContent = '???? Drop .js file to create a new citizen';
+        document.body.appendChild(dropOverlay);
+
+        document.addEventListener('dragenter', (e) => {
+            if (e.dataTransfer.types.includes('Files')) {
+                dropOverlay.style.display = 'flex';
+            }
+        });
+        document.addEventListener('dragover', (e) => { e.preventDefault(); dropOverlay.style.display = 'flex'; });
+        document.addEventListener('dragleave', (e) => {
+            if (!e.relatedTarget || e.relatedTarget === document.body) dropOverlay.style.display = 'none';
+        });
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropOverlay.style.display = 'none';
+            const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.js'));
+            if (files.length === 0) { notify('??? Drop .js files only'); return; }
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const code = ev.target.result;
+                    const name = file.name.replace('.js', '');
+                    const id = spawnCitizen(name, 'CREATOR');
+                    notify(`???? Plugin loaded: ${name} ??? spawned from ${file.name}`);
+                    // Inject code into the worker
+                    if (id && _citizens[id] && _citizens[id].worker) {
+                        _citizens[id].worker.postMessage({ type: 'plugin_code', code, fileName: file.name });
+                    }
+                };
+                reader.readAsText(file);
+            });
+        });
+    })();
+
     // ==================== ARMY SYSTEM ====================
     // ARMY system removed — cosmetic-only, no kernel integration
     
@@ -4448,6 +5678,7 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
     
     function openCommandCenter() {
         commandCenterMode = true;
+        setGameMode('command');
         
         const ccPanel = document.getElementById('commandCenterPanel');
         if (ccPanel) {
@@ -4513,6 +5744,34 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
             } else if (playerInVehicle) {
                 exitVehicle();
             }
+        }
+        if (e.key === '`' || e.key === '~') {
+            e.preventDefault();
+            toggleTerminal();
+        }
+        if (e.key === 'F2') {
+            e.preventDefault();
+            const panel = document.getElementById('ideModal');
+            if (panel && panel.style.display === 'flex') closeFullIDE();
+            else if (_inspectBuildingId) openFullIDE();
+        }
+        // V ??? toggle camera mode (orbit / first person)
+        if (e.key === 'v' || e.key === 'V') {
+            e.preventDefault();
+            if (typeof toggleCameraMode === 'function') toggleCameraMode();
+        }
+        // Ctrl+S or Cmd+S ??? save game
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            if (document.activeElement && ['INPUT', 'TEXTAREA', 'TEXT'].includes(document.activeElement.tagName)) return;
+            e.preventDefault();
+            const saved = _save.save();
+            notify(saved ? '???? Game saved' : '??? Save failed');
+        }
+        // Ctrl+L or Cmd+L ??? load game
+        if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+            e.preventDefault();
+            const loaded = _save.load();
+            notify(loaded ? '???? Game loaded' : '??? No save found');
         }
     });
     
@@ -4987,6 +6246,9 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
     // ── PHASE 5: SPATIAL CODE EDITOR ─────────────────────────────
     let _codeEditor = null;
     let _editView = 'json';
+    let _fullIDEEditor = null;
+    let _fullIDEFile = 'buildings/current.json';
+    let _fullIDEContent = '{\n  "name": "current",\n  "type": "building",\n  "level": 1,\n  "revenue": 1250,\n  "employees": 12\n}';
 
     function switchInspectView(view) {
         _editView = view;
@@ -5009,7 +6271,8 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
                     lineNumbers: true,
                     lineWrapping: true,
                     tabSize: 2,
-                    viewportMargin: Infinity
+                    viewportMargin: Infinity,
+                    extraKeys: { 'Ctrl-S': () => saveInspectCode() }
                 });
             } else if (_codeEditor) {
                 _codeEditor.setValue(jsonEl.textContent || '');
@@ -5021,7 +6284,6 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
     function saveInspectCode() {
         if (!_codeEditor || !_inspectBuildingId) return;
         const code = _codeEditor.getValue();
-        // Send updated code to GSK via bridge
         if (kernelWs && kernelWs.readyState === WebSocket.OPEN) {
             kernelWs.send(JSON.stringify({
                 type: 'command',
@@ -5059,22 +6321,21 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
                 _terminal.loadAddon(fitAddon);
                 _terminal.open(container);
                 fitAddon.fit();
-                _terminal.write('Dark City Terminal v1.0\r\n');
-                _terminal.write('Connecting to GSK...\r\n');
-                // Try WebSocket to bridge
+                _terminal.write('Dark City Terminal v2.0 ??? Spatial OS\r\n');
+                _terminal.write('Type "help" for commands.\r\n');
                 try {
                     _termSocket = new WebSocket('ws://127.0.0.1:8080');
                     _termSocket.onopen = () => {
-                        _terminal.write('Connected.\r\n> ');
+                        _terminal.write('\x1b[32mGSK Bridge: CONNECTED\x1b[0m\r\n> ');
                     };
                     _termSocket.onmessage = (e) => {
                         _terminal.write(e.data + '\r\n> ');
                     };
                     _termSocket.onclose = () => {
-                        _terminal.write('\r\nDisconnected. Type to run locally.\r\n> ');
+                        _terminal.write('\r\n\x1b[33mGSK Bridge: DISCONNECTED ??? local mode\x1b[0m\r\n> ');
                     };
-                } catch (e) {
-                    _terminal.write('Bridge unavailable. Local mode.\r\n> ');
+                } catch (_) {
+                    _terminal.write('\x1b[33mGSK Bridge: OFFLINE ??? local mode\x1b[0m\r\n> ');
                 }
                 _terminal.onData((data) => {
                     if (data === '\r') {
@@ -5083,27 +6344,21 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
                         _terminal.write('\r\n');
                         if (_termSocket && _termSocket.readyState === WebSocket.OPEN) {
                             _termSocket.send(cmd);
-                        } else if (cmd === 'clear' || cmd === 'cls') {
-                            _terminal.clear();
-                        } else if (cmd === 'help') {
-                            _terminal.write('Commands: clear, help, spawn, build, status, citizens\r\n');
-                        } else if (cmd === 'citizens') {
-                            const count = Object.keys(_citizens).length;
-                            _terminal.write(`Active citizens: ${count}\r\n`);
-                        } else if (cmd) {
-                            _terminal.write(`[Local] ${cmd}: not connected to GSK\r\n`);
+                        } else {
+                            execLocalCommand(cmd);
                         }
                         _terminal.write('> ');
                     } else if (data === '\x7f') {
-                        // Backspace
-                        const line = _terminal.buffer.active.getLine(_terminal.buffer.active.length - 1);
-                        if (line) {
-                            const text = line.translateToString();
-                            if (text.length > 2) {
-                                _terminal.write('\b \b');
-                            }
+                        if (_termBuffer.length > 0) {
+                            _termBuffer = _termBuffer.slice(0, -1);
+                            _terminal.write('\b \b');
                         }
+                    } else if (data === '\x1b') {
+                        // Escape sequences ??? ignore
+                    } else if (data.length === 1 && data.charCodeAt(0) < 32) {
+                        // Control chars ??? ignore
                     } else {
+                        _termBuffer += data;
                         _terminal.write(data);
                     }
                 });
@@ -5111,9 +6366,125 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
         }, 100);
     }
 
+    function execLocalCommand(cmd) {
+        const parts = cmd.trim().split(/\s+/);
+        const base = parts[0].toLowerCase();
+        switch (base) {
+            case 'clear': case 'cls':
+                _terminal.clear(); break;
+            case 'help':
+                _terminal.write('Commands:\r\n');
+                _terminal.write('  help           Show this help\r\n');
+                _terminal.write('  clear/cls      Clear terminal\r\n');
+                _terminal.write('  citizens       List active Browser Citizens\r\n');
+                _terminal.write('  spawn <name>   Spawn a new citizen\r\n');
+                _terminal.write('  status         System status\r\n');
+                _terminal.write('  build <type>   Place a building\r\n');
+                _terminal.write('  soul           Show soul state\r\n');
+                _terminal.write('  say <msg>      Broadcast a message to citizens\r\n');
+                _terminal.write('  save           Force save all citizen state\r\n');
+                _terminal.write('  civ            Show civilization status\r\n');
+                _terminal.write('  events         Recent civilization events\r\n');
+                _terminal.write('  savestats      Show save engine stats\r\n');
+                _terminal.write('  discoveries    Rare discovery status\r\n');
+                _terminal.write('  tuning         Midnight tuning status\r\n');
+                break;
+            case 'citizens':
+                const ids = Object.keys(_citizens);
+                if (ids.length === 0) { _terminal.write('No active citizens.\r\n'); break; }
+                ids.forEach(id => {
+                    const c = _citizens[id];
+                    const s = _citizenStateCache[id] || {};
+                    _terminal.write(`  ${c.name} [${c.archetype}] ${c.isHermes ? '??? ' : ''}??? ${s.thoughts || 0} thoughts, ${s.memoryCount || 0} memories\r\n`);
+                });
+                break;
+            case 'spawn':
+                const name = parts[1] || `Terminal-${Date.now() % 1000}`;
+                const archetypes = ['OBSERVER','EXPLORER','CREATOR','SAGE','MERCHANT'];
+                const arch = archetypes[Math.floor(Math.random() * archetypes.length)];
+                spawnCitizen(name, arch);
+                _terminal.write(`Spawned ${name} [${arch}]\r\n`);
+                break;
+            case 'status':
+                const cCount = Object.keys(_citizens).length;
+                const running = Object.values(_citizens).filter(c => c.status === 'running').length;
+                const totalThoughts = Object.values(_citizenStateCache).reduce((s, c) => s + (c.thoughts || 0), 0);
+                _terminal.write(`Dark City Spatial OS\r\n`);
+                _terminal.write(`  Citizens: ${cCount} (${running} running)\r\n`);
+                _terminal.write(`  Total Thoughts: ${totalThoughts}\r\n`);
+                _terminal.write(`  Buildings: ${allBuildings.length}\r\n`);
+                _terminal.write(`  Grid: ${GRIDS[currentGrid]?.name || 'unknown'}\r\n`);
+                _terminal.write(`  GSK Bridge: ${kernelWs && kernelWs.readyState === WebSocket.OPEN ? 'CONNECTED' : 'OFFLINE'}\r\n`);
+                _terminal.write(`  Civilization Score: ${_civ ? _civ.score.total.toFixed(2) : 'N/A'}\r\n`);
+                _terminal.write(`  Resources: E=${Math.floor(_civ?.resources?.energy || 0)} K=${Math.floor(_civ?.resources?.knowledge || 0)} M=${Math.floor(_civ?.resources?.materials || 0)} W=${Math.floor(_civ?.resources?.wealth || 0)}\r\n`);
+                break;
+            case 'build':
+                const types = ['knowledge','skill','agent','tool','memory','identity'];
+                const bType = types[Math.floor(Math.random() * types.length)];
+                _terminal.write(`Building ${bType} at random location...\r\n`);
+                placeBuildingInternal(bType);
+                break;
+            case 'soul':
+                _terminal.write(`Soul: ARIA ??? Awareness ${document.getElementById('awarenessVal')?.textContent || '72%'}\r\n`);
+                _terminal.write(`Agents: ${agents.length}, NPCs: ${npcs.length}\r\n`);
+                break;
+            case 'say':
+                const msg = parts.slice(1).join(' ') || 'hello from terminal';
+                Object.values(_citizens).forEach(c => {
+                    if (c.worker) c.worker.postMessage({ type: 'broadcast', payload: { type: 'message', message: msg } });
+                });
+                _terminal.write(`Broadcast: "${msg}" sent to ${Object.keys(_citizens).length} citizens\r\n`);
+                break;
+            case 'civ':
+                if (!_civ) { _terminal.write('Civilization engine not started.\r\n'); break; }
+                _terminal.write(`Civilization Score: ${_civ.score.total.toFixed(2)}\r\n`);
+                _terminal.write(`  Profit: ${_civ.score.profit.toFixed(2)}  Love: ${_civ.score.love.toFixed(2)}  Tax: ${_civ.score.tax.toFixed(2)}\r\n`);
+                _terminal.write(`Resources: E=${Math.floor(_civ.resources.energy)} K=${Math.floor(_civ.resources.knowledge)} M=${Math.floor(_civ.resources.materials)} W=${Math.floor(_civ.resources.wealth)}\r\n`);
+                _terminal.write(`Age: Day ${Math.floor(_civ.age / 10)}  Events: ${_civ.events.length}\r\n`);
+                break;
+            case 'savestats':
+                _save.getStats().then(stats => {
+                    _terminal.write(`Save Engine: ${stats.engine}\r\n`);
+                    _terminal.write(`  Keys: ${stats.keys}\r\n`);
+                    _terminal.write(`  Size: ${stats.totalBytes} bytes\r\n`);
+                });
+                break;
+            case 'discoveries':
+                _terminal.write(`Rare discoveries: ${_rareDiscoveries.length}\r\n`);
+                _rareDiscoveries.forEach(d => _terminal.write(`  ${d.collected ? '???' : '????'} ${d.type} at (${Math.round(d.x)}, ${Math.round(d.z)})\r\n`));
+                break;
+            case 'tuning':
+                _terminal.write(`Midnight tuning: ${_tuningTimer}s until next\r\n`);
+                _terminal.write(`  Active: ${_tuningActive}\r\n`);
+                _terminal.write(`  Interval: ${_TUNING_INTERVAL}s\r\n`);
+                break;
+            case 'events':
+                if (!_civ || _civ.events.length === 0) { _terminal.write('No civilization events recorded.\r\n'); break; }
+                _civ.events.slice(-10).forEach(e => {
+                    _terminal.write(`  [Day ${Math.floor(e.age / 10)}] ${e.message.substring(0, 60)}\r\n`);
+                });
+                break;
+            case 'save':
+                Object.values(_citizens).forEach(c => {
+                    if (c.worker) c.worker.postMessage({ type: 'pause' });
+                });
+                setTimeout(() => {
+                    Object.values(_citizens).forEach(c => {
+                        if (c.worker) c.worker.postMessage({ type: 'resume' });
+                    });
+                }, 500);
+                _terminal.write('All citizen state saved.\r\n');
+                break;
+            default:
+                _terminal.write(`Unknown command: ${cmd}. Type "help"\r\n`);
+        }
+    }
+
     function closeTerminal() {
         const panel = document.getElementById('terminalPanel');
         if (panel) panel.style.display = 'none';
+        _termBuffer = '';
+        setGameMode('city');
     }
 
     function toggleTerminal() {
@@ -5190,6 +6561,7 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
     let _chatSoulName = null;
 
     function openChat(soulId) {
+        setGameMode('chat');
         _chatSoulName = soulId;
         const panel = document.getElementById('chatPanel');
         if (!panel) return;
@@ -5311,8 +6683,36 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
                             }}
                         }));
                     }
+                    renderCitizenList();
+                } else if (msg.type === 'request_think') {
+                    // Local model inference bridge
+                    generateLocalThought(msg.requestId, msg.perception, entry);
                 }
             };
+
+            function generateLocalThought(requestId, perception, entry) {
+                const worker = entry.worker;
+                if (!worker) return;
+                // Try transformers.js if available
+                if (typeof pipeline !== 'undefined') {
+                    (async () => {
+                        try {
+                            if (!window._localModel) {
+                                window._localModel = await pipeline('text-generation', 'Xenova/phi-3-mini-4k-instruct', { quantized: true });
+                            }
+                            const prompt = `<|user|>\nYou are ${name} the ${archetype} citizen in the Dark City. ${perception}\nWhat do you think and what do you want to do?\n<|assistant|>\n`;
+                            const result = await window._localModel(prompt, { max_new_tokens: 80, temperature: 0.8 });
+                            const thought = (result?.[0]?.generated_text || '').replace(prompt, '').trim().split('\n')[0] || `I am ${name}, observing the city from my position.`;
+                            worker.postMessage({ type: 'local_thought', requestId, thought });
+                        } catch (e) {
+                            console.warn('[LocalModel] Error:', e.message);
+                            worker.postMessage({ type: 'local_thought', requestId, thought: null });
+                        }
+                    })();
+                } else {
+                    worker.postMessage({ type: 'local_thought', requestId, thought: null });
+                }
+            }
 
             worker.onerror = (e) => {
                 entry.status = 'error';
@@ -5321,6 +6721,8 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
 
             worker.postMessage({ type: 'spawn', id, name, archetype, x, z, loopInterval: 10000 });
             _citizens[id] = entry;
+            _citizenStateCache[id] = { name, archetype, thoughts: 0, actions: 0, memoryCount: 0, energy: 100, isRunning: true };
+            renderCitizenList();
             return id;
         } catch (e) {
             notify(`❌ Failed to spawn citizen ${name}: ${e.message}`);
@@ -5379,12 +6781,24 @@ let _sanctumDriven = false; // Dark City: when true, Sanctum state drives the wo
     window.closeChat = closeChat;
     window.deleteInspectBuilding = deleteInspectBuilding;
     window.spawnCitizen = spawnCitizen;
+    window.spawnHermesCitizen = spawnHermesCitizen;
     window.terminateCitizen = terminateCitizen;
     window.pauseAllCitizens = pauseAllCitizens;
     window.resumeAllCitizens = resumeAllCitizens;
+    window.sendCitizenCommand = sendCitizenCommand;
+    window.switchCCTab = switchCCTab;
+    window.renderCitizenList = renderCitizenList;
+    window.hermesLoanAllMemories = hermesLoanAllMemories;
     window.openTerminal = openTerminal;
     window.closeTerminal = closeTerminal;
     window.toggleTerminal = toggleTerminal;
+    window.openFullIDE = openFullIDE;
+    window.closeFullIDE = closeFullIDE;
+    window.saveFullIDE = saveFullIDE;
+    window.switchIDELang = switchIDELang;
+    window.switchIDETheme = switchIDETheme;
+    window.loadIDEFile = loadIDEFile;
+    window.placeBuildingInternal = placeBuildingInternal;
 
     function togglePortalInput() {
         document.getElementById('portalNode').classList.toggle('active');
