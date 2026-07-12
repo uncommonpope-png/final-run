@@ -41,7 +41,7 @@ const S=[
   ]},
 ];
 
-const ch=s=>parseInt(s.slice(1),16);const cm=JSON.parse(localStorage.getItem('gC')||'{}');
+const ch=s=>parseInt(s.slice(1),16);const CO=JSON.parse(localStorage.getItem('gC')||'{}');
 const sc=new THREE.Scene();sc.background=new THREE.Color(0x050510);
 const ca=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,500);ca.position.set(0,2,14);
 const re=new THREE.WebGLRenderer({antialias:true});re.setSize(innerWidth,innerHeight);re.setPixelRatio(Math.min(devicePixelRatio,2));
@@ -107,7 +107,7 @@ re.domElement.onmouseup=e=>{
 };
 
 function modal(it,sec){
-  const b=document.getElementById('mbd');const k=sec.id+'_'+it.t;const c=cm[k]||[];
+  const b=document.getElementById('mbd');const k=sec.id+'_'+it.t;const c=CO[k]||[];
   b.innerHTML=`<div style="display:flex;align-items:center;gap:8;margin-bottom:8"><span style="font-size:22">${sec.e}</span><div><h3>${it.t}</h3><div class="mt">${it.y||''}</div></div></div>
     <div class="b">${it.b.replace(/\n/g,'<br>')}</div>
     <div style="margin-top:10;font-size:9;color:#555;border-top:1px solid rgba(255,255,255,0.04);padding-top:6">COMMENTS</div>
@@ -124,9 +124,9 @@ onkeydown=e=>{if(e.key==='Escape')cm();};
 
 function pc(sid,tit){
   const inp=document.getElementById('ci');if(!inp.value.trim())return;
-  const k=sid+'_'+tit;if(!cm[k])cm[k]=[];
-  cm[k].push({a:'Craig',t:inp.value.trim(),ts:Date.now()});
-  localStorage.setItem('gC',JSON.stringify(cm));
+  const k=sid+'_'+tit;  if(!CO[k])CO[k]=[];
+  CO[k].push({a:'Craig',t:inp.value.trim(),ts:Date.now()});
+  localStorage.setItem('gC',JSON.stringify(CO));
   fetch('http://localhost:61999/mcp/chat',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':'profit-prime-key'},body:JSON.stringify({sender:'craig',message:`[${tit}] ${inp.value.trim()}`,priority:'comment'})}).catch(()=>{});
   inp.value='';document.getElementById('cp').style.display='none';
   const it=S.find(s=>s.id===sid)?.x.find(i=>i.t===tit);const sec=S.find(s=>s.id===sid);
